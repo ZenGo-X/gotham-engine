@@ -4,9 +4,9 @@ version = "1.0.0"
 
 edition = "2021"
 
-[lib]
-name = "backbone"
-path = "src/lib.rs"
+#[lib]
+#name = "backbone"
+#path = "src/lib.rs"
 
 
 [dependencies]
@@ -34,7 +34,6 @@ tokio = { version = "1", features = ["full"] }
 
 
 [workspace.dependencies]
-gotham-server = { path = "gotham-server" }
 serde = { version = "1", features = ["serde_derive"] }
 serde_json = "1"
 log = "0.4"
