@@ -1,10 +1,7 @@
 //! The traits that define the common logic  with default implementation for keygen and sign
 //! while it differentiates implementation of keygen and sign with trait objects for DB management,user authorization and tx authorization
 
-use crate::auth::jwt::Claims;
-use crate::engine::types::{DatabaseError, Db_index, EcdsaStruct, HDPos};
-use crate::private::private_gotham::Config;
-use crate::storage::db;
+use crate::types::{DatabaseError, Db_index, EcdsaStruct, HDPos};
 use kms::ecdsa::two_party::MasterKey1;
 use log::{error, warn};
 use redis::{Commands, Connection, RedisResult};
@@ -16,6 +13,7 @@ use tokio::sync::Mutex;
 use two_party_ecdsa::party_one;
 use two_party_ecdsa::party_one::KeyGenFirstMsg;
 use uuid::Uuid;
+use crate::guarder::Claims;
 
 /// The Txauthorization trait allows for extra tx authorization during the sign protocol. Private Gotham implements the logic of authorization tx while public one lets it empty
 pub trait Txauthorization {

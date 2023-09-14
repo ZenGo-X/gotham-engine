@@ -1,5 +1,4 @@
 //! Common types for traits the implementations thereofs at [private_gotham] and [public_gotham]
-use crate::storage::db;
 use erased_serde::serialize_trait_object;
 use rocket::post;
 use serde::Deserialize;
