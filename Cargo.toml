@@ -29,7 +29,7 @@ cargo-pants = "0.4.16"
 redis = { version = "0.23.0", features = [ "cluster"] }
 thiserror = "1.0"
 erased-serde = "0.3"
-async-trait = "0.1.73"
+async-trait = "0.1.67"
 tokio = { version = "1", features = ["full"] }
 
 
