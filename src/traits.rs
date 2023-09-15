@@ -188,49 +188,49 @@ pub trait KeyGen {
         )
             .await
             .or(Err("Failed to insert into db"))?;
-        db.insert(
-            &DbIndex {
-                customer_id: claim.sub.to_string(),
-                id: id.clone(),
-            },
-            &EcdsaStruct::KeyGenFirstMsg,
-            &key_gen_first_msg,
-        )
-            .await
-            .or(Err("Failed to insert into db"))?;
-
-        db.insert(
-            &DbIndex {
-                customer_id: claim.sub.to_string(),
-                id: id.clone(),
-            },
-            &EcdsaStruct::CommWitness,
-            &comm_witness,
-        )
-            .await
-            .or(Err("Failed to insert into db"))?;
-
-        db.insert(
-            &DbIndex {
-                customer_id: claim.sub.to_string(),
-                id: id.clone(),
-            },
-            &EcdsaStruct::EcKeyPair,
-            &ec_key_pair,
-        )
-            .await
-            .or(Err("Failed to insert into db"))?;
-
-
-        let value = v { value: "false".parse().unwrap() };
-
-        db.insert(&DbIndex {
-            customer_id: claim.sub.to_string(),
-            id: id.clone(),
-        }, &EcdsaStruct::Abort, &value)
-            .await
-            .or(Err("Failed to insert into db"))?;
-
+        // db.insert(
+        //     &DbIndex {
+        //         customer_id: claim.sub.to_string(),
+        //         id: id.clone(),
+        //     },
+        //     &EcdsaStruct::KeyGenFirstMsg,
+        //     &key_gen_first_msg,
+        // )
+        //     .await
+        //     .or(Err("Failed to insert into db"))?;
+        //
+        // db.insert(
+        //     &DbIndex {
+        //         customer_id: claim.sub.to_string(),
+        //         id: id.clone(),
+        //     },
+        //     &EcdsaStruct::CommWitness,
+        //     &comm_witness,
+        // )
+        //     .await
+        //     .or(Err("Failed to insert into db"))?;
+        //
+        // db.insert(
+        //     &DbIndex {
+        //         customer_id: claim.sub.to_string(),
+        //         id: id.clone(),
+        //     },
+        //     &EcdsaStruct::EcKeyPair,
+        //     &ec_key_pair,
+        // )
+        //     .await
+        //     .or(Err("Failed to insert into db"))?;
+        //
+        //
+        // let value = v { value: "false".parse().unwrap() };
+        //
+        // db.insert(&DbIndex {
+        //     customer_id: claim.sub.to_string(),
+        //     id: id.clone(),
+        // }, &EcdsaStruct::Abort, &value)
+        //     .await
+        //     .or(Err("Failed to insert into db"))?;
+        //
         Ok(Json((id.clone(), key_gen_first_msg)))
     }
 
