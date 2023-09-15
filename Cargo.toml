@@ -19,14 +19,14 @@ uuid.workspace = true
 failure.workspace = true
 jsonwebtoken.workspace = true
 hex.workspace = true
-two-party-ecdsa.workspace = true
 kms.workspace = true
-rusoto_core = {version = "0.47.0", optional = true}
+two-party-ecdsa.workspace = true
+rusoto_core = { version = "0.47.0", optional = true }
 rocksdb = { version = "0.21.0", optional = true }
-rusoto_dynamodb = {version = "0.47.0", optional = true}
+rusoto_dynamodb = { version = "0.47.0", optional = true }
 chrono = "0.4.26"
 cargo-pants = "0.4.16"
-redis = { version = "0.23.0", features = [ "cluster"] }
+redis = { version = "0.23.0", features = ["cluster"] }
 thiserror = "1.0"
 erased-serde = "0.3"
 async-trait = "0.1.67"
@@ -40,11 +40,10 @@ log = "0.4"
 reqwest = "0.9.5"
 failure = "0.1"
 floating-duration = "0.1.2"
-rocket = { version = "0.5.0-rc.1", default-features = false, features=["json"]}
+rocket = { version = "0.5.0-rc.1", default-features = false, features = ["json"] }
 config = "0.13.3"
 uuid = { version = "0.7", features = ["v4"] }
 jsonwebtoken = "8"
 hex = "0.4"
-
 two-party-ecdsa = { git = "https://github.com/ZenGo-X/two-party-ecdsa.git" }
 kms = { git = "https://github.com/ZenGo-X/kms-secp256k1.git", branch = "2.0" }

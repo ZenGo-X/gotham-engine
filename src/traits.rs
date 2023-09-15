@@ -188,16 +188,16 @@ pub trait KeyGen {
         )
         .await
         .or(Err("Failed to insert into db"))?;
-        db.insert(
-            &Db_index {
-                customerId: claim.sub.to_string(),
-                id: id.clone(),
-            },
-            &EcdsaStruct::KeyGenFirstMsg,
-            &key_gen_first_msg,
-        )
-            .await
-            .or(Err("Failed to insert into db"))?;
+        // db.insert(
+        //     &Db_index {
+        //         customerId: claim.sub.to_string(),
+        //         id: id.clone(),
+        //     },
+        //     &EcdsaStruct::KeyGenFirstMsg,
+        //     &key_gen_first_msg,
+        // )
+        //     .await
+        //     .or(Err("Failed to insert into db"))?;
 
         // db.insert(
         //     &Db_index {
