@@ -19,7 +19,6 @@ uuid.workspace = true
 failure.workspace = true
 jsonwebtoken.workspace = true
 hex.workspace = true
-kms.workspace = true
 two-party-ecdsa.workspace = true
 rusoto_core = { version = "0.47.0", optional = true }
 rocksdb = { version = "0.21.0", optional = true }
@@ -46,4 +45,3 @@ uuid = { version = "0.7", features = ["v4"] }
 jsonwebtoken = "8"
 hex = "0.4"
 two-party-ecdsa = { git = "https://github.com/ZenGo-X/two-party-ecdsa.git", branch="compatibility_gotham_engine" }
-kms = { git = "https://github.com/ZenGo-X/kms-secp256k1.git", branch = "public-private" }

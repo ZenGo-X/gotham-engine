@@ -1,8 +1,8 @@
 //! The traits that define the common logic  with default implementation for keygen and sign
 //! while it differentiates implementation of keygen and sign with trait objects for DB management,user authorization and tx authorization
 
-use crate::types::{DatabaseError, Db_index, EcdsaStruct, HDPos,v};
-use kms::ecdsa::two_party::MasterKey1;
+use crate::types::{DatabaseError, Db_index, EcdsaStruct, HDPos, v};
+use two_party_ecdsa::kms::ecdsa::two_party::{MasterKey1, party1};
 use log::{error, warn};
 use redis::{Commands, Connection, RedisResult};
 use rocket::serde::json::Json;
@@ -11,8 +11,8 @@ use std::env;
 use std::fmt::{Debug, Display, Formatter};
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use two_party_ecdsa::party_one;
-use two_party_ecdsa::party_one::{CommWitness, KeyGenFirstMsg, EcKeyPair};
+use two_party_ecdsa::{GE, party_one};
+use two_party_ecdsa::party_one::{CommWitness, KeyGenFirstMsg, EcKeyPair, DLogProof};
 use uuid::Uuid;
 use crate::guarder::Claims;
 
@@ -139,8 +139,23 @@ pub async fn wrap_keygen_first(
     gotham::first(state, claim).await
 }
 
+#[post("/engine/traits/wrap_keygen_second", format = "json", data = "<dlog_proof>")]
+pub async fn wrap_keygen_second(
+    state: &State<Mutex<Box<dyn Db>>>,
+    claim: Claims,
+    id: String,
+    dlog_proof: Json<DLogProof>,
+) -> Result<Json<party1::KeyGenParty1Message2>, String> {
+    struct gotham {}
+    ;
+    impl KeyGen for gotham {}
+    ;
+    gotham::second(state, claim, id, dlog_proof).await
+}
+
 #[async_trait]
 pub trait KeyGen {
+    //first round of Keygen
     async fn first(
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
@@ -216,7 +231,7 @@ pub trait KeyGen {
             .or(Err("Failed to insert into db"))?;
 
 
-        let value = v{value: "false".parse().unwrap() };
+        let value = v { value: "false".parse().unwrap() };
 
         db.insert(&Db_index {
             customerId: claim.sub.to_string(),
@@ -227,9 +242,61 @@ pub trait KeyGen {
 
         Ok(Json((id.clone(), key_gen_first_msg)))
     }
-    // async fn second(&self, dbConn: S) {
-    //     //TODO
-    // }
+
+    //second round of Keygen
+    async fn second(state: &State<Mutex<Box<dyn Db>>>,
+                    claim: Claims,
+                    id: String,
+                    dlog_proof: Json<DLogProof>) -> Result<Json<party1::KeyGenParty1Message2>, String> {
+        let mut db = state.lock().await;
+        let party2_public: GE = dlog_proof.0.pk;
+        // db.insert(
+        //     &state.db,
+        //     &claim.sub,
+        //     &id,
+        //     &EcdsaStruct::Party2Public,
+        //     &party2_public,
+        // )
+        //     .await
+        //     .or(Err("Failed to insert into db"))?;
+
+        // let comm_witness: party_one::CommWitness =
+        //     db::get(&state.db, &claim.sub, &id, &EcdsaStruct::CommWitness)
+        //         .await
+        //         .or(Err("Failed to get from db"))?
+        //         .ok_or(format!("No data for such identifier {}", id))?;
+        // let ec_key_pair: party_one::EcKeyPair =
+        //     db::get(&state.db, &claim.sub, &id, &EcdsaStruct::EcKeyPair)
+        //         .await
+        //         .or(Err("Failed to get from db"))?
+        //         .ok_or(format!("No data for such identifier {}", id))?;
+        //
+        // let (kg_party_one_second_message, paillier_key_pair, party_one_private) =
+        //     MasterKey1::key_gen_second_message(comm_witness, &ec_key_pair, &dlog_proof.0);
+        //
+        // db::insert(
+        //     &state.db,
+        //     &claim.sub,
+        //     &id,
+        //     &EcdsaStruct::PaillierKeyPair,
+        //     &paillier_key_pair,
+        // )
+        //     .await
+        //     .or(Err("Failed to insert into db"))?;
+        // db::insert(
+        //     &state.db,
+        //     &claim.sub,
+        //     &id,
+        //     &EcdsaStruct::Party1Private,
+        //     &party_one_private,
+        // )
+        //     .await
+        //     .or(Err("Failed to insert into db"))?;
+
+        Ok(Json(kg_party_one_second_message))
+    }
+
+
     // async fn third(&self, dbConn: S) {
     //     //TODO
     // }

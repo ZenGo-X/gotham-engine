@@ -5,7 +5,7 @@ use rocket::post;
 use serde::Deserialize;
 use serde::Serialize;
 use thiserror::Error;
-use two_party_ecdsa::party_one::{CommWitness, EcKeyPair, KeyGenFirstMsg};
+use two_party_ecdsa::party_one::{CommWitness, DLogProof, EcKeyPair, KeyGenFirstMsg};
 use crate::traits::Value;
 
 #[derive(Debug, Error, PartialEq, Eq, Clone)]
@@ -112,4 +112,6 @@ impl Value for KeyGenFirstMsg {}
 impl Value for CommWitness {}
 impl Value for EcKeyPair{}
 impl Value for v{}
+// impl Value for DLogProof{}
+
 
