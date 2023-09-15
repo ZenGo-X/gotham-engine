@@ -1,7 +1,7 @@
 //! The traits that define the common logic  with default implementation for keygen and sign
 //! while it differentiates implementation of keygen and sign with trait objects for DB management,user authorization and tx authorization
 
-use crate::types::{DatabaseError, Db_index, EcdsaStruct, HDPos};
+use crate::types::{DatabaseError, Db_index, EcdsaStruct, HDPos,v};
 use kms::ecdsa::two_party::MasterKey1;
 use log::{error, warn};
 use redis::{Commands, Connection, RedisResult};
@@ -9,9 +9,10 @@ use rocket::serde::json::Json;
 use rocket::{async_trait, get, post, State};
 use std::env;
 use std::fmt::{Debug, Display, Formatter};
+use std::sync::Arc;
 use tokio::sync::Mutex;
 use two_party_ecdsa::party_one;
-use two_party_ecdsa::party_one::KeyGenFirstMsg;
+use two_party_ecdsa::party_one::{CommWitness, KeyGenFirstMsg, EcKeyPair};
 use uuid::Uuid;
 use crate::guarder::Claims;
 
@@ -27,15 +28,6 @@ pub trait Value: Sync + Send + std::fmt::Display {
     // fn to_string(&self) -> String;
 }
 
-impl Display for HDPos {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.pos)
-    }
-}
-
-
-
-impl Value for HDPos {}
 
 /// The Db trait allows different DB's to implement a common API for insert,delete,get
 #[async_trait]
@@ -53,8 +45,8 @@ pub trait Db: Send + Sync {
         key: &Db_index,
         table_name: &dyn MPCStruct,
     ) -> Result<Option<T>, DatabaseError>
-    where
-        Self: Sized;
+        where
+            Self: Sized;
     async fn has_active_share(&self, user_id: &str) -> Result<bool, String>;
 }
 
@@ -140,8 +132,10 @@ pub async fn wrap_keygen_first(
 ) -> Result<Json<(String, KeyGenFirstMsg)>, String> {
     // let mut gotham = state.lock().unwrap();
     // gotham.first(state,claim).await
-    struct gotham {};
-    impl KeyGen for gotham {};
+    struct gotham {}
+    ;
+    impl KeyGen for gotham {}
+    ;
     gotham::first(state, claim).await
 }
 
@@ -186,47 +180,50 @@ pub trait KeyGen {
             &EcdsaStruct::POS,
             &HDPos { pos: 0u32 },
         )
-        .await
-        .or(Err("Failed to insert into db"))?;
-        // db.insert(
-        //     &Db_index {
-        //         customerId: claim.sub.to_string(),
-        //         id: id.clone(),
-        //     },
-        //     &EcdsaStruct::KeyGenFirstMsg,
-        //     &key_gen_first_msg,
-        // )
-        //     .await
-        //     .or(Err("Failed to insert into db"))?;
+            .await
+            .or(Err("Failed to insert into db"))?;
+        db.insert(
+            &Db_index {
+                customerId: claim.sub.to_string(),
+                id: id.clone(),
+            },
+            &EcdsaStruct::KeyGenFirstMsg,
+            &key_gen_first_msg,
+        )
+            .await
+            .or(Err("Failed to insert into db"))?;
 
-        // db.insert(
-        //     &Db_index {
-        //         customerId: claim.sub.to_string(),
-        //         id: id.clone(),
-        //     },
-        //     &EcdsaStruct::CommWitness,
-        //     &comm_witness,
-        // )
-        //     .await
-        //     .or(Err("Failed to insert into db"))?;
-        //
-        // db.insert(
-        //     &Db_index {
-        //         customerId: claim.sub.to_string(),
-        //         id: id.clone(),
-        //     },
-        //     &EcdsaStruct::EcKeyPair,
-        //     &ec_key_pair,
-        // )
-        //     .await
-        //     .or(Err("Failed to insert into db"))?;
-        //
-        // db.insert(&Db_index {
-        //     customerId: claim.sub.to_string(),
-        //     id: id.clone(),
-        // }, &EcdsaStruct::Abort, "false")
-        //     .await
-        //     .or(Err("Failed to insert into db"))?;
+        db.insert(
+            &Db_index {
+                customerId: claim.sub.to_string(),
+                id: id.clone(),
+            },
+            &EcdsaStruct::CommWitness,
+            &comm_witness,
+        )
+            .await
+            .or(Err("Failed to insert into db"))?;
+
+        db.insert(
+            &Db_index {
+                customerId: claim.sub.to_string(),
+                id: id.clone(),
+            },
+            &EcdsaStruct::EcKeyPair,
+            &ec_key_pair,
+        )
+            .await
+            .or(Err("Failed to insert into db"))?;
+
+
+        let value = v{value: "false".parse().unwrap() };
+
+        db.insert(&Db_index {
+            customerId: claim.sub.to_string(),
+            id: id.clone(),
+        }, &EcdsaStruct::Abort, &value)
+            .await
+            .or(Err("Failed to insert into db"))?;
 
         Ok(Json((id.clone(), key_gen_first_msg)))
     }

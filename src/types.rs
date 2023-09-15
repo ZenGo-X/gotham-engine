@@ -1,9 +1,12 @@
 //! Common types for traits the implementations thereofs at [private_gotham] and [public_gotham]
+use std::fmt::{Display, Formatter};
 use erased_serde::serialize_trait_object;
 use rocket::post;
 use serde::Deserialize;
 use serde::Serialize;
 use thiserror::Error;
+use two_party_ecdsa::party_one::{CommWitness, EcKeyPair, KeyGenFirstMsg};
+use crate::traits::Value;
 
 #[derive(Debug, Error, PartialEq, Eq, Clone)]
 /// The DatabaseError defines different types of database errors for better error handling
@@ -87,3 +90,26 @@ pub enum EcdsaStruct {
 pub struct HDPos {
     pub pos: u32,
 }
+#[derive(Serialize, Deserialize, Debug)]
+pub struct v{
+    pub value: String
+}
+
+impl Display for HDPos {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.pos)
+    }
+}
+
+impl Display for v {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.to_string())
+    }
+}
+
+impl Value for HDPos {}
+impl Value for KeyGenFirstMsg {}
+impl Value for CommWitness {}
+impl Value for EcKeyPair{}
+impl Value for v{}
+
