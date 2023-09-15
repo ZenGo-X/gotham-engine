@@ -33,13 +33,7 @@ impl Display for HDPos {
     }
 }
 
-// impl Display for KeyGenFirstMsg {
-//     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-//         write!(f, "{}", self.to_string())
-//     }
-// }
-//
-// impl Value for party_one::KeyGenFirstMsg {}
+
 
 impl Value for HDPos {}
 
@@ -194,17 +188,17 @@ pub trait KeyGen {
         )
         .await
         .or(Err("Failed to insert into db"))?;
-        // db.insert(
-        //     &Db_index {
-        //         customerId: claim.sub.to_string(),
-        //         id: id.clone(),
-        //     },
-        //     &EcdsaStruct::KeyGenFirstMsg,
-        //     &key_gen_first_msg,
-        // )
-        //     .await
-        //     .or(Err("Failed to insert into db"))?;
-        //
+        db.insert(
+            &Db_index {
+                customerId: claim.sub.to_string(),
+                id: id.clone(),
+            },
+            &EcdsaStruct::KeyGenFirstMsg,
+            &key_gen_first_msg,
+        )
+            .await
+            .or(Err("Failed to insert into db"))?;
+
         // db.insert(
         //     &Db_index {
         //         customerId: claim.sub.to_string(),
