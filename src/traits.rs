@@ -43,7 +43,7 @@ pub trait Db: Send + Sync {
         &self,
         key: &Db_index,
         table_name: &dyn MPCStruct,
-    ) -> Result<Option<&dyn Value>, DatabaseError>;
+    ) -> Result<Option<Vec<u8>>, DatabaseError>;
     async fn has_active_share(&self, user_id: &str) -> Result<bool, String>;
 }
 
@@ -270,10 +270,10 @@ pub trait KeyGen {
                 .await
                 .or(Err("Failed to get from db"))?
                 .ok_or(format!("No data for such identifier {}", id))?;
-        let comm_witness_dc: &CommWitness = comm_witness.as_any().downcast_ref::<CommWitness>().unwrap();
-        let ec_key_pair_dc: &EcKeyPair = ec_key_pair.as_any().downcast_ref::<EcKeyPair>().unwrap();
+        let comm_witness_dc: CommWitness = serde_json::from_slice(&comm_witness).unwrap();
+        let ec_key_pair_dc: EcKeyPair = serde_json::from_slice(&ec_key_pair).unwrap();
         let (kg_party_one_second_message, paillier_key_pair, party_one_private) =
-            MasterKey1::key_gen_second_message(comm_witness_dc.clone(), ec_key_pair_dc, &dlog_proof.0);
+            MasterKey1::key_gen_second_message(comm_witness_dc.clone(), &ec_key_pair_dc, &dlog_proof.0);
 
         db.insert(
             &Db_index {
