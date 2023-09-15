@@ -1,20 +1,18 @@
 //! The traits that define the common logic  with default implementation for keygen and sign
 //! while it differentiates implementation of keygen and sign with trait objects for DB management,user authorization and tx authorization
 
-use crate::types::{DatabaseError, Db_index, EcdsaStruct};
+use crate::types::{DatabaseError, DbIndex, EcdsaStruct};
 
-use two_party_ecdsa::kms::ecdsa::two_party::{MasterKey1, party1};
+use two_party_ecdsa::kms::ecdsa::two_party::{MasterKey1};
 use two_party_ecdsa::{GE, party_one};
-use two_party_ecdsa::party_one::{CommWitness, KeyGenFirstMsg, EcKeyPair, DLogProof, HDPos, v, Value};
+use two_party_ecdsa::party_one::{ KeyGenFirstMsg, DLogProof, HDPos, v, Value};
 
 use std::env;
-use std::fmt::{Debug, Display, Formatter};
-use std::sync::Arc;
 
 use log::{error, warn};
 use redis::{Commands, Connection, RedisResult};
 use rocket::serde::json::Json;
-use rocket::{async_trait, get, post, State};
+use rocket::{async_trait, post, State};
 use tokio::sync::Mutex;
 use uuid::Uuid;
 
@@ -34,21 +32,21 @@ pub trait Db: Send + Sync {
     ///insert a value in the DB
     async fn insert(
         &self,
-        key: &Db_index,
+        key: &DbIndex,
         table_name: &dyn MPCStruct,
         value: &dyn Value,
     ) -> Result<(), DatabaseError>;
     ///get a value from the DB
     async fn get(
         &self,
-        key: &Db_index,
+        key: &DbIndex,
         table_name: &dyn MPCStruct,
     ) -> Result<Option<Vec<u8>>, DatabaseError>;
     async fn has_active_share(&self, user_id: &str) -> Result<bool, String>;
 }
 
 /// Common trait both for private and public for redis api
-pub trait Redis_mod {
+pub trait RedisMod {
     fn redis_get(key: String) -> RedisResult<String> {
         let mut con = Self::redis_get_connection()?;
         println!("[redis getting  key] {:?}", key);
@@ -129,9 +127,9 @@ pub async fn wrap_keygen_first(
 ) -> Result<Json<(String, KeyGenFirstMsg)>, String> {
     // let mut gotham = state.lock().unwrap();
     // gotham.first(state,claim).await
-    struct gotham {}
-    impl KeyGen for gotham {}
-    gotham::first(state, claim).await
+    struct Gotham {}
+    impl KeyGen for Gotham {}
+    Gotham::first(state, claim).await
 }
 
 #[post("/engine/traits/<id>/wrap_keygen_second", format = "json", data = "<dlog_proof>")]
@@ -140,10 +138,10 @@ pub async fn wrap_keygen_second(
     claim: Claims,
     id: String,
     dlog_proof: Json<DLogProof>,
-) -> Result<Json<(String)>,String> {
-    struct gotham {}
-    impl KeyGen for gotham {}
-    gotham::second(state, claim, id, dlog_proof).await
+) -> Result<Json<String>,String> {
+    struct Gotham {}
+    impl KeyGen for Gotham {}
+    Gotham::second(state, claim, id, dlog_proof).await
 }
 
 #[async_trait]
@@ -153,7 +151,7 @@ pub trait KeyGen {
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
     ) -> Result<Json<(String, party_one::KeyGenFirstMsg)>, String> {
-        let mut db = state.lock().await;
+        let db = state.lock().await;
         match db.has_active_share(&claim.sub).await {
             Err(e) => {
                 let msg = format!(
@@ -181,8 +179,8 @@ pub trait KeyGen {
         let id = Uuid::new_v4().to_string();
         //save pos 0
         db.insert(
-            &Db_index {
-                customerId: claim.sub.to_string(),
+            &DbIndex {
+                customer_id: claim.sub.to_string(),
                 id: id.clone(),
             },
             &EcdsaStruct::POS,
@@ -191,8 +189,8 @@ pub trait KeyGen {
             .await
             .or(Err("Failed to insert into db"))?;
         db.insert(
-            &Db_index {
-                customerId: claim.sub.to_string(),
+            &DbIndex {
+                customer_id: claim.sub.to_string(),
                 id: id.clone(),
             },
             &EcdsaStruct::KeyGenFirstMsg,
@@ -202,8 +200,8 @@ pub trait KeyGen {
             .or(Err("Failed to insert into db"))?;
 
         db.insert(
-            &Db_index {
-                customerId: claim.sub.to_string(),
+            &DbIndex {
+                customer_id: claim.sub.to_string(),
                 id: id.clone(),
             },
             &EcdsaStruct::CommWitness,
@@ -213,8 +211,8 @@ pub trait KeyGen {
             .or(Err("Failed to insert into db"))?;
 
         db.insert(
-            &Db_index {
-                customerId: claim.sub.to_string(),
+            &DbIndex {
+                customer_id: claim.sub.to_string(),
                 id: id.clone(),
             },
             &EcdsaStruct::EcKeyPair,
@@ -226,8 +224,8 @@ pub trait KeyGen {
 
         let value = v { value: "false".parse().unwrap() };
 
-        db.insert(&Db_index {
-            customerId: claim.sub.to_string(),
+        db.insert(&DbIndex {
+            customer_id: claim.sub.to_string(),
             id: id.clone(),
         }, &EcdsaStruct::Abort, &value)
             .await
@@ -240,12 +238,12 @@ pub trait KeyGen {
     async fn second(state: &State<Mutex<Box<dyn Db>>>,
                     claim: Claims,
                     id: String,
-                    dlog_proof: Json<DLogProof>) -> Result<Json<(String)>,String>{
-        let mut db = state.lock().await;
+                    dlog_proof: Json<DLogProof>) -> Result<Json<String>,String>{
+        let db = state.lock().await;
         let party2_public: GE = dlog_proof.0.pk;
         db.insert(
-            &Db_index {
-                customerId: claim.sub.to_string(),
+            &DbIndex {
+                customer_id: claim.sub.to_string(),
                 id: id.clone(),
             },
             &EcdsaStruct::Party2Public,

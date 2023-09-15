@@ -1,11 +1,7 @@
 //! Common types for traits the implementations thereofs at [private_gotham] and [public_gotham]
-use std::fmt::{Display, Formatter};
-use erased_serde::serialize_trait_object;
-use rocket::post;
 use serde::Deserialize;
 use serde::Serialize;
 use thiserror::Error;
-use two_party_ecdsa::party_one::{CommWitness, DLogProof, EcKeyPair, KeyGenFirstMsg};
 
 #[derive(Debug, Error, PartialEq, Eq, Clone)]
 /// The DatabaseError defines different types of database errors for better error handling
@@ -39,9 +35,9 @@ pub enum DbConnector {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 /// It is used as an index for the underlying Db table
-pub struct Db_index {
+pub struct DbIndex {
     ///The customerId as assigned from cognito and passed through JWT
-    pub customerId: String,
+    pub customer_id: String,
     ///The is as assigned from gotham server during the first round of keygen to identify users
     pub id: String,
 }

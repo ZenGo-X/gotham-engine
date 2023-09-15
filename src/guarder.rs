@@ -1,4 +1,4 @@
-use rocket::{http::Status, outcome::Outcome, Request, request, State};
+use rocket::{ outcome::Outcome, Request, request};
 use rocket::request::FromRequest;
 
 
@@ -13,7 +13,7 @@ impl<'a> FromRequest<'a> for Claims {
 
     type Error = ();
 
-    async fn from_request(request: &'a Request<'_>) -> request::Outcome<Self, Self::Error> {
+    async fn from_request(_request: &'a Request<'_>) -> request::Outcome<Self, Self::Error> {
         let claim = Claims {
             sub: "yes".to_string(),
             exp: 0,
