@@ -1,19 +1,23 @@
 //! The traits that define the common logic  with default implementation for keygen and sign
 //! while it differentiates implementation of keygen and sign with trait objects for DB management,user authorization and tx authorization
 
-use crate::types::{DatabaseError, Db_index, EcdsaStruct, HDPos, v};
+use crate::types::{DatabaseError, Db_index, EcdsaStruct};
+
 use two_party_ecdsa::kms::ecdsa::two_party::{MasterKey1, party1};
+use two_party_ecdsa::{GE, party_one};
+use two_party_ecdsa::party_one::{CommWitness, KeyGenFirstMsg, EcKeyPair, DLogProof, HDPos, v, Value};
+
+use std::env;
+use std::fmt::{Debug, Display, Formatter};
+use std::sync::Arc;
+
 use log::{error, warn};
 use redis::{Commands, Connection, RedisResult};
 use rocket::serde::json::Json;
 use rocket::{async_trait, get, post, State};
-use std::env;
-use std::fmt::{Debug, Display, Formatter};
-use std::sync::Arc;
 use tokio::sync::Mutex;
-use two_party_ecdsa::{GE, party_one};
-use two_party_ecdsa::party_one::{CommWitness, KeyGenFirstMsg, EcKeyPair, DLogProof};
 use uuid::Uuid;
+
 use crate::guarder::Claims;
 
 /// The Txauthorization trait allows for extra tx authorization during the sign protocol. Private Gotham implements the logic of authorization tx while public one lets it empty
@@ -23,11 +27,6 @@ pub trait Txauthorization {
 }
 
 pub trait Authentication {}
-
-pub trait Value: Sync + Send + std::fmt::Display {
-    // fn to_string(&self) -> String;
-}
-
 
 /// The Db trait allows different DB's to implement a common API for insert,delete,get
 #[async_trait]
@@ -40,13 +39,11 @@ pub trait Db: Send + Sync {
         value: &dyn Value,
     ) -> Result<(), DatabaseError>;
     ///get a value from the DB
-    async fn get<'a, T: serde::de::Deserialize<'a>>(
+    async fn get(
         &self,
         key: &Db_index,
         table_name: &dyn MPCStruct,
-    ) -> Result<Option<T>, DatabaseError>
-        where
-            Self: Sized;
+    ) -> Result<Option<&dyn Value>, DatabaseError>;
     async fn has_active_share(&self, user_id: &str) -> Result<bool, String>;
 }
 
@@ -133,13 +130,11 @@ pub async fn wrap_keygen_first(
     // let mut gotham = state.lock().unwrap();
     // gotham.first(state,claim).await
     struct gotham {}
-    ;
     impl KeyGen for gotham {}
-    ;
     gotham::first(state, claim).await
 }
 
-#[post("/engine/traits/wrap_keygen_second", format = "json", data = "<dlog_proof>")]
+#[post("/engine/traits/<id>/wrap_keygen_second", format = "json", data = "<dlog_proof>")]
 pub async fn wrap_keygen_second(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
@@ -147,9 +142,7 @@ pub async fn wrap_keygen_second(
     dlog_proof: Json<DLogProof>,
 ) -> Result<Json<party1::KeyGenParty1Message2>, String> {
     struct gotham {}
-    ;
     impl KeyGen for gotham {}
-    ;
     gotham::second(state, claim, id, dlog_proof).await
 }
 
@@ -250,48 +243,58 @@ pub trait KeyGen {
                     dlog_proof: Json<DLogProof>) -> Result<Json<party1::KeyGenParty1Message2>, String> {
         let mut db = state.lock().await;
         let party2_public: GE = dlog_proof.0.pk;
-        // db.insert(
-        //     &state.db,
-        //     &claim.sub,
-        //     &id,
-        //     &EcdsaStruct::Party2Public,
-        //     &party2_public,
-        // )
-        //     .await
-        //     .or(Err("Failed to insert into db"))?;
+        db.insert(
+            &Db_index {
+                customerId: claim.sub.to_string(),
+                id: id.clone(),
+            },
+            &EcdsaStruct::Party2Public,
+            &party2_public,
+        )
+            .await
+            .or(Err("Failed to insert into db"))?;
 
-        // let comm_witness: party_one::CommWitness =
-        //     db::get(&state.db, &claim.sub, &id, &EcdsaStruct::CommWitness)
-        //         .await
-        //         .or(Err("Failed to get from db"))?
-        //         .ok_or(format!("No data for such identifier {}", id))?;
-        // let ec_key_pair: party_one::EcKeyPair =
-        //     db::get(&state.db, &claim.sub, &id, &EcdsaStruct::EcKeyPair)
-        //         .await
-        //         .or(Err("Failed to get from db"))?
-        //         .ok_or(format!("No data for such identifier {}", id))?;
-        //
-        // let (kg_party_one_second_message, paillier_key_pair, party_one_private) =
-        //     MasterKey1::key_gen_second_message(comm_witness, &ec_key_pair, &dlog_proof.0);
-        //
-        // db::insert(
-        //     &state.db,
-        //     &claim.sub,
-        //     &id,
-        //     &EcdsaStruct::PaillierKeyPair,
-        //     &paillier_key_pair,
-        // )
-        //     .await
-        //     .or(Err("Failed to insert into db"))?;
-        // db::insert(
-        //     &state.db,
-        //     &claim.sub,
-        //     &id,
-        //     &EcdsaStruct::Party1Private,
-        //     &party_one_private,
-        // )
-        //     .await
-        //     .or(Err("Failed to insert into db"))?;
+        let comm_witness =
+            db.get(&Db_index {
+                customerId: claim.sub.to_string(),
+                id: id.clone(),
+            }, &EcdsaStruct::CommWitness)
+                .await
+                .or(Err("Failed to get from db"))?
+                .ok_or(format!("No data for such identifier {}", id))?;
+        let ec_key_pair =
+            db.get(&Db_index {
+                customerId: claim.sub.to_string(),
+                id: id.clone(),
+            }, &EcdsaStruct::EcKeyPair)
+                .await
+                .or(Err("Failed to get from db"))?
+                .ok_or(format!("No data for such identifier {}", id))?;
+        let comm_witness_dc: &CommWitness = comm_witness.as_any().downcast_ref::<CommWitness>().unwrap();
+        let ec_key_pair_dc: &EcKeyPair = ec_key_pair.as_any().downcast_ref::<EcKeyPair>().unwrap();
+        let (kg_party_one_second_message, paillier_key_pair, party_one_private) =
+            MasterKey1::key_gen_second_message(comm_witness_dc.clone(), ec_key_pair_dc, &dlog_proof.0);
+
+        db.insert(
+            &Db_index {
+                customerId: claim.sub.to_string(),
+                id: id.clone(),
+            },
+            &EcdsaStruct::PaillierKeyPair,
+            &paillier_key_pair,
+        )
+            .await
+            .or(Err("Failed to insert into db"))?;
+        db.insert(
+            &Db_index {
+                customerId: claim.sub.to_string(),
+                id: id.clone(),
+            },
+            &EcdsaStruct::Party1Private,
+            &party_one_private,
+        )
+            .await
+            .or(Err("Failed to insert into db"))?;
 
         Ok(Json(kg_party_one_second_message))
     }

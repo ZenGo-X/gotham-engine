@@ -6,6 +6,8 @@ pub struct Claims {
     pub sub: String,
     pub exp: usize,
 }
+
+
 #[rocket::async_trait]
 impl<'a> FromRequest<'a> for Claims {
 
@@ -20,5 +22,6 @@ impl<'a> FromRequest<'a> for Claims {
         Outcome::Success(claim)
     }
 }
+
 
 
