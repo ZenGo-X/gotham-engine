@@ -272,26 +272,26 @@ pub trait KeyGen {
         let (kg_party_one_second_message, paillier_key_pair, party_one_private) =
             MasterKey1::key_gen_second_message(comm_witness_dc.clone(), &ec_key_pair_dc, &dlog_proof.0);
 
-        // db.insert(
-        //     &Db_index {
-        //         customerId: claim.sub.to_string(),
-        //         id: id.clone(),
-        //     },
-        //     &EcdsaStruct::PaillierKeyPair,
-        //     &paillier_key_pair,
-        // )
-        //     .await
-        //     .or(Err("Failed to insert into db"))?;
-        // db.insert(
-        //     &Db_index {
-        //         customerId: claim.sub.to_string(),
-        //         id: id.clone(),
-        //     },
-        //     &EcdsaStruct::Party1Private,
-        //     &party_one_private,
-        // )
-        //     .await
-        //     .or(Err("Failed to insert into db"))?;
+        db.insert(
+            &DbIndex {
+                customer_id: claim.sub.to_string(),
+                id: id.clone(),
+            },
+            &EcdsaStruct::PaillierKeyPair,
+            &paillier_key_pair,
+        )
+            .await
+            .or(Err("Failed to insert into db"))?;
+        db.insert(
+            &DbIndex {
+                customer_id: claim.sub.to_string(),
+                id: id.clone(),
+            },
+            &EcdsaStruct::Party1Private,
+            &party_one_private,
+        )
+            .await
+            .or(Err("Failed to insert into db"))?;
 
         Ok(Json("kg_party_one_second_message".parse().unwrap()))
     }
