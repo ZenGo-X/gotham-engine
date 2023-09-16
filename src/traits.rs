@@ -149,7 +149,7 @@ pub trait KeyGen {
     async fn first(
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
-    ) -> Result<Json<(String, party_one::KeyGenFirstMsg)>, String> {
+    ) -> Result<Json<(String, KeyGenFirstMsg)>, String> {
         let db = state.lock().await;
         match db.has_active_share(&claim.sub).await {
             Err(e) => {
@@ -164,7 +164,7 @@ pub trait KeyGen {
                 if result {
                     let msg = format!("User {} already has an active share", &claim.sub);
                     warn!("{}", msg);
-                    let should_fail_keygen = std::env::var("FAIL_KEYGEN_IF_ACTIVE_SHARE_EXISTS");
+                    let should_fail_keygen = env::var("FAIL_KEYGEN_IF_ACTIVE_SHARE_EXISTS");
                     if should_fail_keygen.is_ok() && should_fail_keygen.unwrap() == "true" {
                         warn!("Abort KeyGen");
                         return Err(format!("{}", msg));
@@ -251,47 +251,47 @@ pub trait KeyGen {
             .await
             .or(Err("Failed to insert into db"))?;
 
-        let comm_witness =
-            db.get(&DbIndex {
-                customer_id: claim.sub.to_string(),
-                id: id.clone(),
-            }, &EcdsaStruct::CommWitness)
-                .await
-                .or(Err("Failed to get from db"))?
-                .ok_or(format!("No data for such identifier {}", id))?;
-        let ec_key_pair =
-            db.get(&DbIndex {
-                customer_id: claim.sub.to_string(),
-                id: id.clone(),
-            }, &EcdsaStruct::EcKeyPair)
-                .await
-                .or(Err("Failed to get from db"))?
-                .ok_or(format!("No data for such identifier {}", id))?;
-        let comm_witness_dc: CommWitness = serde_json::from_slice(&comm_witness).unwrap();
-        let ec_key_pair_dc: EcKeyPair = serde_json::from_slice(&ec_key_pair).unwrap();
-        let (kg_party_one_second_message, paillier_key_pair, party_one_private) =
-            MasterKey1::key_gen_second_message(comm_witness_dc.clone(), &ec_key_pair_dc, &dlog_proof.0);
+        // let comm_witness =
+        //     db.get(&DbIndex {
+        //         customer_id: claim.sub.to_string(),
+        //         id: id.clone(),
+        //     }, &EcdsaStruct::CommWitness)
+        //         .await
+        //         .or(Err("Failed to get from db"))?
+        //         .ok_or(format!("No data for such identifier {}", id))?;
+        // let ec_key_pair =
+        //     db.get(&DbIndex {
+        //         customer_id: claim.sub.to_string(),
+        //         id: id.clone(),
+        //     }, &EcdsaStruct::EcKeyPair)
+        //         .await
+        //         .or(Err("Failed to get from db"))?
+        //         .ok_or(format!("No data for such identifier {}", id))?;
+        // let comm_witness_dc: CommWitness = serde_json::from_slice(&comm_witness).unwrap();
+        // let ec_key_pair_dc: EcKeyPair = serde_json::from_slice(&ec_key_pair).unwrap();
+        // let (kg_party_one_second_message, paillier_key_pair, party_one_private) =
+        //     MasterKey1::key_gen_second_message(comm_witness_dc.clone(), &ec_key_pair_dc, &dlog_proof.0);
 
-        db.insert(
-            &DbIndex {
-                customer_id: claim.sub.to_string(),
-                id: id.clone(),
-            },
-            &EcdsaStruct::PaillierKeyPair,
-            &paillier_key_pair,
-        )
-            .await
-            .or(Err("Failed to insert into db"))?;
-        db.insert(
-            &DbIndex {
-                customer_id: claim.sub.to_string(),
-                id: id.clone(),
-            },
-            &EcdsaStruct::Party1Private,
-            &party_one_private,
-        )
-            .await
-            .or(Err("Failed to insert into db"))?;
+        // db.insert(
+        //     &DbIndex {
+        //         customer_id: claim.sub.to_string(),
+        //         id: id.clone(),
+        //     },
+        //     &EcdsaStruct::PaillierKeyPair,
+        //     &paillier_key_pair,
+        // )
+        //     .await
+        //     .or(Err("Failed to insert into db"))?;
+        // db.insert(
+        //     &DbIndex {
+        //         customer_id: claim.sub.to_string(),
+        //         id: id.clone(),
+        //     },
+        //     &EcdsaStruct::Party1Private,
+        //     &party_one_private,
+        // )
+        //     .await
+        //     .or(Err("Failed to insert into db"))?;
 
         Ok(Json("kg_party_one_second_message".parse().unwrap()))
     }
