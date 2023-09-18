@@ -30,6 +30,7 @@ thiserror = "1.0"
 erased-serde = "0.3"
 async-trait = "0.1.67"
 tokio = { version = "1", features = ["full"] }
+typetag = "0.2"
 
 
 [workspace.dependencies]
