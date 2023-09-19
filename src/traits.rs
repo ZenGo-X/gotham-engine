@@ -3,8 +3,8 @@
 
 use crate::types::{DatabaseError, DbIndex, EcdsaStruct};
 
-use two_party_ecdsa::{GE, party_one};
-use two_party_ecdsa::party_one::{KeyGenFirstMsg, DLogProof, HDPos, v, Value, CommWitness, EcKeyPair};
+use two_party_ecdsa::{GE, party_one, party_two};
+use two_party_ecdsa::party_one::{KeyGenFirstMsg, DLogProof, HDPos, v, Value, CommWitness, EcKeyPair, Party1Private};
 use two_party_ecdsa::kms::ecdsa::two_party::{MasterKey1, party1};
 
 use std::env;
@@ -143,6 +143,18 @@ pub async fn wrap_keygen_second(
     Gotham::second(state, claim, id, dlog_proof).await
 }
 
+#[post("/ecdsa/keygen/<id>/third", format = "json", data = "<party_2_pdl_first_message>")]
+pub async fn wrap_keygen_third(
+    state: &State<Mutex<Box<dyn Db>>>,
+    claim: Claims,
+    id: String,
+    party_2_pdl_first_message: Json<party_two::PDLFirstMessage>)
+    -> Result<Json<party_one::PDLFirstMessage>, String> {
+    struct Gotham {}
+    impl KeyGen for Gotham {}
+    Gotham::third(state, claim, id, party_2_pdl_first_message).await
+}
+
 #[async_trait]
 pub trait KeyGen {
     //first round of Keygen
@@ -237,7 +249,7 @@ pub trait KeyGen {
     async fn second(state: &State<Mutex<Box<dyn Db>>>,
                     claim: Claims,
                     id: String,
-                    dlog_proof: Json<DLogProof>) -> Result<Json<party1::KeyGenParty1Message2>, String>{
+                    dlog_proof: Json<DLogProof>) -> Result<Json<party1::KeyGenParty1Message2>, String> {
         let db = state.lock().await;
         let party2_public: GE = dlog_proof.0.pk;
         db.insert(
@@ -296,18 +308,75 @@ pub trait KeyGen {
     }
 
 
-    // async fn third(&self, dbConn: S) {
-    //     //TODO
-    // }
-    // async fn fourth(&self, dbConn: S) {
-    //     //TODO
-    // }
-    // async fn chaincode1(&self, dbConn: S) {
-    //     //TODO
-    // }
-    // async fn chaincode2(&self, dbConn: S) {
-    //     //TODO
-    // }
+    async fn third(state: &State<Mutex<Box<dyn Db>>>,
+                   claim: Claims,
+                   id: String,
+                   party_2_pdl_first_message: Json<party_two::PDLFirstMessage>)
+                   -> Result<Json<party_one::PDLFirstMessage>, String> {
+        let db = state.lock().await;
+
+        let party_one_private =
+            db.get(&DbIndex {
+                customer_id: claim.sub.to_string(),
+                id: id.clone(),
+            }, &EcdsaStruct::Party1Private)
+                .await
+                .or(Err(format!("Failed to get from DB, id: {}", id)))?
+                .ok_or(format!("No data for such identifier {}", id))?;
+
+        let (party_one_third_message, party_one_pdl_decommit, alpha) =
+            MasterKey1::key_gen_third_message(&party_2_pdl_first_message.0, &party_one_privat.as_any().downcast_ref::<Party1Private>().unwrap();
+
+        db.insert(
+            &DbIndex {
+                customer_id: claim.sub.to_string(),
+                id: id.clone(),
+            },
+            &EcdsaStruct::PDLDecommit,
+            &party_one_pdl_decommit,
+        )
+            .await
+            .or(Err(format!(
+                "Failed to insert into DB PDLDecommit, id: {}",
+                id
+            )))?;
+
+        db.insert(
+            &DbIndex {
+                customer_id: claim.sub.to_string(),
+                id: id.clone(),
+            },
+            &EcdsaStruct::Alpha,
+            &Alpha { value: alpha },
+        )
+            .await
+            .or(Err(format!("Failed to insert into DB Alpha, id: {}", id)))?;
+
+        db.insert(
+            &DbIndex {
+                customer_id: claim.sub.to_string(),
+                id: id.clone(),
+            },
+            &EcdsaStruct::Party2PDLFirstMsg,
+            &party_2_pdl_first_message.0,
+        )
+            .await
+            .or(Err(format!(
+                "Failed to insert into DB Party2PDLFirstMsg, id: {}",
+                id
+            )))?;
+
+        Ok(Json(party_one_third_message))
+    }
+// async fn fourth(&self, dbConn: S) {
+//     //TODO
+// }
+// async fn chaincode1(&self, dbConn: S) {
+//     //TODO
+// }
+// async fn chaincode2(&self, dbConn: S) {
+//     //TODO
+// }
 }
 
 pub trait Sign<S: Db> {
