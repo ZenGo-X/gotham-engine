@@ -6,6 +6,7 @@ use crate::types::{DatabaseError, DbIndex, EcdsaStruct};
 use two_party_ecdsa::{GE, party_one, party_two};
 use two_party_ecdsa::party_one::{KeyGenFirstMsg, DLogProof, HDPos, v, Value, CommWitness, EcKeyPair, Party1Private};
 use two_party_ecdsa::kms::ecdsa::two_party::{MasterKey1, party1};
+use crate::types::Alpha;
 
 use std::env;
 use log::{error, warn};
@@ -325,7 +326,7 @@ pub trait KeyGen {
                 .ok_or(format!("No data for such identifier {}", id))?;
 
         let (party_one_third_message, party_one_pdl_decommit, alpha) =
-            MasterKey1::key_gen_third_message(&party_2_pdl_first_message.0, &party_one_privat.as_any().downcast_ref::<Party1Private>().unwrap();
+            MasterKey1::key_gen_third_message(&party_2_pdl_first_message.0, &party_one_private.as_any().downcast_ref::<Party1Private>().unwrap());
 
         db.insert(
             &DbIndex {
@@ -368,6 +369,7 @@ pub trait KeyGen {
 
         Ok(Json(party_one_third_message))
     }
+}
 // async fn fourth(&self, dbConn: S) {
 //     //TODO
 // }
@@ -377,7 +379,7 @@ pub trait KeyGen {
 // async fn chaincode2(&self, dbConn: S) {
 //     //TODO
 // }
-}
+
 
 pub trait Sign<S: Db> {
     // async fn sign_first(&self, dbConn: S) {
