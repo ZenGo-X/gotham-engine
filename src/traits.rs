@@ -40,7 +40,7 @@ pub trait Db: Send + Sync {
         &self,
         key: &DbIndex,
         table_name: &dyn MPCStruct,
-    ) -> Result<Option<&dyn Value>, DatabaseError>;
+    ) -> Result<Option<Box<dyn Value>>, DatabaseError>;
     async fn has_active_share(&self, user_id: &str) -> Result<bool, String>;
 }
 
