@@ -144,7 +144,7 @@ pub async fn wrap_keygen_second(
     Gotham::second(state, claim, id, dlog_proof).await
 }
 
-#[post("/ecdsa/keygen/<id>/third", format = "json", data = "<party_2_pdl_first_message>")]
+#[post("/engine/traits/<id>/wrap_keygen_third", format = "json", data = "<party_2_pdl_first_message>")]
 pub async fn wrap_keygen_third(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
