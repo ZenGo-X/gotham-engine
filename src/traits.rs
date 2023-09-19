@@ -5,7 +5,7 @@ use crate::types::{DatabaseError, DbIndex, EcdsaStruct};
 
 use two_party_ecdsa::{GE, party_one};
 use two_party_ecdsa::party_one::{KeyGenFirstMsg, DLogProof, HDPos, v, Value, CommWitness, EcKeyPair};
-use two_party_ecdsa::kms::ecdsa::two_party::MasterKey1;
+use two_party_ecdsa::kms::ecdsa::two_party::{MasterKey1, party1};
 
 use std::env;
 use log::{error, warn};
@@ -137,7 +137,7 @@ pub async fn wrap_keygen_second(
     claim: Claims,
     id: String,
     dlog_proof: Json<DLogProof>,
-) -> Result<Json<String>, String> {
+) -> Result<Json<party1::KeyGenParty1Message2>, String> {
     struct Gotham {}
     impl KeyGen for Gotham {}
     Gotham::second(state, claim, id, dlog_proof).await
@@ -237,7 +237,7 @@ pub trait KeyGen {
     async fn second(state: &State<Mutex<Box<dyn Db>>>,
                     claim: Claims,
                     id: String,
-                    dlog_proof: Json<DLogProof>) -> Result<Json<String>, String> {
+                    dlog_proof: Json<DLogProof>) -> Result<Json<party1::KeyGenParty1Message2>, String>{
         let db = state.lock().await;
         let party2_public: GE = dlog_proof.0.pk;
         db.insert(
@@ -267,7 +267,7 @@ pub trait KeyGen {
                 .await
                 .or(Err("Failed to get from db"))?
                 .ok_or(format!("No data for such identifier {}", id))?;
-        
+
         let (kg_party_one_second_message, paillier_key_pair, party_one_private) =
             MasterKey1::key_gen_second_message(comm_witness.as_any().downcast_ref::<CommWitness>().unwrap(), ec_key_pair.as_any().downcast_ref::<EcKeyPair>().unwrap(), &dlog_proof.0);
 
@@ -292,7 +292,7 @@ pub trait KeyGen {
             .await
             .or(Err("Failed to insert into db"))?;
 
-        Ok(Json("kg_party_one_second_message".parse().unwrap()))
+        Ok(Json(kg_party_one_second_message))
     }
 
 
