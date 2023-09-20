@@ -1,10 +1,14 @@
 //! The traits that define the common logic  with default implementation for keygen and sign
 //! while it differentiates implementation of keygen and sign with trait objects for DB management,user authorization and tx authorization
 
+use std::borrow::{Borrow, BorrowMut};
 use crate::types::{DatabaseError, DbIndex, EcdsaStruct};
 
 use two_party_ecdsa::{GE, party_one, party_two};
 use two_party_ecdsa::party_one::{KeyGenFirstMsg, DLogProof, HDPos, v, Value, CommWitness, EcKeyPair, Party1Private};
+use two_party_ecdsa::party_two::{
+    PDLFirstMessage as Party2PDLFirstMsg, PDLSecondMessage as Party2PDLSecondMsg,
+};
 use two_party_ecdsa::kms::ecdsa::two_party::{MasterKey1, party1};
 use crate::types::Alpha;
 
@@ -154,6 +158,17 @@ pub async fn wrap_keygen_third(
     struct Gotham {}
     impl KeyGen for Gotham {}
     Gotham::third(state, claim, id, party_2_pdl_first_message).await
+}
+
+#[post("/engine/traits/<id>/wrap_keygen_fourth", format = "json", data = "<party_two_pdl_second_message>")]
+pub async fn wrap_keygen_fourth(state: &State<Mutex<Box<dyn Db>>>,
+                                claim: Claims,
+                                id: String,
+                                party_two_pdl_second_message: Json<party_two::PDLSecondMessage>,
+) -> Result<Json<party_one::PDLSecondMessage>, String> {
+    struct Gotham {}
+    impl KeyGen for Gotham {}
+    Gotham::fourth(state, claim, id, party_two_pdl_second_message).await
 }
 
 #[async_trait]
@@ -369,10 +384,66 @@ pub trait KeyGen {
 
         Ok(Json(party_one_third_message))
     }
+    async fn fourth(state: &State<Mutex<Box<dyn Db>>>,
+                    claim: Claims,
+                    id: String, party_two_pdl_second_message: Json<party_two::PDLSecondMessage>,
+    ) -> Result<Json<party_one::PDLSecondMessage>, String> {
+        let db = state.lock().await;
+
+        let party_one_private =
+            db.get(&DbIndex {
+                customer_id: claim.sub.to_string(),
+                id: id.clone(),
+            }, &EcdsaStruct::Party1Private)
+                .await
+                .or(Err(format!("Failed to get from DB, id:{}", id)))?
+                .ok_or(format!("No data for such identifier {}", id))?;
+
+        let mut party_one_pdl_decommit =
+            db.get(&DbIndex {
+                customer_id: claim.sub.to_string(),
+                id: id.clone(),
+            }, &EcdsaStruct::PDLDecommit)
+                .await
+                .or(Err(format!(
+                    "Failed to get party one pdl decommit, id: {}",
+                    id
+                )))?
+                .ok_or(format!("No data for such identifier {}", id))?;
+
+        let party_2_pdl_first_message =
+            db.get(&DbIndex {
+                customer_id: claim.sub.to_string(),
+                id: id.clone(),
+            }, &EcdsaStruct::Party2PDLFirstMsg)
+                .await
+                .or(Err(format!(
+                    "Failed to get party 2 pdl first message from DB, id: {}",
+                    id
+                )))?
+                .ok_or(format!("No data for such identifier {}", id))?;
+
+        let alpha = db.get(&DbIndex {
+            customer_id: claim.sub.to_string(),
+            id: id.clone(),
+        }, &EcdsaStruct::Alpha)
+            .await
+            .or(Err(format!("Failed to get alpha from DB, id: {}", id)))?
+            .ok_or(format!("No data for such identifier {}", id))?;
+        let dl:& mut dyn Value = party_one_pdl_decommit.borrow_mut();
+        let res = MasterKey1::key_gen_fourth_message(
+            party_2_pdl_first_message.as_any().downcast_ref::<Party2PDLFirstMsg>().unwrap().clone(),
+            &party_two_pdl_second_message.0,
+            party_one_private.as_any().downcast_ref::<Party1Private>().unwrap().clone(),
+            dl.as_any().downcast_ref::<party_one::PDLdecommit>().unwrap().clone(),
+            alpha.as_any().downcast_ref::<Alpha>().unwrap().value.clone(),
+        );
+        assert!(res.is_ok());
+        Ok(Json(res.unwrap()))
+    }
 }
-// async fn fourth(&self, dbConn: S) {
-//     //TODO
-// }
+
+
 // async fn chaincode1(&self, dbConn: S) {
 //     //TODO
 // }
