@@ -1,10 +1,10 @@
 //! Common types for traits the implementations thereofs at [private_gotham] and [public_gotham]
 use std::any::Any;
 use std::fmt::{Display, Formatter};
-use serde::{Serialize,Deserialize};
+use serde::{Serialize, Deserialize};
 use thiserror::Error;
 use two_party_ecdsa::BigInt;
-use two_party_ecdsa::party_one::{HDPos, Value};
+use two_party_ecdsa::party_one::{Value};
 
 #[derive(Debug, Error, PartialEq, Eq, Clone)]
 /// The DatabaseError defines different types of database errors for better error handling
@@ -57,7 +57,7 @@ pub enum Authenticator {
 pub const CUSTOMER_ID_IDENTIFIER: &str = "customerId";
 pub const ID_IDENTIFIER: &str = "id";
 
-#[derive( Debug)]
+#[derive(Debug)]
 pub enum EcdsaStruct {
     KeyGenFirstMsg,
     CommWitness,
@@ -84,6 +84,7 @@ pub enum EcdsaStruct {
     POS,
     Abort,
 }
+
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct Alpha {
     pub value: BigInt,

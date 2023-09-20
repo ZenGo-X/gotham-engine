@@ -1,13 +1,13 @@
 //! The traits that define the common logic  with default implementation for keygen and sign
 //! while it differentiates implementation of keygen and sign with trait objects for DB management,user authorization and tx authorization
 
-use std::borrow::{Borrow, BorrowMut};
+use std::borrow::{BorrowMut};
 use crate::types::{DatabaseError, DbIndex, EcdsaStruct};
 
 use two_party_ecdsa::{GE, party_one, party_two};
 use two_party_ecdsa::party_one::{KeyGenFirstMsg, DLogProof, HDPos, v, Value, CommWitness, EcKeyPair, Party1Private};
 use two_party_ecdsa::party_two::{
-    PDLFirstMessage as Party2PDLFirstMsg, PDLSecondMessage as Party2PDLSecondMsg,
+    PDLFirstMessage as Party2PDLFirstMsg
 };
 use two_party_ecdsa::kms::ecdsa::two_party::{MasterKey1, party1};
 use crate::types::Alpha;
@@ -430,7 +430,7 @@ pub trait KeyGen {
             .await
             .or(Err(format!("Failed to get alpha from DB, id: {}", id)))?
             .ok_or(format!("No data for such identifier {}", id))?;
-        let dl:& mut dyn Value = party_one_pdl_decommit.borrow_mut();
+        let dl: &mut dyn Value = party_one_pdl_decommit.borrow_mut();
         let res = MasterKey1::key_gen_fourth_message(
             party_2_pdl_first_message.as_any().downcast_ref::<Party2PDLFirstMsg>().unwrap().clone(),
             &party_two_pdl_second_message.0,
