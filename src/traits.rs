@@ -309,6 +309,8 @@ pub trait KeyGen {
         )
             .await
             .or(Err("Failed to insert into db"))?;
+        println!("To insert typeID of party_one_private{:?}",(&party_one_private).type_id());
+
         db.insert(
             &DbIndex {
                 customer_id: claim.sub.to_string(),
@@ -321,7 +323,6 @@ pub trait KeyGen {
             .or(Err("Failed to insert into db"))?;
 
         // println!("Insert typeID of party_one_private{:?}",(&*party_one_private).type_id());
-        println!("Insert typeID of party_one_private{:?}",(&party_one_private).type_id());
 
         Ok(Json(kg_party_one_second_message))
     }
