@@ -320,6 +320,9 @@ pub trait KeyGen {
             .await
             .or(Err("Failed to insert into db"))?;
 
+        // println!("Insert typeID of party_one_private{:?}",(&*party_one_private).type_id());
+        println!("Insert typeID of party_one_private{:?}",(party_one_private).type_id());
+
         Ok(Json(kg_party_one_second_message))
     }
 
@@ -340,6 +343,7 @@ pub trait KeyGen {
                 .or(Err(format!("Failed to get from DB, id: {}", id)))?
                 .ok_or(format!("No data for such identifier {}", id))?;
 
+
         let (party_one_third_message, party_one_pdl_decommit, alpha) =
             MasterKey1::key_gen_third_message(&party_2_pdl_first_message.0, &party_one_private.as_any().downcast_ref::<Party1Private>().unwrap());
 
@@ -358,10 +362,8 @@ pub trait KeyGen {
                 id
             )))?;
 
-        println!("typeID of party_one_private{:?}",(&*party_one_private).type_id());
-        println!("typeID{:?}",(*party_one_private).type_id());
-        println!("typeID{:?}",(&party_one_private).type_id());
-        println!("typeID{:?}",(party_one_private).type_id());
+        // println!("Insert: typeID of party_one_private{:?}",(&*party_one_pdl_decommit).type_id());
+        println!("Insert: typeID of party_one_private{:?}",(party_one_pdl_decommit).type_id());
         // println!("{:?}",TypeId::of::<Box<dyn party_one_private>>());
 
         db.insert(
