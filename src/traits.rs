@@ -309,7 +309,7 @@ pub trait KeyGen {
         )
             .await
             .or(Err("Failed to insert into db"))?;
-        println!("To insert typeID of party_one_private{:?}",(&party_one_private).type_id());
+        println!("To insert typeID of party_one_private{:?}", (&party_one_private).type_id());
 
         db.insert(
             &DbIndex {
@@ -348,7 +348,7 @@ pub trait KeyGen {
         let (party_one_third_message, party_one_pdl_decommit, alpha) =
             MasterKey1::key_gen_third_message(&party_2_pdl_first_message.0, &party_one_private.as_any().downcast_ref::<Party1Private>().unwrap());
 
-        println!("To insert typeID of party_one_private{:?}",(&party_one_pdl_decommit).type_id());
+        println!("To insert typeID of party_one_private{:?}", (&party_one_pdl_decommit).type_id());
         db.insert(
             &DbIndex {
                 customer_id: claim.sub.to_string(),
@@ -405,7 +405,9 @@ pub trait KeyGen {
                 .await
                 .or(Err(format!("Failed to get from DB, id:{}", id)))?
                 .ok_or(format!("No data for such identifier {}", id))?;
-        println!("Get typeID of party_one_private{:?}",(party_one_private).type_id());
+
+        println!("Get typeID of party_one_private{:?}", (party_one_private).type_id());
+
         let party_2_pdl_first_message =
             db.get(&DbIndex {
                 customer_id: claim.sub.to_string(),
@@ -428,7 +430,6 @@ pub trait KeyGen {
                     id
                 )))?
                 .ok_or(format!("No data for such identifier {}", id))?;
-
 
 
         let alpha = db.get(&DbIndex {
