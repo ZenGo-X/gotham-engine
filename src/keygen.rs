@@ -1,24 +1,21 @@
-use std::any::{Any};
-use crate::types::{ DbIndex, EcdsaStruct};
+use crate::types::{DbIndex, EcdsaStruct, Alpha};
+use crate::guarder::Claims;
+use crate::traits::Db;
 
 use two_party_ecdsa::{GE, party_one, party_two};
 use two_party_ecdsa::party_one::{KeyGenFirstMsg, DLogProof, HDPos, v, CommWitness, EcKeyPair, Party1Private, PaillierKeyPair};
-use two_party_ecdsa::party_two::{
-    PDLFirstMessage as Party2PDLFirstMsg
-};
+use two_party_ecdsa::party_two::{PDLFirstMessage as Party2PDLFirstMsg};
+use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::{Party1FirstMessage, Party1SecondMessage};
+use two_party_ecdsa::kms::chain_code::two_party::party1::ChainCode1;
 use two_party_ecdsa::kms::ecdsa::two_party::{MasterKey1, party1};
-use crate::types::Alpha;
 
 use std::env;
 use log::{error, warn};
 use rocket::serde::json::Json;
 use rocket::{async_trait, State};
 use tokio::sync::Mutex;
-use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::{Party1FirstMessage, Party1SecondMessage};
-use two_party_ecdsa::kms::chain_code::two_party::party1::ChainCode1;
 use uuid::Uuid;
-use crate::guarder::Claims;
-use crate::traits::Db;
+
 
 #[async_trait]
 pub trait KeyGen {
@@ -170,7 +167,6 @@ pub trait KeyGen {
             .await
             .or(Err("Failed to insert into db"))?;
 
-        // println!("Insert typeID of party_one_private{:?}",(&*party_one_private).type_id());
 
         Ok(Json(kg_party_one_second_message))
     }
@@ -347,7 +343,6 @@ pub trait KeyGen {
                                        id: String,
                                        cc_party_two_first_message_d_log_proof: Json<DLogProof>,
     ) -> Result<Json<Party1SecondMessage>, String> {
-
         let db = state.lock().await;
         let cc_comm_witness =
             db.get(&DbIndex {
@@ -364,7 +359,6 @@ pub trait KeyGen {
         );
 
         let party2_pub = &cc_party_two_first_message_d_log_proof.pk;
-        // chain_code_compute_message(state, claim, id, party2_pub).await?;
 
         //compute_chain_code_message
         let cc_ec_key_pair_party1 =

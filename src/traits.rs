@@ -5,18 +5,12 @@
 use std::env;
 
 use crate::types::{DatabaseError, DbIndex, EcdsaStruct};
-use crate::guarder::Claims;
-use crate::keygen::KeyGen;
 
-use two_party_ecdsa::{party_one, party_two};
-use two_party_ecdsa::party_one::{KeyGenFirstMsg, DLogProof, Value};
-use two_party_ecdsa::kms::ecdsa::two_party::{party1};
-use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::{Party1FirstMessage, Party1SecondMessage};
+
+use two_party_ecdsa::party_one::{ Value};
 
 use redis::{Commands, Connection, RedisResult};
-use rocket::serde::json::Json;
-use rocket::{async_trait, post, State};
-use tokio::sync::Mutex;
+use rocket::async_trait;
 
 
 /// The Txauthorization trait allows for extra tx authorization during the sign protocol. Private Gotham implements the logic of authorization tx while public one lets it empty
@@ -121,77 +115,6 @@ impl MPCStruct for EcdsaStruct {
     }
 }
 
-#[post("/engine/traits/wrap_keygen_first", format = "json")]
-pub async fn wrap_keygen_first(
-    state: &State<Mutex<Box<dyn Db>>>,
-    claim: Claims,
-) -> Result<Json<(String, KeyGenFirstMsg)>, String> {
-    // let mut gotham = state.lock().unwrap();
-    // gotham.first(state,claim).await
-    struct Gotham {}
-    impl KeyGen for Gotham {}
-    Gotham::first(state, claim).await
-}
-
-#[post("/engine/traits/<id>/wrap_keygen_second", format = "json", data = "<dlog_proof>")]
-pub async fn wrap_keygen_second(
-    state: &State<Mutex<Box<dyn Db>>>,
-    claim: Claims,
-    id: String,
-    dlog_proof: Json<DLogProof>,
-) -> Result<Json<party1::KeyGenParty1Message2>, String> {
-    struct Gotham {}
-    impl KeyGen for Gotham {}
-    Gotham::second(state, claim, id, dlog_proof).await
-}
-
-#[post("/engine/traits/<id>/wrap_keygen_third", format = "json", data = "<party_2_pdl_first_message>")]
-pub async fn wrap_keygen_third(
-    state: &State<Mutex<Box<dyn Db>>>,
-    claim: Claims,
-    id: String,
-    party_2_pdl_first_message: Json<party_two::PDLFirstMessage>)
-    -> Result<Json<party_one::PDLFirstMessage>, String> {
-    struct Gotham {}
-    impl KeyGen for Gotham {}
-    Gotham::third(state, claim, id, party_2_pdl_first_message).await
-}
-
-#[post("/engine/traits/<id>/wrap_keygen_fourth", format = "json", data = "<party_two_pdl_second_message>")]
-pub async fn wrap_keygen_fourth(state: &State<Mutex<Box<dyn Db>>>,
-                                claim: Claims,
-                                id: String,
-                                party_two_pdl_second_message: Json<party_two::PDLSecondMessage>,
-) -> Result<Json<party_one::PDLSecondMessage>, String> {
-    struct Gotham {}
-    impl KeyGen for Gotham {}
-    Gotham::fourth(state, claim, id, party_two_pdl_second_message).await
-}
-
-#[post("/engine/traits/<id>/chaincode/first", format = "json")]
-pub async fn wrap_chain_code_first_message(state: &State<Mutex<Box<dyn Db>>>,
-                                           claim: Claims,
-                                           id: String,
-) -> Result<Json<Party1FirstMessage>, String> {
-    struct Gotham {}
-    impl KeyGen for Gotham {}
-    Gotham::chain_code_first_message(state, claim, id).await
-}
-
-#[post(
-"/engine/traits/<id>/chaincode/second",
-format = "json",
-data = "<cc_party_two_first_message_d_log_proof>"
-)]
-pub async fn wrap_chain_code_second_message(state: &State<Mutex<Box<dyn Db>>>,
-                                            claim: Claims,
-                                            id: String,
-                                            cc_party_two_first_message_d_log_proof: Json<DLogProof>,
-) -> Result<Json<Party1SecondMessage>, String> {
-    struct Gotham {}
-    impl KeyGen for Gotham {}
-    Gotham::chain_code_second_message(state, claim, id, cc_party_two_first_message_d_log_proof).await
-}
 
 
 #[async_trait]
