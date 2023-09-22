@@ -321,7 +321,7 @@ pub trait KeyGen {
             .or(Err("Failed to insert into db"))?;
 
         // println!("Insert typeID of party_one_private{:?}",(&*party_one_private).type_id());
-        println!("Insert typeID of party_one_private{:?}",(party_one_private).type_id());
+        println!("Insert typeID of party_one_private{:?}",(&party_one_private).type_id());
 
         Ok(Json(kg_party_one_second_message))
     }
