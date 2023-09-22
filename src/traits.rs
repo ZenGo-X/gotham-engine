@@ -1,13 +1,10 @@
 //! The traits that define the common logic  with default implementation for keygen and sign
 //! while it differentiates implementation of keygen and sign with trait objects for DB management,user authorization and tx authorization
-
-
 use std::env;
 
 use crate::types::{DatabaseError, DbIndex, EcdsaStruct};
 
-
-use two_party_ecdsa::party_one::{ Value};
+use two_party_ecdsa::party_one::{Value};
 
 use redis::{Commands, Connection, RedisResult};
 use rocket::async_trait;
@@ -96,33 +93,5 @@ pub trait MPCStruct: Sync {
     }
 }
 
-impl MPCStruct for EcdsaStruct {
-    fn to_string(&self) -> String {
-        format!("{:?}", self)
-    }
-
-    // backward compatibility
-    fn to_table_name(&self, env: &str) -> String {
-        if self.to_string() == "Party1MasterKey" {
-            format!("{}_{}", env, self.to_string())
-        } else {
-            format!("{}-gotham-{}", env, self.to_string())
-        }
-    }
-
-    fn require_customer_id(&self) -> bool {
-        self.to_string() == "Party1MasterKey"
-    }
-}
 
 
-
-#[async_trait]
-pub trait Sign {
-    // async fn sign_first(&self, dbConn: S) {
-    //     //TODO
-    // }
-    // async fn sign_second(&self, dbConn: S) {
-    //     //TODO
-    // }
-}

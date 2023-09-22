@@ -1,6 +1,6 @@
 use crate::guarder::Claims;
 use crate::traits::Db;
-use crate::types::{DbIndex, EcdsaStruct};
+use crate::types::{DbIndex, EcdsaStruct, SignSecondMsgRequest};
 
 use two_party_ecdsa::{BigInt, party_one, party_two};
 use two_party_ecdsa::kms::ecdsa::two_party::{MasterKey1, party2};
@@ -12,13 +12,7 @@ use tokio::sync::Mutex;
 use serde::{Deserialize, Serialize};
 
 
-#[derive(Serialize, Deserialize)]
-pub struct SignSecondMsgRequest {
-    pub message: BigInt,
-    pub party_two_sign_message: party2::SignMessage,
-    pub x_pos_child_key: BigInt,
-    pub y_pos_child_key: BigInt,
-}
+
 #[async_trait]
 pub trait Sign {
     async fn sign_first(

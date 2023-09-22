@@ -1,7 +1,7 @@
 use crate::guarder::Claims;
 use crate::keygen::KeyGen;
 use crate::sign::Sign;
-use crate::sign::SignSecondMsgRequest;
+use crate::types::SignSecondMsgRequest;
 
 use two_party_ecdsa::{party_one, party_two};
 use two_party_ecdsa::party_one::{KeyGenFirstMsg, DLogProof};

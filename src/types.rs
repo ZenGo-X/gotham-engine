@@ -4,7 +4,9 @@ use std::fmt::{Display, Formatter};
 use serde::{Serialize, Deserialize};
 use thiserror::Error;
 use two_party_ecdsa::BigInt;
+use two_party_ecdsa::kms::ecdsa::two_party::party2;
 use two_party_ecdsa::party_one::{Value};
+use crate::traits::MPCStruct;
 
 #[derive(Debug, Error, PartialEq, Eq, Clone)]
 /// The DatabaseError defines different types of database errors for better error handling
@@ -101,6 +103,33 @@ impl Value for Alpha {
     fn as_any(&self) -> &dyn Any {
         self
     }
+}
+
+impl MPCStruct for EcdsaStruct {
+    fn to_string(&self) -> String {
+        format!("{:?}", self)
+    }
+
+    // backward compatibility
+    fn to_table_name(&self, env: &str) -> String {
+        if self.to_string() == "Party1MasterKey" {
+            format!("{}_{}", env, self.to_string())
+        } else {
+            format!("{}-gotham-{}", env, self.to_string())
+        }
+    }
+
+    fn require_customer_id(&self) -> bool {
+        self.to_string() == "Party1MasterKey"
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct SignSecondMsgRequest {
+    pub message: BigInt,
+    pub party_two_sign_message: party2::SignMessage,
+    pub x_pos_child_key: BigInt,
+    pub y_pos_child_key: BigInt,
 }
 
 
