@@ -406,7 +406,17 @@ pub trait KeyGen {
                 .or(Err(format!("Failed to get from DB, id:{}", id)))?
                 .ok_or(format!("No data for such identifier {}", id))?;
         println!("Get typeID of party_one_private{:?}",(party_one_private).type_id());
-
+        let party_2_pdl_first_message =
+            db.get(&DbIndex {
+                customer_id: claim.sub.to_string(),
+                id: id.clone(),
+            }, &EcdsaStruct::Party2PDLFirstMsg)
+                .await
+                .or(Err(format!(
+                    "Failed to get party 2 pdl first message from DB, id: {}",
+                    id
+                )))?
+                .ok_or(format!("No data for such identifier {}", id))?;
         let party_one_pdl_decommit =
             db.get(&DbIndex {
                 customer_id: claim.sub.to_string(),
@@ -419,17 +429,7 @@ pub trait KeyGen {
                 )))?
                 .ok_or(format!("No data for such identifier {}", id))?;
 
-        let party_2_pdl_first_message =
-            db.get(&DbIndex {
-                customer_id: claim.sub.to_string(),
-                id: id.clone(),
-            }, &EcdsaStruct::Party2PDLFirstMsg)
-                .await
-                .or(Err(format!(
-                    "Failed to get party 2 pdl first message from DB, id: {}",
-                    id
-                )))?
-                .ok_or(format!("No data for such identifier {}", id))?;
+
 
         let alpha = db.get(&DbIndex {
             customer_id: claim.sub.to_string(),
