@@ -542,7 +542,7 @@ pub trait KeyGen {
                 .ok_or(format!("No data for such identifier {}", id))?;
 
         let party1_cc_res = ChainCode1::chain_code_second_message(
-            cc_comm_witness.as_any().downcast_ref::<two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::CommWitness>().unwrap().clone(),
+            cc_comm_witness.as_any().downcast_ref::<two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::CommWitnessDHPoK>().unwrap().clone(),
             &cc_party_two_first_message_d_log_proof.0,
         );
 
