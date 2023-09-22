@@ -1,10 +1,11 @@
 //! The traits that define the common logic  with default implementation for keygen and sign
 //! while it differentiates implementation of keygen and sign with trait objects for DB management,user authorization and tx authorization
 
+use std::any::Any;
 use crate::types::{DatabaseError, DbIndex, EcdsaStruct};
 
 use two_party_ecdsa::{GE, party_one, party_two};
-use two_party_ecdsa::party_one::{KeyGenFirstMsg, DLogProof, HDPos, v, Value, CommWitness, EcKeyPair, Party1Private};
+use two_party_ecdsa::party_one::{KeyGenFirstMsg, DLogProof, HDPos, v, Value, CommWitness, EcKeyPair, Party1Private, PDLdecommit};
 use two_party_ecdsa::party_two::{
     PDLFirstMessage as Party2PDLFirstMsg
 };
@@ -430,11 +431,16 @@ pub trait KeyGen {
             .or(Err(format!("Failed to get alpha from DB, id: {}", id)))?
             .ok_or(format!("No data for such identifier {}", id))?;
         // let dl: &mut dyn Value = party_one_pdl_decommit.borrow_mut();
+        println!("{:?}",(&*alpha).type_id());
+        println!("{:?}",(&*party_2_pdl_first_message).type_id());
+        println!("{:?}",(&*party_one_private).type_id());
+
+
         let res = MasterKey1::key_gen_fourth_message(
             party_2_pdl_first_message.as_any().downcast_ref::<Party2PDLFirstMsg>().unwrap().clone(),
             &party_two_pdl_second_message.0,
             party_one_private.as_any().downcast_ref::<Party1Private>().unwrap().clone(),
-            party_one_pdl_decommit.as_any().downcast_ref::<party_one::PDLdecommit>().unwrap().clone(),
+            party_one_pdl_decommit.as_any().downcast_ref::<PDLdecommit>().unwrap().clone(),
             alpha.as_any().downcast_ref::<Alpha>().unwrap().value.clone(),
         );
         assert!(res.is_ok());
