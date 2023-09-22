@@ -158,7 +158,6 @@ pub trait KeyGen {
         )
             .await
             .or(Err("Failed to insert into db"))?;
-        println!("To insert typeID of party_one_private{:?}", (&party_one_private).type_id());
 
         db.insert(
             &DbIndex {

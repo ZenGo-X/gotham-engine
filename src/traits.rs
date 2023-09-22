@@ -8,16 +8,15 @@ use crate::types::{DatabaseError, DbIndex, EcdsaStruct};
 use crate::guarder::Claims;
 use crate::keygen::KeyGen;
 
-use two_party_ecdsa::{ party_one, party_two};
+use two_party_ecdsa::{party_one, party_two};
 use two_party_ecdsa::party_one::{KeyGenFirstMsg, DLogProof, Value};
-use two_party_ecdsa::kms::ecdsa::two_party::{ party1};
+use two_party_ecdsa::kms::ecdsa::two_party::{party1};
 use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::{Party1FirstMessage, Party1SecondMessage};
 
 use redis::{Commands, Connection, RedisResult};
 use rocket::serde::json::Json;
 use rocket::{async_trait, post, State};
 use tokio::sync::Mutex;
-
 
 
 /// The Txauthorization trait allows for extra tx authorization during the sign protocol. Private Gotham implements the logic of authorization tx while public one lets it empty
@@ -193,9 +192,6 @@ pub async fn wrap_chain_code_second_message(state: &State<Mutex<Box<dyn Db>>>,
     impl KeyGen for Gotham {}
     Gotham::chain_code_second_message(state, claim, id, cc_party_two_first_message_d_log_proof).await
 }
-
-
-
 
 
 #[async_trait]
