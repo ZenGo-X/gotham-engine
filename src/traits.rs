@@ -363,7 +363,7 @@ pub trait KeyGen {
             )))?;
 
         // println!("Insert: typeID of party_one_private{:?}",(&*party_one_pdl_decommit).type_id());
-        println!("Insert: typeID of party_one_private{:?}",(party_one_pdl_decommit).type_id());
+        println!("Insert: typeID of party_one_pdl_decommit{:?}",(party_one_pdl_decommit).type_id());
         // println!("{:?}",TypeId::of::<Box<dyn party_one_private>>());
 
         db.insert(
@@ -407,6 +407,7 @@ pub trait KeyGen {
                 .await
                 .or(Err(format!("Failed to get from DB, id:{}", id)))?
                 .ok_or(format!("No data for such identifier {}", id))?;
+        println!("Get typeID of party_one_private{:?}",(party_one_private).type_id());
 
         let party_one_pdl_decommit =
             db.get(&DbIndex {
