@@ -1,7 +1,7 @@
 //! The traits that define the common logic  with default implementation for keygen and sign
 //! while it differentiates implementation of keygen and sign with trait objects for DB management,user authorization and tx authorization
 
-use std::any::Any;
+use std::any::{Any, TypeId};
 use crate::types::{DatabaseError, DbIndex, EcdsaStruct};
 
 use two_party_ecdsa::{GE, party_one, party_two};
@@ -343,6 +343,7 @@ pub trait KeyGen {
         let (party_one_third_message, party_one_pdl_decommit, alpha) =
             MasterKey1::key_gen_third_message(&party_2_pdl_first_message.0, &party_one_private.as_any().downcast_ref::<Party1Private>().unwrap());
 
+
         db.insert(
             &DbIndex {
                 customer_id: claim.sub.to_string(),
@@ -356,6 +357,12 @@ pub trait KeyGen {
                 "Failed to insert into DB PDLDecommit, id: {}",
                 id
             )))?;
+
+        println!("typeID of party_one_private{:?}",(&*party_one_private).type_id());
+        println!("typeID{:?}",(*party_one_private).type_id());
+        println!("typeID{:?}",(&party_one_private).type_id());
+        println!("typeID{:?}",(party_one_private).type_id());
+        // println!("{:?}",TypeId::of::<Box<dyn party_one_private>>());
 
         db.insert(
             &DbIndex {
@@ -399,7 +406,7 @@ pub trait KeyGen {
                 .or(Err(format!("Failed to get from DB, id:{}", id)))?
                 .ok_or(format!("No data for such identifier {}", id))?;
 
-        let  party_one_pdl_decommit =
+        let party_one_pdl_decommit =
             db.get(&DbIndex {
                 customer_id: claim.sub.to_string(),
                 id: id.clone(),
@@ -431,9 +438,6 @@ pub trait KeyGen {
             .or(Err(format!("Failed to get alpha from DB, id: {}", id)))?
             .ok_or(format!("No data for such identifier {}", id))?;
         // let dl: &mut dyn Value = party_one_pdl_decommit.borrow_mut();
-        println!("{:?}",(&*alpha).type_id());
-        println!("{:?}",(&*party_2_pdl_first_message).type_id());
-        println!("{:?}",(&*party_one_private).type_id());
 
 
         let res = MasterKey1::key_gen_fourth_message(
