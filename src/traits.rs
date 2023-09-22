@@ -363,9 +363,6 @@ pub trait KeyGen {
                 id
             )))?;
 
-        // println!("Insert: typeID of party_one_private{:?}",(&*party_one_pdl_decommit).type_id());
-        println!("Insert: typeID of party_one_pdl_decommit{:?}",(party_one_pdl_decommit).type_id());
-        // println!("{:?}",TypeId::of::<Box<dyn party_one_private>>());
 
         db.insert(
             &DbIndex {
