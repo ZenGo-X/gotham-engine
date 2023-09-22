@@ -180,7 +180,7 @@ pub async fn wrap_chain_code_first_message(state: &State<Mutex<Box<dyn Db>>>,
 }
 
 #[post(
-"/engine/keygen/<id>/chaincode/second",
+"/engine/traits/<id>/chaincode/second",
 format = "json",
 data = "<cc_party_two_first_message_d_log_proof>"
 )]
