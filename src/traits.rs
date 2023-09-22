@@ -559,7 +559,7 @@ pub trait KeyGen {
                 .or(Err("Failed to get from db"))?
                 .ok_or(format!("No data for such identifier {}", id))?;
         let party1_cc = ChainCode1::compute_chain_code(
-            &cc_ec_key_pair_party1.as_any().downcast_ref::<two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::EcKeyPair>().unwrap().clone(),
+            &cc_ec_key_pair_party1.as_any().downcast_ref::<two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::EcKeyPairDHPoK>().unwrap().clone(),
             party2_pub,
         );
 
