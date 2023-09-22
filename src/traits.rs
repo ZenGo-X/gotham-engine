@@ -5,7 +5,7 @@ use std::any::{Any, TypeId};
 use crate::types::{DatabaseError, DbIndex, EcdsaStruct};
 
 use two_party_ecdsa::{GE, party_one, party_two};
-use two_party_ecdsa::party_one::{KeyGenFirstMsg, DLogProof, HDPos, v, Value, CommWitness, EcKeyPair, Party1Private, PDLdecommit};
+use two_party_ecdsa::party_one::{KeyGenFirstMsg, DLogProof, HDPos, v, Value, CommWitness, EcKeyPair, Party1Private, PDLdecommit, PaillierKeyPair};
 use two_party_ecdsa::party_two::{
     PDLFirstMessage as Party2PDLFirstMsg
 };
@@ -13,11 +13,14 @@ use two_party_ecdsa::kms::ecdsa::two_party::{MasterKey1, party1};
 use crate::types::Alpha;
 
 use std::env;
+use failure::format_err;
 use log::{error, warn};
 use redis::{Commands, Connection, RedisResult};
 use rocket::serde::json::Json;
 use rocket::{async_trait, post, State};
 use tokio::sync::Mutex;
+use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::{Party1FirstMessage, Party1SecondMessage};
+use two_party_ecdsa::kms::chain_code::two_party::party1::ChainCode1;
 use uuid::Uuid;
 
 use crate::guarder::Claims;
@@ -170,6 +173,32 @@ pub async fn wrap_keygen_fourth(state: &State<Mutex<Box<dyn Db>>>,
     impl KeyGen for Gotham {}
     Gotham::fourth(state, claim, id, party_two_pdl_second_message).await
 }
+
+#[post("/engine/traits/<id>/chaincode/first", format = "json")]
+pub async fn wrap_chain_code_first_message(state: &State<Mutex<Box<dyn Db>>>,
+                                           claim: Claims,
+                                           id: String,
+) -> Result<Json<Party1FirstMessage>, String> {
+    struct Gotham {}
+    impl KeyGen for Gotham {}
+    Gotham::chain_code_first_message(state, claim, id).await
+}
+
+#[post(
+"/engine/traits/<id>/chaincode/second",
+format = "json",
+data = "<cc_party_two_first_message_d_log_proof>"
+)]
+pub async fn wrap_chain_code_second_message(state: &State<Mutex<Box<dyn Db>>>,
+                                            claim: Claims,
+                                            id: String,
+                                            cc_party_two_first_message_d_log_proof: Json<DLogProof>,
+) -> Result<Json<Party1SecondMessage>, String> {
+    struct Gotham {}
+    impl KeyGen for Gotham {}
+    Gotham::chain_code_second_message(state, claim, id, cc_party_two_first_message_d_log_proof).await
+}
+
 
 #[async_trait]
 pub trait KeyGen {
@@ -446,24 +475,173 @@ pub trait KeyGen {
             party_2_pdl_first_message.as_any().downcast_ref::<Party2PDLFirstMsg>().unwrap().clone(),
             &party_two_pdl_second_message.0,
             party_one_private.as_any().downcast_ref::<Party1Private>().unwrap().clone(),
-            party_one_pdl_decommit.as_any().downcast_ref::<PDLdecommit>().unwrap().clone(),
+            party_one_pdl_decommit.as_any().downcast_ref::<party_one::PDLdecommit>().unwrap().clone(),
             alpha.as_any().downcast_ref::<Alpha>().unwrap().value.clone(),
         );
         assert!(res.is_ok());
         Ok(Json(res.unwrap()))
     }
+    async fn chain_code_first_message(state: &State<Mutex<Box<dyn Db>>>,
+                                      claim: Claims,
+                                      id: String,
+    ) -> Result<Json<Party1FirstMessage>, String> {
+        let db = state.lock().await;
+
+        let (cc_party_one_first_message, cc_comm_witness, cc_ec_key_pair1) =
+            ChainCode1::chain_code_first_message();
+
+        db.insert(
+            &DbIndex {
+                customer_id: claim.sub.to_string(),
+                id: id.clone(),
+            },
+            &EcdsaStruct::CCKeyGenFirstMsg,
+            &cc_party_one_first_message,
+        )
+            .await
+            .or(Err("Failed to insert into db"))?;
+
+        db.insert(
+            &DbIndex {
+                customer_id: claim.sub.to_string(),
+                id: id.clone(),
+            },
+            &EcdsaStruct::CCCommWitness,
+            &cc_comm_witness,
+        )
+            .await
+            .or(Err("Failed to insert into db"))?;
+
+        db.insert(
+            &DbIndex {
+                customer_id: claim.sub.to_string(),
+                id: id.clone(),
+            },
+            &EcdsaStruct::CCEcKeyPair,
+            &cc_ec_key_pair1,
+        )
+            .await
+            .or(Err("Failed to insert into db"))?;
+
+        Ok(Json(cc_party_one_first_message))
+    }
+    async fn chain_code_second_message(state: &State<Mutex<Box<dyn Db>>>,
+                                       claim: Claims,
+                                       id: String,
+                                       cc_party_two_first_message_d_log_proof: Json<DLogProof>,
+    ) -> Result<Json<Party1SecondMessage>, String> {
+
+        let db = state.lock().await;
+        let cc_comm_witness =
+            db.get(&DbIndex {
+                customer_id: claim.sub.to_string(),
+                id: id.clone(),
+            }, &EcdsaStruct::CCCommWitness)
+                .await
+                .or(Err("Failed to get from db"))?
+                .ok_or(format!("No data for such identifier {}", id))?;
+
+        let party1_cc_res = ChainCode1::chain_code_second_message(
+            cc_comm_witness.as_any().downcast_ref::<two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::CommWitness>().unwrap().clone(),
+            &cc_party_two_first_message_d_log_proof.0,
+        );
+
+        let party2_pub = &cc_party_two_first_message_d_log_proof.pk;
+        // chain_code_compute_message(state, claim, id, party2_pub).await?;
+
+        //compute_chain_code_message
+        let cc_ec_key_pair_party1 =
+            db.get(&DbIndex {
+                customer_id: claim.sub.to_string(),
+                id: id.clone(),
+            }, &EcdsaStruct::CCEcKeyPair)
+                .await
+                .or(Err("Failed to get from db"))?
+                .ok_or(format!("No data for such identifier {}", id))?;
+        let party1_cc = ChainCode1::compute_chain_code(
+            &cc_ec_key_pair_party1.as_any().downcast_ref::<two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::EcKeyPair>().unwrap().clone(),
+            party2_pub,
+        );
+
+        db.insert(&DbIndex {
+            customer_id: claim.sub.to_string(),
+            id: id.clone(),
+        }, &EcdsaStruct::CC, &party1_cc)
+            .await
+            .or(Err("Failed to insert into db"))?;
+
+        //set master key
+        let party2_public = db.get(&DbIndex {
+            customer_id: claim.sub.to_string(),
+            id: id.clone(),
+        }, &EcdsaStruct::Party2Public)
+            .await
+            .or(Err(format!("Failed to get alpha from DB, id: {}", id)))?
+            .ok_or(format!("No data for such identifier {}", id))?;
+
+        let paillier_key_pair =
+            db.get(&DbIndex {
+                customer_id: claim.sub.to_string(),
+                id: id.clone(),
+            }, &EcdsaStruct::PaillierKeyPair)
+                .await
+                .or(Err(format!("Failed to get alpha from DB, id: {}", id)))?
+                .ok_or(format!("No data for such identifier {}", id))?;
+
+        let party1_cc =
+            db.get(&DbIndex {
+                customer_id: claim.sub.to_string(),
+                id: id.clone(),
+            }, &EcdsaStruct::CC)
+                .await
+                .or(Err(format!("Failed to get alpha from DB, id: {}", id)))?
+                .ok_or(format!("No data for such identifier {}", id))?;
+
+        let party_one_private =
+            db.get(&DbIndex {
+                customer_id: claim.sub.to_string(),
+                id: id.clone(),
+            }, &EcdsaStruct::Party1Private)
+                .await
+                .or(Err(format!("Failed to get alpha from DB, id: {}", id)))?
+                .ok_or(format!("No data for such identifier {}", id))?;
+
+        let comm_witness =
+            db.get(&DbIndex {
+                customer_id: claim.sub.to_string(),
+                id: id.clone(),
+            }, &EcdsaStruct::CommWitness)
+                .await
+                .or(Err(format!("Failed to get alpha from DB, id: {}", id)))?
+                .ok_or(format!("No data for such identifier {}", id))?;
+
+        let masterKey = MasterKey1::set_master_key(
+            &party1_cc.as_any().downcast_ref::<ChainCode1>().unwrap().chain_code,
+            party_one_private.as_any().downcast_ref::<Party1Private>().unwrap().clone(),
+            &comm_witness.as_any().downcast_ref::<CommWitness>().unwrap().public_share,
+            party2_public.as_any().downcast_ref::<GE>().unwrap(),
+            paillier_key_pair.as_any().downcast_ref::<PaillierKeyPair>().unwrap().clone(),
+        );
+
+        db.insert(
+            &DbIndex {
+                customer_id: claim.sub.to_string(),
+                id: id.clone(),
+            },
+            &EcdsaStruct::Party1MasterKey,
+            &masterKey,
+        )
+            .await
+            .or(Err("Failed to insert into db"))?;
+
+
+        Ok(Json(party1_cc_res))
+    }
 }
 
 
-// async fn chaincode1(&self, dbConn: S) {
-//     //TODO
-// }
-// async fn chaincode2(&self, dbConn: S) {
-//     //TODO
-// }
-
-
-pub trait Sign<S: Db> {
+#[async_trait]
+pub trait Sign {
     // async fn sign_first(&self, dbConn: S) {
     //     //TODO
     // }
