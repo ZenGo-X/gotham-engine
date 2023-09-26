@@ -1,7 +1,11 @@
+//! The routes that gotham-engine exposes. Notice that these are actually wrappers on the underlying implementations due
+//! to the fact that rockets http server does not allow to mount directly routes as trait functions.
+
 use crate::guarder::Claims;
 use crate::keygen::KeyGen;
 use crate::sign::Sign;
 use crate::types::SignSecondMsgRequest;
+use crate::traits::Db;
 
 use two_party_ecdsa::{party_one, party_two};
 use two_party_ecdsa::party_one::{KeyGenFirstMsg, DLogProof};
@@ -11,7 +15,6 @@ use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_v
 use rocket::serde::json::Json;
 use rocket::{post, State};
 use tokio::sync::Mutex;
-use crate::traits::Db;
 
 #[post("/ecdsa/keygen/wrap_keygen_first", format = "json")]
 pub async fn wrap_keygen_first(

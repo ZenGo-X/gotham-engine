@@ -16,12 +16,31 @@ pub trait Txauthorization {
     fn granted<T: Clone + std::fmt::Display>(&self, key: T) -> Result<bool, DatabaseError>;
 }
 
-pub trait Authentication {}
 
-/// The Db trait allows different DB's to implement a common API for insert,delete,get
+/// The Db trait allows different DB's to implement a common API for insert and get
 #[async_trait]
 pub trait Db: Send + Sync {
     ///insert a value in the DB
+    /// # Arguments
+    /// * `key` - A [DbIndex] struct which acts as a key index in the DB.
+    /// * `table_name` - The table name which is derived from [MPCStruct]
+    /// * `value` - The value to be inserted in the db which is a trait object of the trait  [Value]
+    /// # Examples:
+    /// ```
+    /// db.insert(
+    ///             &DbIndex {
+    ///                customer_id: claim.sub.to_string(),
+    ///                 id: id.clone(),
+    ///             },
+    ///             &EcdsaStruct::PDLDecommit,
+    ///             &party_one_pdl_decommit,
+    ///         )
+    ///             .await
+    ///             .or(Err(format!(
+    ///                 "Failed to insert into DB PDLDecommit, id: {}",
+    ///                id
+    ///            )))?;
+    /// ```
     async fn insert(
         &self,
         key: &DbIndex,
@@ -29,6 +48,26 @@ pub trait Db: Send + Sync {
         value: &dyn Value,
     ) -> Result<(), DatabaseError>;
     ///get a value from the DB
+    /// # Arguments
+    /// * `key` - A [DbIndex] struct which acts as a key index in the DB.
+    /// * `table_name` - The table name which is derived from [MPCStruct]
+    /// * `value` - The value to be inserted in the db which is a trait object of the trait  [Value]
+    /// # Examples
+    /// ```
+    /// let party_one_pdl_decommit =
+    ///             db.get(&DbIndex {
+    ///                 customer_id: claim.sub.to_string(),
+    ///                 id: id.clone(),
+    ///             }, &EcdsaStruct::PDLDecommit)
+    ///                 .await
+    ///                 .or(Err(format!(
+    ///                     "Failed to get party one pdl decommit, id: {}",
+    ///                     id
+    ///                 )))?
+    ///                 .ok_or(format!("No data for such identifier {}", id))?;
+    /// //downcasting the result:
+    /// party_one_pdl_decommit.as_any().downcast_ref::<party_one::PDLdecommit>().unwrap()
+    /// ```
     async fn get(
         &self,
         key: &DbIndex,
@@ -80,7 +119,7 @@ pub trait RedisMod {
         client.get_connection()
     }
 }
-
+///Trait for table names management for the different type of tables to be inserted in the DB
 pub trait MPCStruct: Sync {
     fn to_string(&self) -> String;
 

@@ -59,6 +59,7 @@ pub enum Authenticator {
 pub const CUSTOMER_ID_IDENTIFIER: &str = "customerId";
 pub const ID_IDENTIFIER: &str = "id";
 
+/// An enumeration which keeps track of the different table names used to store information during KeyGen and Sign
 #[derive(Debug)]
 pub enum EcdsaStruct {
     KeyGenFirstMsg,
@@ -87,6 +88,9 @@ pub enum EcdsaStruct {
     Abort,
 }
 
+
+/// Wrapper struct for alpha values. They implement the Value trait in order to serialize/deserialize trait objects. Generics was not an option
+/// since they are used inside KeyGen and Sign traits which are treated as trait objects
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct Alpha {
     pub value: BigInt,
@@ -105,6 +109,7 @@ impl Value for Alpha {
     }
 }
 
+///common functions for the members of EcdsaStruct struct to strigify and format
 impl MPCStruct for EcdsaStruct {
     fn to_string(&self) -> String {
         format!("{:?}", self)
@@ -124,6 +129,8 @@ impl MPCStruct for EcdsaStruct {
     }
 }
 
+
+//TODO move to two-party-ecdsa/kms
 #[derive(Serialize, Deserialize)]
 pub struct SignSecondMsgRequest {
     pub message: BigInt,

@@ -19,7 +19,7 @@ use uuid::Uuid;
 
 #[async_trait]
 pub trait KeyGen {
-    //first round of Keygen
+    ///first round of Keygen
     async fn first(
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
