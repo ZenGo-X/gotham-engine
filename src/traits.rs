@@ -2,7 +2,7 @@
 //! while it differentiates implementation of keygen and sign with trait objects for DB management,user authorization and tx authorization
 use std::env;
 
-use crate::types::{DatabaseError, DbIndex, EcdsaStruct};
+use crate::types::{DatabaseError, DbIndex};
 
 use two_party_ecdsa::party_one::{Value};
 

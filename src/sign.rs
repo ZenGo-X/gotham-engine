@@ -3,14 +3,12 @@ use crate::traits::Db;
 use crate::types::{DbIndex, EcdsaStruct, SignSecondMsgRequest};
 
 use two_party_ecdsa::{BigInt, party_one, party_two};
-use two_party_ecdsa::kms::ecdsa::two_party::{MasterKey1, party2};
-use two_party_ecdsa::party_one::{CommWitness, v};
+use two_party_ecdsa::kms::ecdsa::two_party::{MasterKey1};
+use two_party_ecdsa::party_one::{v};
 
 use rocket::serde::json::Json;
 use rocket::{async_trait, State};
 use tokio::sync::Mutex;
-use serde::{Deserialize, Serialize};
-
 
 
 #[async_trait]
