@@ -4,18 +4,16 @@ use std::env;
 
 use crate::types::{DatabaseError, DbIndex};
 
-use two_party_ecdsa::party_one::{Value};
+use two_party_ecdsa::party_one::Value;
 
 use redis::{Commands, Connection, RedisResult};
 use rocket::async_trait;
 
-
 /// The Txauthorization trait allows for extra tx authorization during the sign protocol. Private Gotham implements the logic of authorization tx while public one lets it empty
-pub trait Txauthorization {
+pub trait Txauthorization: Send + Sync {
     /// the granted function implements the logic of tx authorization. If no tx authorization is needed the function returns always true
-    fn granted<T: Clone + std::fmt::Display>(&self, key: T) -> Result<bool, DatabaseError>;
+    fn granted(&self) -> Result<bool, DatabaseError>;
 }
-
 
 /// The Db trait allows different DB's to implement a common API for insert and get
 #[async_trait]
@@ -131,6 +129,3 @@ pub trait MPCStruct: Sync {
         true
     }
 }
-
-
-

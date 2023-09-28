@@ -4,8 +4,8 @@
 use crate::guarder::Claims;
 use crate::keygen::KeyGen;
 use crate::sign::Sign;
+use crate::traits::{Db, Txauthorization};
 use crate::types::SignSecondMsgRequest;
-use crate::traits::Db;
 
 use two_party_ecdsa::{party_one, party_two};
 use two_party_ecdsa::party_one::{KeyGenFirstMsg, DLogProof};
@@ -38,23 +38,32 @@ pub async fn wrap_keygen_second(
     Gotham::second(state, claim, id, dlog_proof).await
 }
 
-#[post("/ecdsa/keygen/<id>/third", format = "json", data = "<party_2_pdl_first_message>")]
+#[post(
+    "/ecdsa/keygen/<id>/third",
+    format = "json",
+    data = "<party_2_pdl_first_message>"
+)]
 pub async fn wrap_keygen_third(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
     id: String,
-    party_2_pdl_first_message: Json<party_two::PDLFirstMessage>)
-    -> Result<Json<party_one::PDLFirstMessage>, String> {
+    party_2_pdl_first_message: Json<party_two::PDLFirstMessage>,
+) -> Result<Json<party_one::PDLFirstMessage>, String> {
     struct Gotham {}
     impl KeyGen for Gotham {}
     Gotham::third(state, claim, id, party_2_pdl_first_message).await
 }
 
-#[post("/ecdsa/keygen/<id>/fourth", format = "json", data = "<party_two_pdl_second_message>")]
-pub async fn wrap_keygen_fourth(state: &State<Mutex<Box<dyn Db>>>,
-                                claim: Claims,
-                                id: String,
-                                party_two_pdl_second_message: Json<party_two::PDLSecondMessage>,
+#[post(
+    "/ecdsa/keygen/<id>/fourth",
+    format = "json",
+    data = "<party_two_pdl_second_message>"
+)]
+pub async fn wrap_keygen_fourth(
+    state: &State<Mutex<Box<dyn Db>>>,
+    claim: Claims,
+    id: String,
+    party_two_pdl_second_message: Json<party_two::PDLSecondMessage>,
 ) -> Result<Json<party_one::PDLSecondMessage>, String> {
     struct Gotham {}
     impl KeyGen for Gotham {}
@@ -62,9 +71,10 @@ pub async fn wrap_keygen_fourth(state: &State<Mutex<Box<dyn Db>>>,
 }
 
 #[post("/ecdsa/keygen/<id>/chaincode/first", format = "json")]
-pub async fn wrap_chain_code_first_message(state: &State<Mutex<Box<dyn Db>>>,
-                                           claim: Claims,
-                                           id: String,
+pub async fn wrap_chain_code_first_message(
+    state: &State<Mutex<Box<dyn Db>>>,
+    claim: Claims,
+    id: String,
 ) -> Result<Json<Party1FirstMessage>, String> {
     struct Gotham {}
     impl KeyGen for Gotham {}
@@ -72,24 +82,26 @@ pub async fn wrap_chain_code_first_message(state: &State<Mutex<Box<dyn Db>>>,
 }
 
 #[post(
-"/ecdsa/keygen/<id>/chaincode/second",
-format = "json",
-data = "<cc_party_two_first_message_d_log_proof>"
+    "/ecdsa/keygen/<id>/chaincode/second",
+    format = "json",
+    data = "<cc_party_two_first_message_d_log_proof>"
 )]
-pub async fn wrap_chain_code_second_message(state: &State<Mutex<Box<dyn Db>>>,
-                                            claim: Claims,
-                                            id: String,
-                                            cc_party_two_first_message_d_log_proof: Json<DLogProof>,
+pub async fn wrap_chain_code_second_message(
+    state: &State<Mutex<Box<dyn Db>>>,
+    claim: Claims,
+    id: String,
+    cc_party_two_first_message_d_log_proof: Json<DLogProof>,
 ) -> Result<Json<Party1SecondMessage>, String> {
     struct Gotham {}
     impl KeyGen for Gotham {}
-    Gotham::chain_code_second_message(state, claim, id, cc_party_two_first_message_d_log_proof).await
+    Gotham::chain_code_second_message(state, claim, id, cc_party_two_first_message_d_log_proof)
+        .await
 }
 
 #[post(
-"/ecdsa/sign/<id>/first",
-format = "json",
-data = "<eph_key_gen_first_message_party_two>"
+    "/ecdsa/sign/<id>/first",
+    format = "json",
+    data = "<eph_key_gen_first_message_party_two>"
 )]
 pub async fn wrap_sign_first(
     state: &State<Mutex<Box<dyn Db>>>,
@@ -105,11 +117,12 @@ pub async fn wrap_sign_first(
 #[post("/ecdsa/sign/<id>/second", format = "json", data = "<request>")]
 pub async fn wrap_sign_second(
     state: &State<Mutex<Box<dyn Db>>>,
+    tx_auth: &State<Mutex<Box<dyn Txauthorization>>>,
     claim: Claims,
     id: String,
     request: Json<SignSecondMsgRequest>,
 ) -> Result<Json<party_one::SignatureRecid>, String> {
     struct Gotham {}
     impl Sign for Gotham {}
-    Gotham::sign_second(state, claim, id, request).await
+    Gotham::sign_second(state, tx_auth, claim, id, request).await
 }

@@ -1,12 +1,12 @@
 //! Common types for traits the implementations thereofs at [private_gotham] and [public_gotham]
+use crate::traits::MPCStruct;
+use serde::{Deserialize, Serialize};
 use std::any::Any;
 use std::fmt::{Display, Formatter};
-use serde::{Serialize, Deserialize};
 use thiserror::Error;
-use two_party_ecdsa::BigInt;
 use two_party_ecdsa::kms::ecdsa::two_party::party2;
-use two_party_ecdsa::party_one::{Value};
-use crate::traits::MPCStruct;
+use two_party_ecdsa::party_one::Value;
+use two_party_ecdsa::BigInt;
 
 #[derive(Debug, Error, PartialEq, Eq, Clone)]
 /// The DatabaseError defines different types of database errors for better error handling
@@ -88,7 +88,6 @@ pub enum EcdsaStruct {
     Abort,
 }
 
-
 /// Wrapper struct for alpha values. They implement the Value trait in order to serialize/deserialize trait objects. Generics was not an option
 /// since they are used inside KeyGen and Sign traits which are treated as trait objects
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
@@ -129,7 +128,6 @@ impl MPCStruct for EcdsaStruct {
     }
 }
 
-
 //TODO move to two-party-ecdsa/kms
 #[derive(Serialize, Deserialize)]
 pub struct SignSecondMsgRequest {
@@ -138,5 +136,3 @@ pub struct SignSecondMsgRequest {
     pub x_pos_child_key: BigInt,
     pub y_pos_child_key: BigInt,
 }
-
-
