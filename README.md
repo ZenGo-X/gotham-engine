@@ -61,10 +61,10 @@ rocket::Rocket::build()
             ],
         )
 ```
-5. Pass to the gotham-engine the Db and TxAuthorization trait as dyn trait object
+5. Pass to the gotham-engine the `State` for `Db` and `TxAuthorization` trait as dyn trait objects
    ```
    .manage(Mutex::new(Box::new(x) as Box<dyn gotham_engine::traits::Db>))
-        .manage(Mutex::new(
+   .manage(Mutex::new(
             Box::new(tx) as Box<dyn gotham_engine::traits::Txauthorization>
         ))
    ```
