@@ -52,7 +52,7 @@ pub trait KeyGen {
         //save pos 0
         db.insert(
             &DbIndex {
-                customer_id: claim.sub.to_string(),
+                customerId: claim.sub.to_string(),
                 id: id.clone(),
             },
             &EcdsaStruct::POS,
@@ -62,7 +62,7 @@ pub trait KeyGen {
         .or(Err("Failed to insert into db"))?;
         db.insert(
             &DbIndex {
-                customer_id: claim.sub.to_string(),
+                customerId: claim.sub.to_string(),
                 id: id.clone(),
             },
             &EcdsaStruct::KeyGenFirstMsg,
@@ -73,7 +73,7 @@ pub trait KeyGen {
 
         db.insert(
             &DbIndex {
-                customer_id: claim.sub.to_string(),
+                customerId: claim.sub.to_string(),
                 id: id.clone(),
             },
             &EcdsaStruct::CommWitness,
@@ -84,7 +84,7 @@ pub trait KeyGen {
 
         db.insert(
             &DbIndex {
-                customer_id: claim.sub.to_string(),
+                customerId: claim.sub.to_string(),
                 id: id.clone(),
             },
             &EcdsaStruct::EcKeyPair,
@@ -99,7 +99,7 @@ pub trait KeyGen {
 
         db.insert(
             &DbIndex {
-                customer_id: claim.sub.to_string(),
+                customerId: claim.sub.to_string(),
                 id: id.clone(),
             },
             &EcdsaStruct::Abort,
@@ -122,7 +122,7 @@ pub trait KeyGen {
         let party2_public: GE = dlog_proof.0.pk;
         db.insert(
             &DbIndex {
-                customer_id: claim.sub.to_string(),
+                customerId: claim.sub.to_string(),
                 id: id.clone(),
             },
             &EcdsaStruct::Party2Public,
@@ -134,7 +134,7 @@ pub trait KeyGen {
         let comm_witness = db
             .get(
                 &DbIndex {
-                    customer_id: claim.sub.to_string(),
+                    customerId: claim.sub.to_string(),
                     id: id.clone(),
                 },
                 &EcdsaStruct::CommWitness,
@@ -145,7 +145,7 @@ pub trait KeyGen {
         let ec_key_pair = db
             .get(
                 &DbIndex {
-                    customer_id: claim.sub.to_string(),
+                    customerId: claim.sub.to_string(),
                     id: id.clone(),
                 },
                 &EcdsaStruct::EcKeyPair,
@@ -163,7 +163,7 @@ pub trait KeyGen {
 
         db.insert(
             &DbIndex {
-                customer_id: claim.sub.to_string(),
+                customerId: claim.sub.to_string(),
                 id: id.clone(),
             },
             &EcdsaStruct::PaillierKeyPair,
@@ -174,7 +174,7 @@ pub trait KeyGen {
 
         db.insert(
             &DbIndex {
-                customer_id: claim.sub.to_string(),
+                customerId: claim.sub.to_string(),
                 id: id.clone(),
             },
             &EcdsaStruct::Party1Private,
@@ -197,7 +197,7 @@ pub trait KeyGen {
         let party_one_private = db
             .get(
                 &DbIndex {
-                    customer_id: claim.sub.to_string(),
+                    customerId: claim.sub.to_string(),
                     id: id.clone(),
                 },
                 &EcdsaStruct::Party1Private,
@@ -217,7 +217,7 @@ pub trait KeyGen {
 
         db.insert(
             &DbIndex {
-                customer_id: claim.sub.to_string(),
+                customerId: claim.sub.to_string(),
                 id: id.clone(),
             },
             &EcdsaStruct::PDLDecommit,
@@ -231,7 +231,7 @@ pub trait KeyGen {
 
         db.insert(
             &DbIndex {
-                customer_id: claim.sub.to_string(),
+                customerId: claim.sub.to_string(),
                 id: id.clone(),
             },
             &EcdsaStruct::Alpha,
@@ -242,7 +242,7 @@ pub trait KeyGen {
 
         db.insert(
             &DbIndex {
-                customer_id: claim.sub.to_string(),
+                customerId: claim.sub.to_string(),
                 id: id.clone(),
             },
             &EcdsaStruct::Party2PDLFirstMsg,
@@ -267,7 +267,7 @@ pub trait KeyGen {
         let party_one_private = db
             .get(
                 &DbIndex {
-                    customer_id: claim.sub.to_string(),
+                    customerId: claim.sub.to_string(),
                     id: id.clone(),
                 },
                 &EcdsaStruct::Party1Private,
@@ -279,7 +279,7 @@ pub trait KeyGen {
         let party_2_pdl_first_message = db
             .get(
                 &DbIndex {
-                    customer_id: claim.sub.to_string(),
+                    customerId: claim.sub.to_string(),
                     id: id.clone(),
                 },
                 &EcdsaStruct::Party2PDLFirstMsg,
@@ -293,7 +293,7 @@ pub trait KeyGen {
         let party_one_pdl_decommit = db
             .get(
                 &DbIndex {
-                    customer_id: claim.sub.to_string(),
+                    customerId: claim.sub.to_string(),
                     id: id.clone(),
                 },
                 &EcdsaStruct::PDLDecommit,
@@ -308,7 +308,7 @@ pub trait KeyGen {
         let alpha = db
             .get(
                 &DbIndex {
-                    customer_id: claim.sub.to_string(),
+                    customerId: claim.sub.to_string(),
                     id: id.clone(),
                 },
                 &EcdsaStruct::Alpha,
@@ -357,7 +357,7 @@ pub trait KeyGen {
 
         db.insert(
             &DbIndex {
-                customer_id: claim.sub.to_string(),
+                customerId: claim.sub.to_string(),
                 id: id.clone(),
             },
             &EcdsaStruct::CCKeyGenFirstMsg,
@@ -368,7 +368,7 @@ pub trait KeyGen {
 
         db.insert(
             &DbIndex {
-                customer_id: claim.sub.to_string(),
+                customerId: claim.sub.to_string(),
                 id: id.clone(),
             },
             &EcdsaStruct::CCCommWitness,
@@ -379,7 +379,7 @@ pub trait KeyGen {
 
         db.insert(
             &DbIndex {
-                customer_id: claim.sub.to_string(),
+                customerId: claim.sub.to_string(),
                 id: id.clone(),
             },
             &EcdsaStruct::CCEcKeyPair,
@@ -400,7 +400,7 @@ pub trait KeyGen {
         let cc_comm_witness = db
             .get(
                 &DbIndex {
-                    customer_id: claim.sub.to_string(),
+                    customerId: claim.sub.to_string(),
                     id: id.clone(),
                 },
                 &EcdsaStruct::CCCommWitness,
@@ -420,7 +420,7 @@ pub trait KeyGen {
         let cc_ec_key_pair_party1 = db
             .get(
                 &DbIndex {
-                    customer_id: claim.sub.to_string(),
+                    customerId: claim.sub.to_string(),
                     id: id.clone(),
                 },
                 &EcdsaStruct::CCEcKeyPair,
@@ -435,7 +435,7 @@ pub trait KeyGen {
 
         db.insert(
             &DbIndex {
-                customer_id: claim.sub.to_string(),
+                customerId: claim.sub.to_string(),
                 id: id.clone(),
             },
             &EcdsaStruct::CC,
@@ -448,7 +448,7 @@ pub trait KeyGen {
         let party2_public = db
             .get(
                 &DbIndex {
-                    customer_id: claim.sub.to_string(),
+                    customerId: claim.sub.to_string(),
                     id: id.clone(),
                 },
                 &EcdsaStruct::Party2Public,
@@ -460,7 +460,7 @@ pub trait KeyGen {
         let paillier_key_pair = db
             .get(
                 &DbIndex {
-                    customer_id: claim.sub.to_string(),
+                    customerId: claim.sub.to_string(),
                     id: id.clone(),
                 },
                 &EcdsaStruct::PaillierKeyPair,
@@ -472,7 +472,7 @@ pub trait KeyGen {
         let party1_cc = db
             .get(
                 &DbIndex {
-                    customer_id: claim.sub.to_string(),
+                    customerId: claim.sub.to_string(),
                     id: id.clone(),
                 },
                 &EcdsaStruct::CC,
@@ -484,7 +484,7 @@ pub trait KeyGen {
         let party_one_private = db
             .get(
                 &DbIndex {
-                    customer_id: claim.sub.to_string(),
+                    customerId: claim.sub.to_string(),
                     id: id.clone(),
                 },
                 &EcdsaStruct::Party1Private,
@@ -496,7 +496,7 @@ pub trait KeyGen {
         let comm_witness = db
             .get(
                 &DbIndex {
-                    customer_id: claim.sub.to_string(),
+                    customerId: claim.sub.to_string(),
                     id: id.clone(),
                 },
                 &EcdsaStruct::CommWitness,
@@ -531,7 +531,7 @@ pub trait KeyGen {
 
         db.insert(
             &DbIndex {
-                customer_id: claim.sub.to_string(),
+                customerId: claim.sub.to_string(),
                 id: id.clone(),
             },
             &EcdsaStruct::Party1MasterKey,

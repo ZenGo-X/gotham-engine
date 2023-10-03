@@ -42,7 +42,7 @@ pub enum DbConnector {
 /// It is used as an index for the underlying Db table
 pub struct DbIndex {
     ///The customerId as assigned from cognito and passed through JWT
-    pub customer_id: String,
+    pub customerId: String,
     ///The is as assigned from gotham server during the first round of keygen to identify users
     pub id: String,
 }

@@ -24,7 +24,7 @@ pub trait Sign {
         let abort = db
             .get(
                 &DbIndex {
-                    customer_id: claim.sub.to_string(),
+                    customerId: claim.sub.to_string(),
                     id: id.clone(),
                 },
                 &EcdsaStruct::Abort,
@@ -43,7 +43,7 @@ pub trait Sign {
 
         db.insert(
             &DbIndex {
-                customer_id: claim.sub.to_string(),
+                customerId: claim.sub.to_string(),
                 id: id.clone(),
             },
             &EcdsaStruct::EphKeyGenFirstMsg,
@@ -54,7 +54,7 @@ pub trait Sign {
 
         db.insert(
             &DbIndex {
-                customer_id: claim.sub.to_string(),
+                customerId: claim.sub.to_string(),
                 id: id.clone(),
             },
             &EcdsaStruct::EphEcKeyPair,
@@ -85,7 +85,7 @@ pub trait Sign {
         let master_key = db
             .get(
                 &DbIndex {
-                    customer_id: claim.sub.to_string(),
+                    customerId: claim.sub.to_string(),
                     id: id.clone(),
                 },
                 &EcdsaStruct::Party1MasterKey,
@@ -107,7 +107,7 @@ pub trait Sign {
         let eph_ec_key_pair_party1 = db
             .get(
                 &DbIndex {
-                    customer_id: claim.sub.to_string(),
+                    customerId: claim.sub.to_string(),
                     id: id.clone(),
                 },
                 &EcdsaStruct::EphEcKeyPair,
@@ -120,7 +120,7 @@ pub trait Sign {
         let eph_key_gen_first_message_party_two = db
             .get(
                 &DbIndex {
-                    customer_id: claim.sub.to_string(),
+                    customerId: claim.sub.to_string(),
                     id: id.clone(),
                 },
                 &EcdsaStruct::EphKeyGenFirstMsg,
@@ -149,7 +149,7 @@ pub trait Sign {
             println!("signature failed, user tainted[{:?}]", id);
             db.insert(
                 &DbIndex {
-                    customer_id: claim.sub.to_string(),
+                    customerId: claim.sub.to_string(),
                     id: id.clone(),
                 },
                 &EcdsaStruct::Abort,
