@@ -124,7 +124,7 @@ impl MPCStruct for EcdsaStruct {
     }
 
     fn require_customer_id(&self) -> bool {
-        self.to_string() == "Party1MasterKey"
+        self.to_string() == "Party1MasterKey" || self.to_string() == "Abort"
     }
 }
 
