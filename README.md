@@ -1,8 +1,8 @@
 # Gotham-engine
 
-Gotham engine is the engine for gotham-city project. It abstracts through traits,
+Gotham engine is the engine for [gotham-city server](https://github.com/ZenGo-X/gotham-city/tree/master/gotham-server). It abstracts through traits,
 routes for keygen and sign in a 2P setting for Lindell17 protocol. The level of abstraction allows
-the implementers to pass specific DB api and authorization policies. The engine provides default trait implementations
+the implementers to pass specific DB api and authorization policies. The engine provides default trait implementations for keygen and sign logic,
 such that the implementers are only implementing the peripherals. Any potential change at the cryptographic protocol is done through the gotham-engine and and changes are reflected automatically at the implementers through default implementations. An example of usage is provided in the [gotham-city](https://github.com/ZenGo-X/gotham-city/) project.
 ## Example Workflow for an Implementer:
 1. Instantiate empty traits for KeyGen and Sign:
@@ -68,4 +68,7 @@ rocket::Rocket::build()
             Box::new(tx) as Box<dyn gotham_engine::traits::Txauthorization>
         ))
    ```
+
+   ## Details
+   [Documentation](https://medium.com/@leontiad/291a51677643)
 
