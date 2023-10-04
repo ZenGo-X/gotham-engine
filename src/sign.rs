@@ -246,7 +246,7 @@ pub trait Sign {
     ) -> Result<Json<party_one::SignatureRecid>, String> {
         let db = state.lock().await;
         let tx_flag = tx_auth.lock().await;
-        if tx_flag.granted().unwrap() == false {
+        if tx_flag.granted(&*request.message.to_hex().to_string(), claim.sub.as_str()).unwrap() == false {
             panic!(
                 "Unauthorized transaction from redis-pps: {:?}",
                 ssid.clone().to_string()
