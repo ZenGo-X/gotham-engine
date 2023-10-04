@@ -24,23 +24,27 @@ pub trait KeyGen {
         claim: Claims,
     ) -> Result<Json<(String, KeyGenFirstMsg)>, String> {
         let db = state.lock().await;
-        match db.has_active_share(&claim.sub).await {
-            Err(e) => {
-                let msg = format!(
-                    "Error when searching for active shares of customerId {}",
-                    &claim.sub
-                );
-                error!("{}: {:?}", msg, e);
-                return Err(format!("{}", msg));
-            }
-            Ok(result) => {
-                if result {
-                    let msg = format!("User {} already has an active share", &claim.sub);
-                    warn!("{}", msg);
-                    let should_fail_keygen = env::var("FAIL_KEYGEN_IF_ACTIVE_SHARE_EXISTS");
-                    if should_fail_keygen.is_ok() && should_fail_keygen.unwrap() == "true" {
-                        warn!("Abort KeyGen");
-                        return Err(format!("{}", msg));
+
+        //do not run in a local env
+        if !env::var("redis_env").is_ok() {
+            match db.has_active_share(&claim.sub).await {
+                Err(e) => {
+                    let msg = format!(
+                        "Error when searching for active shares of customerId {}",
+                        &claim.sub
+                    );
+                    error!("{}: {:?}", msg, e);
+                    return Err(format!("{}", msg));
+                }
+                Ok(result) => {
+                    if result {
+                        let msg = format!("User {} already has an active share", &claim.sub);
+                        warn!("{}", msg);
+                        let should_fail_keygen = env::var("FAIL_KEYGEN_IF_ACTIVE_SHARE_EXISTS");
+                        if should_fail_keygen.is_ok() && should_fail_keygen.unwrap() == "true" {
+                            warn!("Abort KeyGen");
+                            return Err(format!("{}", msg));
+                        }
                     }
                 }
             }
@@ -58,8 +62,8 @@ pub trait KeyGen {
             &EcdsaStruct::POS,
             &HDPos { pos: 0u32 },
         )
-        .await
-        .or(Err("Failed to insert into db"))?;
+            .await
+            .or(Err("Failed to insert into db"))?;
         db.insert(
             &DbIndex {
                 customerId: claim.sub.to_string(),
@@ -68,8 +72,8 @@ pub trait KeyGen {
             &EcdsaStruct::KeyGenFirstMsg,
             &key_gen_first_msg,
         )
-        .await
-        .or(Err("Failed to insert into db"))?;
+            .await
+            .or(Err("Failed to insert into db"))?;
 
         db.insert(
             &DbIndex {
@@ -79,8 +83,8 @@ pub trait KeyGen {
             &EcdsaStruct::CommWitness,
             &comm_witness,
         )
-        .await
-        .or(Err("Failed to insert into db"))?;
+            .await
+            .or(Err("Failed to insert into db"))?;
 
         db.insert(
             &DbIndex {
@@ -90,8 +94,8 @@ pub trait KeyGen {
             &EcdsaStruct::EcKeyPair,
             &ec_key_pair,
         )
-        .await
-        .or(Err("Failed to insert into db"))?;
+            .await
+            .or(Err("Failed to insert into db"))?;
 
         let value = v {
             value: "false".parse().unwrap(),
@@ -105,8 +109,8 @@ pub trait KeyGen {
             &EcdsaStruct::Abort,
             &value,
         )
-        .await
-        .or(Err("Failed to insert into db"))?;
+            .await
+            .or(Err("Failed to insert into db"))?;
 
         Ok(Json((id.clone(), key_gen_first_msg)))
     }
@@ -128,8 +132,8 @@ pub trait KeyGen {
             &EcdsaStruct::Party2Public,
             &party2_public,
         )
-        .await
-        .or(Err("Failed to insert into db"))?;
+            .await
+            .or(Err("Failed to insert into db"))?;
 
         let comm_witness = db
             .get(
@@ -169,8 +173,8 @@ pub trait KeyGen {
             &EcdsaStruct::PaillierKeyPair,
             &paillier_key_pair,
         )
-        .await
-        .or(Err("Failed to insert into db"))?;
+            .await
+            .or(Err("Failed to insert into db"))?;
 
         db.insert(
             &DbIndex {
@@ -180,8 +184,8 @@ pub trait KeyGen {
             &EcdsaStruct::Party1Private,
             &party_one_private,
         )
-        .await
-        .or(Err("Failed to insert into db"))?;
+            .await
+            .or(Err("Failed to insert into db"))?;
 
         Ok(Json(kg_party_one_second_message))
     }
@@ -223,11 +227,11 @@ pub trait KeyGen {
             &EcdsaStruct::PDLDecommit,
             &party_one_pdl_decommit,
         )
-        .await
-        .or(Err(format!(
-            "Failed to insert into DB PDLDecommit, id: {}",
-            id
-        )))?;
+            .await
+            .or(Err(format!(
+                "Failed to insert into DB PDLDecommit, id: {}",
+                id
+            )))?;
 
         db.insert(
             &DbIndex {
@@ -237,8 +241,8 @@ pub trait KeyGen {
             &EcdsaStruct::Alpha,
             &Alpha { value: alpha },
         )
-        .await
-        .or(Err(format!("Failed to insert into DB Alpha, id: {}", id)))?;
+            .await
+            .or(Err(format!("Failed to insert into DB Alpha, id: {}", id)))?;
 
         db.insert(
             &DbIndex {
@@ -248,11 +252,11 @@ pub trait KeyGen {
             &EcdsaStruct::Party2PDLFirstMsg,
             &party_2_pdl_first_message.0,
         )
-        .await
-        .or(Err(format!(
-            "Failed to insert into DB Party2PDLFirstMsg, id: {}",
-            id
-        )))?;
+            .await
+            .or(Err(format!(
+                "Failed to insert into DB Party2PDLFirstMsg, id: {}",
+                id
+            )))?;
 
         Ok(Json(party_one_third_message))
     }
@@ -363,8 +367,8 @@ pub trait KeyGen {
             &EcdsaStruct::CCKeyGenFirstMsg,
             &cc_party_one_first_message,
         )
-        .await
-        .or(Err("Failed to insert into db"))?;
+            .await
+            .or(Err("Failed to insert into db"))?;
 
         db.insert(
             &DbIndex {
@@ -374,8 +378,8 @@ pub trait KeyGen {
             &EcdsaStruct::CCCommWitness,
             &cc_comm_witness,
         )
-        .await
-        .or(Err("Failed to insert into db"))?;
+            .await
+            .or(Err("Failed to insert into db"))?;
 
         db.insert(
             &DbIndex {
@@ -385,8 +389,8 @@ pub trait KeyGen {
             &EcdsaStruct::CCEcKeyPair,
             &cc_ec_key_pair1,
         )
-        .await
-        .or(Err("Failed to insert into db"))?;
+            .await
+            .or(Err("Failed to insert into db"))?;
 
         Ok(Json(cc_party_one_first_message))
     }
@@ -441,8 +445,8 @@ pub trait KeyGen {
             &EcdsaStruct::CC,
             &party1_cc,
         )
-        .await
-        .or(Err("Failed to insert into db"))?;
+            .await
+            .or(Err("Failed to insert into db"))?;
 
         //set master key
         let party2_public = db
@@ -537,8 +541,8 @@ pub trait KeyGen {
             &EcdsaStruct::Party1MasterKey,
             &master_key,
         )
-        .await
-        .or(Err("Failed to insert into db"))?;
+            .await
+            .or(Err("Failed to insert into db"))?;
 
         Ok(Json(party1_cc_res))
     }
