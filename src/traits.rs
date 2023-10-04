@@ -71,7 +71,7 @@ pub trait Db: Send + Sync {
         key: &DbIndex,
         table_name: &dyn MPCStruct,
     ) -> Result<Option<Box<dyn Value>>, DatabaseError>;
-    async fn has_active_share(&self, user_id: &str) -> Result<bool, String>;
+    async fn has_active_share(&self, customerId: &str) -> Result<bool, String>;
 }
 
 /// Common trait both for private and public for redis api
