@@ -126,3 +126,32 @@ pub async fn wrap_sign_second(
     impl Sign for Gotham {}
     Gotham::sign_second(state, tx_auth, claim, id, request).await
 }
+
+#[post(
+"/ecdsa/sign/<id>/first_v2",
+format = "json",
+data = "<eph_key_gen_first_message_party_two>"
+)]
+pub async fn wrap_sign_first_v2(
+    state: &State<Mutex<Box<dyn Db>>>,
+    claim: Claims,
+    id: String,
+    eph_key_gen_first_message_party_two: Json<party_two::EphKeyGenFirstMsg>,
+) ->Result<Json<(String, party_one::EphKeyGenFirstMsg)>, String> {
+    struct Gotham {}
+    impl Sign for Gotham {}
+    Gotham::sign_first_v2(state, claim, id, eph_key_gen_first_message_party_two).await
+}
+
+#[post("/ecdsa/sign/<ssid>/second_v2", format = "json", data = "<request>")]
+pub async fn wrap_sign_second_v2(
+    state: &State<Mutex<Box<dyn Db>>>,
+    tx_auth: &State<Mutex<Box<dyn Txauthorization>>>,
+    claim: Claims,
+    ssid: String,
+    request: Json<SignSecondMsgRequest>,
+) -> Result<Json<party_one::SignatureRecid>, String> {
+    struct Gotham {}
+    impl Sign for Gotham {}
+    Gotham::sign_second_v2(state, tx_auth, claim, ssid, request).await
+}

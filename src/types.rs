@@ -108,6 +108,23 @@ impl Value for Alpha {
     }
 }
 
+#[derive(Serialize, Deserialize,Debug)]
+pub(crate) struct Aborted {
+    pub(crate) isAborted: String,
+}
+
+impl Display for Aborted {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+#[typetag::serde]
+impl Value for Aborted {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
 ///common functions for the members of EcdsaStruct struct to strigify and format
 impl MPCStruct for EcdsaStruct {
     fn to_string(&self) -> String {
@@ -135,4 +152,8 @@ pub struct SignSecondMsgRequest {
     pub party_two_sign_message: party2::SignMessage,
     pub x_pos_child_key: BigInt,
     pub y_pos_child_key: BigInt,
+}
+#[inline(always)]
+pub fn idify(user_id: &String, id: &String, name: &dyn MPCStruct) -> String {
+    format!("{}_{}_{}", user_id, id, name.to_string())
 }
