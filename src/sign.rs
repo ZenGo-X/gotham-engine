@@ -1,6 +1,7 @@
+use std::env;
 use crate::guarder::Claims;
-use crate::traits::{Db, Txauthorization,RedisMod};
-use crate::types::{DbIndex, EcdsaStruct, SignSecondMsgRequest,idify,Aborted};
+use crate::traits::{Db, RedisMod};
+use crate::types::{DbIndex, EcdsaStruct, SignSecondMsgRequest, idify, Aborted};
 use config::Value;
 
 use two_party_ecdsa::kms::ecdsa::two_party::MasterKey1;
@@ -68,18 +69,18 @@ pub trait Sign {
     }
     async fn sign_second(
         state: &State<Mutex<Box<dyn Db>>>,
-        tx_auth: &State<Mutex<Box<dyn Txauthorization>>>,
         claim: Claims,
         id: String,
         request: Json<SignSecondMsgRequest>,
     ) -> Result<Json<party_one::SignatureRecid>, String> {
         let db = state.lock().await;
-        let tx_flag = tx_auth.lock().await;
-        if tx_flag.granted(&*request.message.to_hex().to_string(), claim.sub.as_str()).unwrap() == false {
-            panic!(
-                "Unauthorized transaction from redis-pps: {:?}",
-                id.clone().to_string()
-            );
+        if !env::var("redis_env").is_ok() {
+            if db.granted(&*request.message.to_hex().to_string(), claim.sub.as_str())==Ok(false) {
+                panic!(
+                    "Unauthorized transaction from redis-pps: {:?}",
+                    id.clone().to_string()
+                );
+            }
         }
 
         //: MasterKey1
@@ -239,18 +240,18 @@ pub trait Sign {
     }
     async fn sign_second_v2(
         state: &State<Mutex<Box<dyn Db>>>,
-        tx_auth: &State<Mutex<Box<dyn Txauthorization>>>,
         claim: Claims,
         ssid: String,
         request: Json<SignSecondMsgRequest>,
     ) -> Result<Json<party_one::SignatureRecid>, String> {
         let db = state.lock().await;
-        let tx_flag = tx_auth.lock().await;
-        if tx_flag.granted(&*request.message.to_hex().to_string(), claim.sub.as_str()).unwrap() == false {
-            panic!(
-                "Unauthorized transaction from redis-pps: {:?}",
-                ssid.clone().to_string()
-            );
+        if !env::var("redis_env").is_ok() {
+            if db.granted(&*request.message.to_hex().to_string(), claim.sub.as_str())==Ok(false) {
+                panic!(
+                    "Unauthorized transaction from redis-pps: {:?}",
+                    ssid.clone().to_string()
+                );
+            }
         }
 
         println!(
@@ -350,7 +351,7 @@ pub trait Sign {
 
             db.insert(&DbIndex {
                 customerId: claim.sub.to_string(),
-                id: id.clone().to_string()
+                id: id.clone().to_string(),
             }, &EcdsaStruct::Abort, &item)
                 .await
                 .or(Err("Failed to insert into db"))?;

@@ -9,11 +9,6 @@ use two_party_ecdsa::party_one::Value;
 use redis::{Commands, Connection, RedisResult};
 use rocket::async_trait;
 
-/// The Txauthorization trait allows for extra tx authorization during the sign protocol. Private Gotham implements the logic of authorization tx while public one lets it empty
-pub trait Txauthorization: Send + Sync {
-    /// the granted function implements the logic of tx authorization. If no tx authorization is needed the function returns always true
-    fn granted(&self,message: &str,customerId: &str) -> Result<bool, DatabaseError>;
-}
 
 /// The Db trait allows different DB's to implement a common API for insert and get
 #[async_trait]
@@ -72,6 +67,9 @@ pub trait Db: Send + Sync {
         table_name: &dyn MPCStruct,
     ) -> Result<Option<Box<dyn Value>>, DatabaseError>;
     async fn has_active_share(&self, customerId: &str) -> Result<bool, String>;
+
+    /// the granted function implements the logic of tx authorization. If no tx authorization is needed the function returns always true
+    fn granted(&self, message: &str, customer_id: &str) -> Result<bool, DatabaseError>;
 }
 
 /// Common trait both for private and public for redis api
@@ -117,6 +115,7 @@ pub trait RedisMod {
         client.get_connection()
     }
 }
+
 ///Trait for table names management for the different type of tables to be inserted in the DB
 pub trait MPCStruct: Sync {
     fn to_string(&self) -> String;
