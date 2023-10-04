@@ -12,7 +12,7 @@ use rocket::async_trait;
 /// The Txauthorization trait allows for extra tx authorization during the sign protocol. Private Gotham implements the logic of authorization tx while public one lets it empty
 pub trait Txauthorization: Send + Sync {
     /// the granted function implements the logic of tx authorization. If no tx authorization is needed the function returns always true
-    fn granted(&self) -> Result<bool, DatabaseError>;
+    fn granted(&self,message: &str,customerId: &str) -> Result<bool, DatabaseError>;
 }
 
 /// The Db trait allows different DB's to implement a common API for insert and get

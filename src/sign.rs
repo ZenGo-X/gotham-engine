@@ -4,7 +4,7 @@ use crate::types::{DbIndex, EcdsaStruct, SignSecondMsgRequest,idify,Aborted};
 use config::Value;
 
 use two_party_ecdsa::kms::ecdsa::two_party::MasterKey1;
-use two_party_ecdsa::party_one::v;
+use two_party_ecdsa::party_one::{Converter, v};
 use two_party_ecdsa::{party_one, party_two, BigInt};
 
 use rocket::serde::json::Json;
@@ -75,7 +75,7 @@ pub trait Sign {
     ) -> Result<Json<party_one::SignatureRecid>, String> {
         let db = state.lock().await;
         let tx_flag = tx_auth.lock().await;
-        if tx_flag.granted().unwrap() == false {
+        if tx_flag.granted(&*request.message.to_hex().to_string(), claim.sub.as_str()).unwrap() == false {
             panic!(
                 "Unauthorized transaction from redis-pps: {:?}",
                 id.clone().to_string()
