@@ -13,8 +13,9 @@ use two_party_ecdsa::kms::ecdsa::two_party::{party1};
 use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::{Party1FirstMessage, Party1SecondMessage};
 
 use rocket::serde::json::Json;
-use rocket::{post, State};
+use rocket::{post, get, http::Status, State};
 use tokio::sync::Mutex;
+
 
 #[post("/ecdsa/keygen/first", format = "json")]
 pub async fn wrap_keygen_first(
@@ -152,4 +153,11 @@ pub async fn wrap_sign_second_v2(
     struct Gotham {}
     impl Sign for Gotham {}
     Gotham::sign_second_v2(state, claim, ssid, request).await
+}
+
+
+#[get("/health")]
+pub fn ping() -> Status {
+    // TODO: Add logic for health check
+    Status::Ok
 }
