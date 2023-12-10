@@ -101,7 +101,7 @@ impl EcdsaStruct {
             EcdsaStruct::PDLDecommit => "PDLdecommit",
             EcdsaStruct::Alpha => "Alpha",
             EcdsaStruct::Party2PDLFirstMsg => "PDLFirstMessage",
-            EcdsaStruct::CCKeyGenFirstMsg => "KeyGenFirstMsg",
+            EcdsaStruct::CCKeyGenFirstMsg => "Party1FirstMessage",
             EcdsaStruct::CCCommWitness => "CommWitnessDHPoK",
             EcdsaStruct::CCEcKeyPair => "EcKeyPairDHPoK",
             EcdsaStruct::CC => "ChainCode1",
