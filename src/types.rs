@@ -109,7 +109,7 @@ impl EcdsaStruct {
             EcdsaStruct::EphEcKeyPair => "EphEcKeyPair",
             EcdsaStruct::EphKeyGenFirstMsg => "EphKeyGenFirstMsg",
             EcdsaStruct::POS => "POS",
-            EcdsaStruct::Abort => "Abort"
+            EcdsaStruct::Abort => "v"
         };
 
         res.to_string()
