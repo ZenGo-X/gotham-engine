@@ -45,4 +45,4 @@ config = "0.13.3"
 uuid = { version = "0.7", features = ["v4"] }
 jsonwebtoken = "8"
 hex = "0.4"
-two-party-ecdsa = { git = "https://github.com/ZenGo-X/two-party-ecdsa.git", branch="compatibility_gotham_engine" }
+two-party-ecdsa = { git = "https://github.com/ZenGo-X/two-party-ecdsa.git", branch="serde-type-name" }

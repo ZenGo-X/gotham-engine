@@ -127,4 +127,5 @@ pub trait MPCStruct: Sync {
     fn require_customer_id(&self) -> bool {
         true
     }
+    fn to_struct_name(&self) -> String;
 }

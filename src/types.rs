@@ -88,6 +88,35 @@ pub enum EcdsaStruct {
     Abort,
 }
 
+impl EcdsaStruct {
+    fn to_struct_name(&self) -> String {
+        let res = match self {
+            EcdsaStruct::KeyGenFirstMsg => "KeyGenFirstMsg",
+            EcdsaStruct::CommWitness => "CommWitness",
+            EcdsaStruct::EcKeyPair => "EcKeyPair",
+            EcdsaStruct::PaillierKeyPair => "PaillierKeyPair",
+            EcdsaStruct::Party1Private => "Party1Private",
+            EcdsaStruct::Party2Public => "Secp256k1Point",
+            EcdsaStruct::PDLProver => "PDLProver",
+            EcdsaStruct::PDLDecommit => "PDLdecommit",
+            EcdsaStruct::Alpha => "Alpha",
+            EcdsaStruct::Party2PDLFirstMsg => "PDLFirstMessage",
+            EcdsaStruct::CCKeyGenFirstMsg => "Party1FirstMessage",
+            EcdsaStruct::CCCommWitness => "CommWitnessDHPoK",
+            EcdsaStruct::CCEcKeyPair => "EcKeyPairDHPoK",
+            EcdsaStruct::CC => "ChainCode1",
+            EcdsaStruct::Party1MasterKey => "MasterKey1",
+            EcdsaStruct::EphEcKeyPair => "EphEcKeyPair",
+            EcdsaStruct::EphKeyGenFirstMsg => "EphKeyGenFirstMsg",
+            EcdsaStruct::POS => "POS",
+            EcdsaStruct::Abort => "v"
+        };
+
+        res.to_string()
+    }
+}
+
+
 /// Wrapper struct for alpha values. They implement the Value trait in order to serialize/deserialize trait objects. Generics was not an option
 /// since they are used inside KeyGen and Sign traits which are treated as trait objects
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
@@ -105,6 +134,10 @@ impl Display for Alpha {
 impl Value for Alpha {
     fn as_any(&self) -> &dyn Any {
         self
+    }
+
+    fn type_name(&self) -> &str {
+        "Alpha"
     }
 }
 
@@ -124,6 +157,10 @@ impl Value for Aborted {
     fn as_any(&self) -> &dyn Any {
         self
     }
+
+    fn type_name(&self) -> &str {
+        "Aborted"
+    }
 }
 ///common functions for the members of EcdsaStruct struct to strigify and format
 impl MPCStruct for EcdsaStruct {
@@ -142,6 +179,10 @@ impl MPCStruct for EcdsaStruct {
 
     fn require_customer_id(&self) -> bool {
         self.to_string() == "Party1MasterKey" || self.to_string() == "Abort"
+    }
+
+    fn to_struct_name(&self) -> String {
+        self.to_struct_name()
     }
 }
 
