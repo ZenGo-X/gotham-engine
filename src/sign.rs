@@ -185,8 +185,11 @@ pub trait Sign {
                 &EcdsaStruct::Abort,
             )
             .await
-            .or(Err("Failed to get from db"))?
-            .ok_or(format!("No data for such identifier {}", id))?;
+            .unwrap_or_else(|err|
+                panic!("DatabaseError: {}", err))
+            .unwrap_or(
+            Box::new(v { value: "false".to_string() }));
+
         let abort_res = abort.as_any().downcast_ref::<v>().unwrap();
 
         if abort_res.value == "true" {
