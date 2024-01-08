@@ -26,7 +26,7 @@ pub trait KeyGen {
         let db = state.lock().await;
 
         //do not run in a local env
-        if !env::var("redis_env").is_ok() {
+        if env::var("redis_env").is_ok() {
             match db.has_active_share(&claim.sub).await {
                 Err(e) => {
                     let msg = format!(
