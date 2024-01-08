@@ -77,7 +77,7 @@ pub trait Sign {
         request: Json<SignSecondMsgRequest>,
     ) -> Result<Json<party_one::SignatureRecid>, String> {
         let db = state.lock().await;
-        if env::var("redis_env").is_ok() {
+        if env::var("REDIS_ENV").is_ok() {
             if db.granted(&*request.message.to_hex().to_string(), claim.sub.as_str())==Ok(false) {
                 panic!(
                     "Unauthorized transaction from redis-pps: {:?}",
@@ -251,7 +251,7 @@ pub trait Sign {
         request: Json<SignSecondMsgRequest>,
     ) -> Result<Json<party_one::SignatureRecid>, String> {
         let db = state.lock().await;
-        if env::var("redis_env").is_ok() {
+        if env::var("REDIS_ENV").is_ok() {
             if db.granted(&*request.message.to_hex().to_string(), claim.sub.as_str())==Ok(false) {
                 panic!(
                     "Unauthorized transaction from redis-pps: {:?}",
