@@ -26,7 +26,7 @@ pub trait KeyGen {
         let db = state.lock().await;
 
         //do not run in a local env
-        if !env::var("redis_env").is_ok() {
+        if env::var("REDIS_ENV").is_ok() {
             match db.has_active_share(&claim.sub).await {
                 Err(e) => {
                     let msg = format!(
@@ -93,21 +93,6 @@ pub trait KeyGen {
             },
             &EcdsaStruct::EcKeyPair,
             &ec_key_pair,
-        )
-            .await
-            .or(Err("Failed to insert into db"))?;
-
-        let value = v {
-            value: "false".parse().unwrap(),
-        };
-
-        db.insert(
-            &DbIndex {
-                customerId: claim.sub.to_string(),
-                id: id.clone(),
-            },
-            &EcdsaStruct::Abort,
-            &value,
         )
             .await
             .or(Err("Failed to insert into db"))?;
