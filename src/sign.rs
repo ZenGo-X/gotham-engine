@@ -32,8 +32,11 @@ pub trait Sign {
                 &EcdsaStruct::Abort,
             )
             .await
-            .or(Err("Failed to get from db"))?
-            .ok_or(format!("No data for such identifier {}", id))?;
+            .unwrap_or_else(|err|
+                panic!("DatabaseError: {}", err))
+            .unwrap_or(
+                Box::new(v { value: "false".to_string() }));
+
         let abort_res = abort.as_any().downcast_ref::<v>().unwrap();
 
         if abort_res.value == "true" {
@@ -74,7 +77,7 @@ pub trait Sign {
         request: Json<SignSecondMsgRequest>,
     ) -> Result<Json<party_one::SignatureRecid>, String> {
         let db = state.lock().await;
-        if !env::var("redis_env").is_ok() {
+        if env::var("REDIS_ENV").is_ok() {
             if db.granted(&*request.message.to_hex().to_string(), claim.sub.as_str())==Ok(false) {
                 panic!(
                     "Unauthorized transaction from redis-pps: {:?}",
@@ -248,7 +251,7 @@ pub trait Sign {
         request: Json<SignSecondMsgRequest>,
     ) -> Result<Json<party_one::SignatureRecid>, String> {
         let db = state.lock().await;
-        if !env::var("redis_env").is_ok() {
+        if env::var("REDIS_ENV").is_ok() {
             if db.granted(&*request.message.to_hex().to_string(), claim.sub.as_str())==Ok(false) {
                 panic!(
                     "Unauthorized transaction from redis-pps: {:?}",
