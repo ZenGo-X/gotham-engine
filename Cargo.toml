@@ -46,3 +46,4 @@ uuid = { version = "0.7", features = ["v4"] }
 jsonwebtoken = "8"
 hex = "0.4"
 two-party-ecdsa = { git = "https://github.com/ZenGo-X/two-party-ecdsa.git", branch="party1-msg1-rand-range" }
+
