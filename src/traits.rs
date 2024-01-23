@@ -4,7 +4,7 @@ use std::env;
 
 use crate::types::{DatabaseError, DbIndex};
 
-use two_party_ecdsa::party_one::Value;
+use two_party_ecdsa::typetags::Value;
 
 use redis::{Commands, Connection, RedisResult};
 use rocket::async_trait;
@@ -129,3 +129,18 @@ pub trait MPCStruct: Sync {
     }
     fn to_struct_name(&self) -> String;
 }
+
+
+#[macro_export]
+macro_rules! db_get {
+    ($db:expr, $customer_id:expr, $id:expr, $enum_val:ident) => {
+        $db
+            .get(&DbIndex {customerId: $customer_id, id: $id},
+                &EcdsaStruct::$enum_val)
+            .await
+            .or(Err("Failed to get from db"))?
+            .ok_or(format!("{} with customerId='{}' and id='{}' does not exist",
+                $id, $customer_id, stringify!($enum_val)))?
+    };
+}
+

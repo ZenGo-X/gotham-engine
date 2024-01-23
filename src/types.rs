@@ -5,7 +5,8 @@ use std::any::Any;
 use std::fmt::{Display, Formatter};
 use thiserror::Error;
 use two_party_ecdsa::kms::ecdsa::two_party::party2;
-use two_party_ecdsa::party_one::Value;
+use two_party_ecdsa::typetag_value;
+use two_party_ecdsa::typetags::Value;
 use two_party_ecdsa::BigInt;
 
 #[derive(Debug, Error, PartialEq, Eq, Clone)]
@@ -84,6 +85,17 @@ pub enum EcdsaStruct {
     EphEcKeyPair,
     EphKeyGenFirstMsg,
 
+    RotateFirstMsg,
+    RotateCommitMessage1M,
+    RotateCommitMessage1R,
+    RotateRandom1,
+
+    RotateParty1Second,
+    RotateParty2First,
+    RotatePdlDecom,
+    RotatePrivateNew,
+
+
     POS,
     Abort,
 }
@@ -109,7 +121,15 @@ impl EcdsaStruct {
             EcdsaStruct::EphEcKeyPair => "EphEcKeyPair",
             EcdsaStruct::EphKeyGenFirstMsg => "EphKeyGenFirstMsg",
             EcdsaStruct::POS => "POS",
-            EcdsaStruct::Abort => "v"
+            EcdsaStruct::Abort => "v",
+            EcdsaStruct::RotateFirstMsg => "RotateFirstMsg",
+            EcdsaStruct::RotateCommitMessage1M => "RotateCommitMessage1M",
+            EcdsaStruct::RotateCommitMessage1R => "RotateCommitMessage1R",
+            EcdsaStruct::RotateParty1Second => "RotateParty1Second",
+            EcdsaStruct::RotateParty2First => "RotateParty2First",
+            EcdsaStruct::RotatePdlDecom => "RotatePdlDecom",
+            EcdsaStruct::RotatePrivateNew => "RotatePrivateNew",
+            EcdsaStruct::RotateRandom1 => "RotateRandom1"
         };
 
         res.to_string()
@@ -124,44 +144,16 @@ pub struct Alpha {
     pub value: BigInt,
 }
 
-impl Display for Alpha {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
 
-#[typetag::serde]
-impl Value for Alpha {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-
-    fn type_name(&self) -> &str {
-        "Alpha"
-    }
-}
+typetag_value!(Alpha);
 
 #[derive(Serialize, Deserialize,Debug)]
 pub(crate) struct Aborted {
     pub(crate) isAborted: String,
 }
 
-impl Display for Aborted {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
+typetag_value!(Aborted);
 
-#[typetag::serde]
-impl Value for Aborted {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-
-    fn type_name(&self) -> &str {
-        "Aborted"
-    }
-}
 ///common functions for the members of EcdsaStruct struct to strigify and format
 impl MPCStruct for EcdsaStruct {
     fn to_string(&self) -> String {
