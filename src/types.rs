@@ -85,57 +85,19 @@ pub enum EcdsaStruct {
     EphEcKeyPair,
     EphKeyGenFirstMsg,
 
-    RotateFirstMsg,
     RotateCommitMessage1M,
     RotateCommitMessage1R,
     RotateRandom1,
-
-    RotateParty1Second,
-    RotateParty2First,
-    RotatePdlDecom,
+    RotateFirstMsg,
     RotatePrivateNew,
+    RotatePdlDecom,
+    RotateParty2First,
+    RotateParty1Second,
 
 
     POS,
     Abort,
 }
-
-impl EcdsaStruct {
-    fn to_struct_name(&self) -> String {
-        let res = match self {
-            EcdsaStruct::KeyGenFirstMsg => "KeyGenFirstMsg",
-            EcdsaStruct::CommWitness => "CommWitness",
-            EcdsaStruct::EcKeyPair => "EcKeyPair",
-            EcdsaStruct::PaillierKeyPair => "PaillierKeyPair",
-            EcdsaStruct::Party1Private => "Party1Private",
-            EcdsaStruct::Party2Public => "Secp256k1Point",
-            EcdsaStruct::PDLProver => "PDLProver",
-            EcdsaStruct::PDLDecommit => "PDLdecommit",
-            EcdsaStruct::Alpha => "Alpha",
-            EcdsaStruct::Party2PDLFirstMsg => "PDLFirstMessage",
-            EcdsaStruct::CCKeyGenFirstMsg => "Party1FirstMessage",
-            EcdsaStruct::CCCommWitness => "CommWitnessDHPoK",
-            EcdsaStruct::CCEcKeyPair => "EcKeyPairDHPoK",
-            EcdsaStruct::CC => "ChainCode1",
-            EcdsaStruct::Party1MasterKey => "MasterKey1",
-            EcdsaStruct::EphEcKeyPair => "EphEcKeyPair",
-            EcdsaStruct::EphKeyGenFirstMsg => "EphKeyGenFirstMsg",
-            EcdsaStruct::POS => "POS",
-            EcdsaStruct::Abort => "v",
-            EcdsaStruct::RotateFirstMsg => "RotateFirstMsg",
-            EcdsaStruct::RotateCommitMessage1M => "RotateCommitMessage1M",
-            EcdsaStruct::RotateCommitMessage1R => "RotateCommitMessage1R",
-            EcdsaStruct::RotateParty1Second => "RotateParty1Second",
-            EcdsaStruct::RotateParty2First => "RotateParty2First",
-            EcdsaStruct::RotatePdlDecom => "RotatePdlDecom",
-            EcdsaStruct::RotatePrivateNew => "RotatePrivateNew",
-            EcdsaStruct::RotateRandom1 => "RotateRandom1"
-        };
-
-        res.to_string()
-    }
-}
-
 
 /// Wrapper struct for alpha values. They implement the Value trait in order to serialize/deserialize trait objects. Generics was not an option
 /// since they are used inside KeyGen and Sign traits which are treated as trait objects
@@ -144,10 +106,9 @@ pub struct Alpha {
     pub value: BigInt,
 }
 
-
 typetag_value!(Alpha);
 
-#[derive(Serialize, Deserialize,Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct Aborted {
     pub(crate) isAborted: String,
 }
@@ -174,7 +135,39 @@ impl MPCStruct for EcdsaStruct {
     }
 
     fn to_struct_name(&self) -> String {
-        self.to_struct_name()
+        let res = match self {
+            EcdsaStruct::KeyGenFirstMsg => "KeyGenFirstMsg",
+            EcdsaStruct::CommWitness => "CommWitness",
+            EcdsaStruct::EcKeyPair => "EcKeyPair",
+            EcdsaStruct::PaillierKeyPair => "PaillierKeyPair",
+            EcdsaStruct::Party1Private => "Party1Private",
+            EcdsaStruct::Party2Public => "Secp256k1Point",
+            EcdsaStruct::PDLProver => "PDLProver",
+            EcdsaStruct::PDLDecommit => "PDLdecommit",
+            EcdsaStruct::Alpha => "Alpha",
+            EcdsaStruct::Party2PDLFirstMsg => "PDLFirstMessage",
+            EcdsaStruct::CCKeyGenFirstMsg => "Party1FirstMessage",
+            EcdsaStruct::CCCommWitness => "CommWitnessDHPoK",
+            EcdsaStruct::CCEcKeyPair => "EcKeyPairDHPoK",
+            EcdsaStruct::CC => "ChainCode1",
+            EcdsaStruct::Party1MasterKey => "MasterKey1",
+            EcdsaStruct::EphEcKeyPair => "EphEcKeyPair",
+            EcdsaStruct::EphKeyGenFirstMsg => "EphKeyGenFirstMsg",
+            EcdsaStruct::POS => "POS",
+            EcdsaStruct::Abort => "v",
+
+            EcdsaStruct::RotateCommitMessage1M => "RotateCommitMessage1M",
+            EcdsaStruct::RotateCommitMessage1R => "RotateCommitMessage1R",
+            EcdsaStruct::RotateRandom1 => "RotateRandom1",
+            EcdsaStruct::RotateFirstMsg => "RotateFirstMsg",
+            EcdsaStruct::RotatePrivateNew => "RotatePrivateNew",
+            EcdsaStruct::RotatePdlDecom => "RotatePdlDecom",
+            EcdsaStruct::RotateParty2First => "RotateParty2First",
+            EcdsaStruct::RotateParty1Second => "RotateParty1Second",
+
+        };
+
+        res.to_string()
     }
 }
 

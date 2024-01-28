@@ -4,7 +4,7 @@
 use crate::guarder::Claims;
 use crate::keygen::KeyGen;
 use crate::sign::Sign;
-use crate::traits::{Db};
+use crate::traits::Db;
 use crate::types::SignSecondMsgRequest;
 
 use two_party_ecdsa::{party_one, party_two};
@@ -13,9 +13,8 @@ use two_party_ecdsa::kms::ecdsa::two_party::{party1};
 use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::{Party1FirstMessage, Party1SecondMessage};
 
 use rocket::serde::json::Json;
-use rocket::{post, get, http::Status, State};
+use rocket::{get, http::Status, post, State};
 use tokio::sync::Mutex;
-
 
 #[post("/ecdsa/keygen/first", format = "json")]
 pub async fn wrap_keygen_first(
@@ -40,9 +39,9 @@ pub async fn wrap_keygen_second(
 }
 
 #[post(
-"/ecdsa/keygen/<id>/third",
-format = "json",
-data = "<party_2_pdl_first_message>"
+    "/ecdsa/keygen/<id>/third",
+    format = "json",
+    data = "<party_2_pdl_first_message>"
 )]
 pub async fn wrap_keygen_third(
     state: &State<Mutex<Box<dyn Db>>>,
@@ -56,9 +55,9 @@ pub async fn wrap_keygen_third(
 }
 
 #[post(
-"/ecdsa/keygen/<id>/fourth",
-format = "json",
-data = "<party_two_pdl_second_message>"
+    "/ecdsa/keygen/<id>/fourth",
+    format = "json",
+    data = "<party_two_pdl_second_message>"
 )]
 pub async fn wrap_keygen_fourth(
     state: &State<Mutex<Box<dyn Db>>>,
@@ -83,9 +82,9 @@ pub async fn wrap_chain_code_first_message(
 }
 
 #[post(
-"/ecdsa/keygen/<id>/chaincode/second",
-format = "json",
-data = "<cc_party_two_first_message_d_log_proof>"
+    "/ecdsa/keygen/<id>/chaincode/second",
+    format = "json",
+    data = "<cc_party_two_first_message_d_log_proof>"
 )]
 pub async fn wrap_chain_code_second_message(
     state: &State<Mutex<Box<dyn Db>>>,
@@ -100,9 +99,9 @@ pub async fn wrap_chain_code_second_message(
 }
 
 #[post(
-"/ecdsa/sign/<id>/first",
-format = "json",
-data = "<eph_key_gen_first_message_party_two>"
+    "/ecdsa/sign/<id>/first",
+    format = "json",
+    data = "<eph_key_gen_first_message_party_two>"
 )]
 pub async fn wrap_sign_first(
     state: &State<Mutex<Box<dyn Db>>>,
@@ -128,9 +127,9 @@ pub async fn wrap_sign_second(
 }
 
 #[post(
-"/ecdsa/sign/<id>/first_v2",
-format = "json",
-data = "<eph_key_gen_first_message_party_two>"
+    "/ecdsa/sign/<id>/first_v2",
+    format = "json",
+    data = "<eph_key_gen_first_message_party_two>"
 )]
 pub async fn wrap_sign_first_v2(
     state: &State<Mutex<Box<dyn Db>>>,
@@ -154,7 +153,6 @@ pub async fn wrap_sign_second_v2(
     impl Sign for Gotham {}
     Gotham::sign_second_v2(state, claim, ssid, request).await
 }
-
 
 #[get("/health")]
 pub fn ping() -> Status {

@@ -9,7 +9,6 @@ use two_party_ecdsa::typetags::Value;
 use redis::{Commands, Connection, RedisResult};
 use rocket::async_trait;
 
-
 /// The Db trait allows different DB's to implement a common API for insert and get
 #[async_trait]
 pub trait Db: Send + Sync {

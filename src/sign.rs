@@ -1,11 +1,11 @@
-use std::env;
 use crate::guarder::Claims;
 use crate::traits::{Db, RedisMod};
-use crate::types::{DbIndex, EcdsaStruct, SignSecondMsgRequest, idify, Aborted};
+use crate::types::{idify, Aborted, DbIndex, EcdsaStruct, SignSecondMsgRequest};
 use config::Value;
+use std::env;
 
 use two_party_ecdsa::kms::ecdsa::two_party::MasterKey1;
-use two_party_ecdsa::party_one::{Converter, v};
+use two_party_ecdsa::party_one::{v, Converter};
 use two_party_ecdsa::{party_one, party_two, BigInt};
 
 use rocket::serde::json::Json;
@@ -32,10 +32,10 @@ pub trait Sign {
                 &EcdsaStruct::Abort,
             )
             .await
-            .unwrap_or_else(|err|
-                panic!("DatabaseError: {}", err))
-            .unwrap_or(
-                Box::new(v { value: "false".to_string() }));
+            .unwrap_or_else(|err| panic!("DatabaseError: {}", err))
+            .unwrap_or(Box::new(v {
+                value: "false".to_string(),
+            }));
 
         let abort_res = abort.as_any().downcast_ref::<v>().unwrap();
 
@@ -54,8 +54,8 @@ pub trait Sign {
             &EcdsaStruct::EphKeyGenFirstMsg,
             &eph_key_gen_first_message_party_two.0,
         )
-            .await
-            .or(Err("Failed to insert into db"))?;
+        .await
+        .or(Err("Failed to insert into db"))?;
 
         db.insert(
             &DbIndex {
@@ -65,8 +65,8 @@ pub trait Sign {
             &EcdsaStruct::EphEcKeyPair,
             &eph_ec_key_pair_party1,
         )
-            .await
-            .or(Err("Failed to insert into db"))?;
+        .await
+        .or(Err("Failed to insert into db"))?;
 
         Ok(Json(sign_party_one_first_message))
     }
@@ -78,7 +78,7 @@ pub trait Sign {
     ) -> Result<Json<party_one::SignatureRecid>, String> {
         let db = state.lock().await;
         if env::var("REDIS_ENV").is_ok() {
-            if db.granted(&*request.message.to_hex().to_string(), claim.sub.as_str())==Ok(false) {
+            if db.granted(&*request.message.to_hex().to_string(), claim.sub.as_str()) == Ok(false) {
                 panic!(
                     "Unauthorized transaction from redis-pps: {:?}",
                     id.clone().to_string()
@@ -160,8 +160,8 @@ pub trait Sign {
                 &EcdsaStruct::Abort,
                 &value,
             )
-                .await
-                .or(Err("Failed to insert into db"))?;
+            .await
+            .or(Err("Failed to insert into db"))?;
             panic!("Server sign_second: validation of signature failed. Potential adversary")
         };
 
@@ -188,10 +188,10 @@ pub trait Sign {
                 &EcdsaStruct::Abort,
             )
             .await
-            .unwrap_or_else(|err|
-                panic!("DatabaseError: {}", err))
-            .unwrap_or(
-            Box::new(v { value: "false".to_string() }));
+            .unwrap_or_else(|err| panic!("DatabaseError: {}", err))
+            .unwrap_or(Box::new(v {
+                value: "false".to_string(),
+            }));
 
         let abort_res = abort.as_any().downcast_ref::<v>().unwrap();
 
@@ -202,7 +202,8 @@ pub trait Sign {
         struct RedisCon {}
         impl RedisMod for RedisCon {}
 
-        let (sign_party_one_first_message, eph_ec_key_pair_party1) = MasterKey1::sign_first_message();
+        let (sign_party_one_first_message, eph_ec_key_pair_party1) =
+            MasterKey1::sign_first_message();
         let sid = Uuid::new_v4().to_string();
         let ssid = String::from(id + "," + &*sid);
         println!("Server side - sign first ssid={:?}", ssid);
@@ -213,7 +214,7 @@ pub trait Sign {
             key.clone(),
             serde_json::to_string(&eph_key_gen_first_message_party_two.0).unwrap(),
         )
-            .is_ok();
+        .is_ok();
         let mut err_msg: String = format!(
             "redis error during set key-value = {:?} - {:?}",
             key.clone().to_string(),
@@ -231,7 +232,7 @@ pub trait Sign {
             key.clone(),
             serde_json::to_string(&eph_ec_key_pair_party1).unwrap(),
         )
-            .is_ok();
+        .is_ok();
         err_msg = format!(
             "redis error during set key-value = {:?} - {:?}",
             key.clone().to_string(),
@@ -252,7 +253,7 @@ pub trait Sign {
     ) -> Result<Json<party_one::SignatureRecid>, String> {
         let db = state.lock().await;
         if env::var("REDIS_ENV").is_ok() {
-            if db.granted(&*request.message.to_hex().to_string(), claim.sub.as_str())==Ok(false) {
+            if db.granted(&*request.message.to_hex().to_string(), claim.sub.as_str()) == Ok(false) {
                 panic!(
                     "Unauthorized transaction from redis-pps: {:?}",
                     ssid.clone().to_string()
@@ -342,25 +343,37 @@ pub trait Sign {
                 "y_pos_child_key: {}",
                 request.y_pos_child_key.clone().to_string()
             );
-            println!("public: {:?}", master_key
-                .as_any()
-                .downcast_ref::<MasterKey1>()
-                .unwrap().public);
-            println!("private {:?}", master_key
-                .as_any()
-                .downcast_ref::<MasterKey1>()
-                .unwrap().private);
+            println!(
+                "public: {:?}",
+                master_key
+                    .as_any()
+                    .downcast_ref::<MasterKey1>()
+                    .unwrap()
+                    .public
+            );
+            println!(
+                "private {:?}",
+                master_key
+                    .as_any()
+                    .downcast_ref::<MasterKey1>()
+                    .unwrap()
+                    .private
+            );
 
             let item = Aborted {
                 isAborted: "true".to_string(),
             };
 
-            db.insert(&DbIndex {
-                customerId: claim.sub.to_string(),
-                id: id.clone().to_string(),
-            }, &EcdsaStruct::Abort, &item)
-                .await
-                .or(Err("Failed to insert into db"))?;
+            db.insert(
+                &DbIndex {
+                    customerId: claim.sub.to_string(),
+                    id: id.clone().to_string(),
+                },
+                &EcdsaStruct::Abort,
+                &item,
+            )
+            .await
+            .or(Err("Failed to insert into db"))?;
             panic!("Server sign_second: verification of signature failed. Potential adversary")
         };
 
