@@ -93,6 +93,7 @@ pub enum EcdsaStruct {
     RotatePdlDecom,
     RotateParty2First,
     RotateParty1Second,
+    RotateAlpha,
 
 
     POS,
@@ -164,7 +165,7 @@ impl MPCStruct for EcdsaStruct {
             EcdsaStruct::RotatePdlDecom => "RotatePdlDecom",
             EcdsaStruct::RotateParty2First => "RotateParty2First",
             EcdsaStruct::RotateParty1Second => "RotateParty1Second",
-
+            EcdsaStruct::RotateAlpha => "RotateAlpha",
         };
 
         res.to_string()
