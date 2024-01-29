@@ -16,7 +16,7 @@ use rocket::serde::json::Json;
 use rocket::{get, http::Status, post, State};
 use tokio::sync::Mutex;
 
-#[post("/ecdsa/keygen/first", format = "json")]
+#[post("/ecdsa/keygen_v2/first", format = "json")]
 pub async fn wrap_keygen_first(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
@@ -26,7 +26,7 @@ pub async fn wrap_keygen_first(
     Gotham::first(state, claim).await
 }
 
-#[post("/ecdsa/keygen/<id>/second", format = "json", data = "<dlog_proof>")]
+#[post("/ecdsa/keygen_v2/<id>/second", format = "json", data = "<dlog_proof>")]
 pub async fn wrap_keygen_second(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
@@ -39,7 +39,7 @@ pub async fn wrap_keygen_second(
 }
 
 #[post(
-    "/ecdsa/keygen/<id>/third",
+    "/ecdsa/keygen_v2/<id>/third",
     format = "json",
     data = "<party_2_pdl_first_message>"
 )]
@@ -55,7 +55,7 @@ pub async fn wrap_keygen_third(
 }
 
 #[post(
-    "/ecdsa/keygen/<id>/fourth",
+    "/ecdsa/keygen_v2/<id>/fourth",
     format = "json",
     data = "<party_two_pdl_second_message>"
 )]
@@ -70,7 +70,7 @@ pub async fn wrap_keygen_fourth(
     Gotham::fourth(state, claim, id, party_two_pdl_second_message).await
 }
 
-#[post("/ecdsa/keygen/<id>/chaincode/first", format = "json")]
+#[post("/ecdsa/keygen_v2/<id>/chaincode/first", format = "json")]
 pub async fn wrap_chain_code_first_message(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
@@ -82,7 +82,7 @@ pub async fn wrap_chain_code_first_message(
 }
 
 #[post(
-    "/ecdsa/keygen/<id>/chaincode/second",
+    "/ecdsa/keygen_v2/<id>/chaincode/second",
     format = "json",
     data = "<cc_party_two_first_message_d_log_proof>"
 )]

@@ -144,7 +144,7 @@ impl MPCStruct for EcdsaStruct {
             EcdsaStruct::Party1Private => "Party1Private",
             EcdsaStruct::Party2Public => "Secp256k1Point",
             EcdsaStruct::PDLProver => "PDLProver",
-            EcdsaStruct::PDLDecommit => "PDLDecommit",
+            EcdsaStruct::PDLDecommit => "Party1PDLDecommit",
             EcdsaStruct::Alpha => "Alpha",
             EcdsaStruct::Party2PDLFirstMsg => "Party2PDLFirstMessage",
             EcdsaStruct::CCKeyGenFirstMsg => "Party1FirstMessageDHPoK",
