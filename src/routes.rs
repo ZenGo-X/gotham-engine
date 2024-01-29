@@ -10,7 +10,7 @@ use crate::types::SignSecondMsgRequest;
 use two_party_ecdsa::{party_one, party_two};
 use two_party_ecdsa::party_one::{KeyGenFirstMsg, DLogProof};
 use two_party_ecdsa::kms::ecdsa::two_party::{party1};
-use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::{Party1FirstMessage, Party1SecondMessage};
+use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::{Party1FirstMessageDHPoK, Party1SecondMessageDHPoK};
 
 use rocket::serde::json::Json;
 use rocket::{get, http::Status, post, State};
@@ -47,8 +47,8 @@ pub async fn wrap_keygen_third(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
     id: String,
-    party_2_pdl_first_message: Json<party_two::PDLFirstMessage>,
-) -> Result<Json<party_one::PDLFirstMessage>, String> {
+    party_2_pdl_first_message: Json<party_two::Party2PDLFirstMessage>,
+) -> Result<Json<party_one::Party1PDLFirstMessage>, String> {
     struct Gotham {}
     impl KeyGen for Gotham {}
     Gotham::third(state, claim, id, party_2_pdl_first_message).await
@@ -63,8 +63,8 @@ pub async fn wrap_keygen_fourth(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
     id: String,
-    party_two_pdl_second_message: Json<party_two::PDLSecondMessage>,
-) -> Result<Json<party_one::PDLSecondMessage>, String> {
+    party_two_pdl_second_message: Json<party_two::Party2PDLSecondMessage>,
+) -> Result<Json<party_one::Party1PDLSecondMessage>, String> {
     struct Gotham {}
     impl KeyGen for Gotham {}
     Gotham::fourth(state, claim, id, party_two_pdl_second_message).await
@@ -75,7 +75,7 @@ pub async fn wrap_chain_code_first_message(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
     id: String,
-) -> Result<Json<Party1FirstMessage>, String> {
+) -> Result<Json<Party1FirstMessageDHPoK>, String> {
     struct Gotham {}
     impl KeyGen for Gotham {}
     Gotham::chain_code_first_message(state, claim, id).await
@@ -91,7 +91,7 @@ pub async fn wrap_chain_code_second_message(
     claim: Claims,
     id: String,
     cc_party_two_first_message_d_log_proof: Json<DLogProof>,
-) -> Result<Json<Party1SecondMessage>, String> {
+) -> Result<Json<Party1SecondMessageDHPoK>, String> {
     struct Gotham {}
     impl KeyGen for Gotham {}
     Gotham::chain_code_second_message(state, claim, id, cc_party_two_first_message_d_log_proof)

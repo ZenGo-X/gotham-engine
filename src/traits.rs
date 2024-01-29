@@ -4,10 +4,10 @@ use std::env;
 
 use crate::types::{DatabaseError, DbIndex};
 
-use two_party_ecdsa::typetags::Value;
 
 use redis::{Commands, Connection, RedisResult};
 use rocket::async_trait;
+use two_party_ecdsa::typetags::Value;
 
 /// The Db trait allows different DB's to implement a common API for insert and get
 #[async_trait]

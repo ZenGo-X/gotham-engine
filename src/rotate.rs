@@ -83,8 +83,8 @@ pub trait Rotate {
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         id: String,
-        rotation_party_two_first: Json<party_two::PDLFirstMessage>,
-    ) -> Result<Json<party_one::PDLFirstMessage>, String> {
+        rotation_party_two_first: Json<party_two::Party2PDLFirstMessage>,
+    ) -> Result<Json<party_one::Party1PDLFirstMessage>, String> {
         let db = state.lock().await;
 
         let tmp = db_get!(db, claim.sub, id, RotatePrivateNew);
@@ -113,8 +113,8 @@ pub trait Rotate {
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         id: String,
-        rotation_party_two_second: Json<party_two::PDLSecondMessage>,
-    ) -> Result<Json<(party_one::PDLSecondMessage)>, String> {
+        rotation_party_two_second: Json<party_two::Party2PDLSecondMessage>,
+    ) -> Result<Json<(party_one::Party1PDLSecondMessage)>, String> {
         let db = state.lock().await;
 
         let tmp = db_get!(db, claim.sub, id, RotateFirstMsg);
@@ -131,13 +131,13 @@ pub trait Rotate {
         // let rotation_party_one_second = db_cast!(tmp, party_one::PDLSecondMessage);
 
         let tmp = db_get!(db, claim.sub, id, RotateParty2First);
-        let rotation_party_two_first = db_cast!(tmp, party_two::PDLFirstMessage);
+        let rotation_party_two_first = db_cast!(tmp, party_two::Party2PDLFirstMessage);
 
         let tmp = db_get!(db, claim.sub, id, RotateAlpha);
         let party_one_alpha = db_cast!(tmp, Alpha);
 
         let tmp = db_get!(db, claim.sub, id, RotatePdlDecom);
-        let party_one_pdl_decommit = db_cast!(tmp, party_one::PDLdecommit);
+        let party_one_pdl_decommit = db_cast!(tmp, party_one::Party1PDLDecommit);
 
         let mk_tmp = db_get!(db, claim.sub, id, Party1MasterKey);
         let party_one_master_key_temp = db_cast!(mk_tmp, MasterKey1);
