@@ -15,6 +15,9 @@ use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_v
 use rocket::serde::json::Json;
 use rocket::{get, http::Status, post, State};
 use tokio::sync::Mutex;
+use two_party_ecdsa::curv::cryptographic_primitives::twoparty::coin_flip_optimal_rounds;
+use two_party_ecdsa::kms::ecdsa::two_party::party1::RotationParty1Message1;
+use crate::rotate::Rotate;
 
 #[post("/ecdsa/keygen_v2/first", format = "json")]
 pub async fn wrap_keygen_first(
@@ -152,6 +155,63 @@ pub async fn wrap_sign_second_v2(
     struct Gotham {}
     impl Sign for Gotham {}
     Gotham::sign_second_v2(state, claim, ssid, request).await
+}
+
+#[post(
+"/ecdsa/rotate/<id>/first",
+format = "json"
+)]
+pub async fn wrap_rotate_first(
+    state: &State<Mutex<Box<dyn Db>>>,
+    claim: Claims,
+    id: String,
+) -> Result<Json<(coin_flip_optimal_rounds::Party1FirstMessage)>, String> {
+    struct Gotham {}
+    impl Rotate for Gotham {}
+    Gotham::rotate_first(state, claim, id).await
+}
+
+#[post(
+"/ecdsa/rotate/<id>/second", format = "json", data = "<request>"
+)]
+pub async fn wrap_rotate_second(
+    state: &State<Mutex<Box<dyn Db>>>,
+    claim: Claims,
+    id: String,
+    request: Json<coin_flip_optimal_rounds::Party2FirstMessage>,
+) -> Result<Json<Option<(coin_flip_optimal_rounds::Party1SecondMessage, RotationParty1Message1)>>, String> {
+    struct Gotham {}
+    impl Rotate for Gotham {}
+    Gotham::rotate_second(state, claim, id, request).await
+}
+
+#[post(
+"/ecdsa/rotate/<id>/third", format = "json", data = "<request>"
+)]
+pub async fn wrap_rotate_third(
+    state: &State<Mutex<Box<dyn Db>>>,
+    claim: Claims,
+    id: String,
+    request: Json<party_two::Party2PDLFirstMessage>,
+) -> Result<Json<party_one::Party1PDLFirstMessage>, String> {
+    struct Gotham {}
+    impl Rotate for Gotham {}
+    Gotham::rotate_third(state, claim, id, request).await
+}
+
+
+#[post(
+"/ecdsa/rotate/<id>/forth", format = "json", data = "<request>"
+)]
+pub async fn wrap_rotate_forth(
+    state: &State<Mutex<Box<dyn Db>>>,
+    claim: Claims,
+    id: String,
+    request:  Json<party_two::Party2PDLSecondMessage>,
+) -> Result<Json<(party_one::Party1PDLSecondMessage)>, String> {
+    struct Gotham {}
+    impl Rotate for Gotham {}
+    Gotham::rotate_forth(state, claim, id, request).await
 }
 
 #[get("/health")]

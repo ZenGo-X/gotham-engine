@@ -28,7 +28,7 @@ pub trait Rotate {
 
         let (party1_first, m1, r1) = Rotation1::key_rotate_first_message();
 
-        db_insert!(db, claim.sub, id, RotateCommitMessage1R, m1);
+        db_insert!(db, claim.sub, id, RotateCommitMessage1M, m1);
 
         db_insert!(db, claim.sub, id, RotateCommitMessage1R, r1);
 
@@ -49,7 +49,7 @@ pub trait Rotate {
         let tmp = db_get!(db, claim.sub, id, RotateCommitMessage1R);
         let r1 = db_cast!(tmp, Secp256k1Scalar);
 
-        let (coin_flip_party1_second, random) =
+        let (coin_flip_party1_second, random1) =
             Rotation1::key_rotate_second_message(&coin_flip_party2_first.0, &m1, &r1);
 
         let mk_tmp = db_get!(db, claim.sub, id, Party1MasterKey);
@@ -58,16 +58,16 @@ pub trait Rotate {
 
         if !party_one::Party1Private::check_rotated_key_bounds(
             &party_one_master_key_temp.private,
-            &random.rotation.to_big_int(),
+            &random1.rotation.to_big_int(),
         ) {
             // TODO: check if RotateCommitMessage1M and RotateCommitMessage1R need to be deleted
             return Ok(Json(None));
         }
 
-        db_insert!(db, claim.sub, id, RotateRandom1, random);
+        db_insert!(db, claim.sub, id, RotateRandom1, random1);
 
         let (rotation_party_one_first, party_one_private_new) =
-            party_one_master_key.rotation_first_message(&random);
+            party_one_master_key.rotation_first_message(&random1);
 
         db_insert!(db, claim.sub, id, RotateFirstMsg, rotation_party_one_first);
 
