@@ -52,12 +52,11 @@ pub trait Rotate {
         let (coin_flip_party1_second, random1) =
             Rotation1::key_rotate_second_message(&coin_flip_party2_first.0, &m1, &r1);
 
-        let mk_tmp = db_get!(db, claim.sub, id, Party1MasterKey);
-        let party_one_master_key_temp = db_cast!(mk_tmp, MasterKey1);
-        let party_one_master_key = party_one_master_key_temp.clone();
+        let tmp = db_get!(db, claim.sub, id, Party1MasterKey);
+        let party_one_master_key = db_cast!(tmp, MasterKey1);
 
-        if !party_one::Party1Private::check_rotated_key_bounds(
-            &party_one_master_key_temp.private,
+        if party_one::Party1Private::check_rotated_key_bounds(
+            &party_one_master_key.private,
             &random1.rotation.to_big_int(),
         ) {
             // TODO: check if RotateCommitMessage1M and RotateCommitMessage1R need to be deleted
