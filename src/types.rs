@@ -85,8 +85,7 @@ pub enum EcdsaStruct {
     EphEcKeyPair,
     EphKeyGenFirstMsg,
 
-    RotateCommitMessage1M,
-    RotateCommitMessage1R,
+    RotateCommitMessage1,
     RotateRandom1,
     RotateFirstMsg,
     RotatePrivateNew,
@@ -157,8 +156,7 @@ impl MPCStruct for EcdsaStruct {
             EcdsaStruct::POS => "POS",
             EcdsaStruct::Abort => "v",
 
-            EcdsaStruct::RotateCommitMessage1M => "RotateCommitMessage1M",
-            EcdsaStruct::RotateCommitMessage1R => "RotateCommitMessage1R",
+            EcdsaStruct::RotateCommitMessage1 => "RotateCommitMessage1",
             EcdsaStruct::RotateRandom1 => "RotateRandom1",
             EcdsaStruct::RotateFirstMsg => "RotateFirstMsg",
             EcdsaStruct::RotatePrivateNew => "RotatePrivateNew",

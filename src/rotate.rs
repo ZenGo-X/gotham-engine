@@ -10,6 +10,7 @@ use tokio::sync::Mutex;
 use two_party_ecdsa::curv::cryptographic_primitives::twoparty::coin_flip_optimal_rounds;
 use two_party_ecdsa::curv::elliptic::curves::traits::ECScalar;
 use two_party_ecdsa::kms::ecdsa::two_party::party1::RotationParty1Message1;
+use two_party_ecdsa::kms::ecdsa::two_party::party1::RotateCommitMessage1;
 use two_party_ecdsa::kms::ecdsa::two_party::MasterKey1;
 use two_party_ecdsa::kms::rotation::two_party::party1::Rotation1;
 use two_party_ecdsa::{BigInt, party_one, party_two, Secp256k1Scalar};
@@ -26,11 +27,9 @@ pub trait Rotate {
     ) -> Result<Json<coin_flip_optimal_rounds::Party1FirstMessage>, String> {
         let db = state.lock().await;
 
-        let (party1_first, m1, r1) = Rotation1::key_rotate_first_message();
+        let (party1_first, rotate_commit_message) = Rotation1::key_rotate_first_message();
 
-        db_insert!(db, claim.sub, id, RotateCommitMessage1M, m1);
-
-        db_insert!(db, claim.sub, id, RotateCommitMessage1R, r1);
+        db_insert!(db, claim.sub, id, RotateCommitMessage1, rotate_commit_message);
 
         Ok(Json(party1_first))
     }
@@ -43,14 +42,11 @@ pub trait Rotate {
     ) -> Result<Json<Option<(coin_flip_optimal_rounds::Party1SecondMessage, RotationParty1Message1)>>, String> {
         let db = state.lock().await;
 
-        let tmp = db_get!(db, claim.sub, id, RotateCommitMessage1M);
-        let m1 = db_cast!(tmp, Secp256k1Scalar);
-
-        let tmp = db_get!(db, claim.sub, id, RotateCommitMessage1R);
-        let r1 = db_cast!(tmp, Secp256k1Scalar);
+        let tmp = db_get!(db, claim.sub, id, RotateCommitMessage1);
+        let rotate_commit_message = db_cast!(tmp, RotateCommitMessage1);
 
         let (coin_flip_party1_second, random1) =
-            Rotation1::key_rotate_second_message(&coin_flip_party2_first.0, &m1, &r1);
+            Rotation1::key_rotate_second_message(&coin_flip_party2_first.0, &rotate_commit_message);
 
         let tmp = db_get!(db, claim.sub, id, Party1MasterKey);
         let party_one_master_key = db_cast!(tmp, MasterKey1);
