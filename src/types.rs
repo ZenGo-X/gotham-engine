@@ -177,8 +177,7 @@ impl MPCStruct for EcdsaStruct {
 pub struct SignSecondMsgRequest {
     pub message: BigInt,
     pub party_two_sign_message: party2::SignMessage,
-    pub x_pos_child_key: BigInt,
-    pub y_pos_child_key: BigInt,
+    pub derivation_path: Vec<BigInt>,
 }
 #[inline(always)]
 pub fn idify(user_id: &String, id: &String, name: &dyn MPCStruct) -> String {
