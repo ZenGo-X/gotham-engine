@@ -159,7 +159,7 @@ impl MPCStruct for EcdsaStruct {
             EcdsaStruct::RotateCommitMessage1 => "RotateCommitMessage1",
             EcdsaStruct::RotateRandom1 => "RotateRandom1",
             EcdsaStruct::RotateFirstMsg => "RotateFirstMsg",
-            EcdsaStruct::RotatePrivateNew => "RotatePrivateNew",
+            EcdsaStruct::RotatePrivateNew => "Party1Private",
             EcdsaStruct::RotatePdlDecom => "RotatePdlDecom",
             EcdsaStruct::RotateParty2First => "RotateParty2First",
             EcdsaStruct::RotateParty1Second => "RotateParty1Second",
