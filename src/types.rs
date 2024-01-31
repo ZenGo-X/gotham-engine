@@ -157,12 +157,12 @@ impl MPCStruct for EcdsaStruct {
             EcdsaStruct::Abort => "v",
 
             EcdsaStruct::RotateCommitMessage1 => "RotateCommitMessage1",
-            EcdsaStruct::RotateRandom1 => "RotateRandom1",
-            EcdsaStruct::RotateFirstMsg => "RotateFirstMsg",
+            EcdsaStruct::RotateRandom1 => "Rotation",
+            EcdsaStruct::RotateFirstMsg => "RotationParty1Message1",
             EcdsaStruct::RotatePrivateNew => "Party1Private",
-            EcdsaStruct::RotatePdlDecom => "RotatePdlDecom",
-            EcdsaStruct::RotateParty2First => "RotateParty2First",
-            EcdsaStruct::RotateParty1Second => "RotateParty1Second",
+            EcdsaStruct::RotatePdlDecom => "Party1PDLDecommit",
+            EcdsaStruct::RotateParty2First => "Party2PDLFirstMessage",
+            EcdsaStruct::RotateParty1Second => "Party1PDLFirstMessage",
             EcdsaStruct::RotateAlpha => "RotateAlpha",
         };
 

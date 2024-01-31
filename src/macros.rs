@@ -11,15 +11,15 @@ macro_rules! db_get {
         .await
         .or(Err(format!(
             "Failed to get {} with customerId: {}, id: {} from db",
+            stringify!($enum_ident),
             $id,
             $customer_id,
-            stringify!($enum_ident)
         )))?
         .ok_or(format!(
             "{} with customerId: {}, id: {} does not exist in db",
+            stringify!($enum_ident),
             $id,
             $customer_id,
-            stringify!($enum_ident)
         ))?
     };
 }
@@ -44,6 +44,8 @@ macro_rules! db_insert {
         )))?
     };
 }
+
+//TODO: db_insert abort after error
 
 #[macro_export]
 macro_rules! db_cast {
