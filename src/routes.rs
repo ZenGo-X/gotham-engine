@@ -33,12 +33,12 @@ pub async fn wrap_keygen_first(
 pub async fn wrap_keygen_second(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
-    id: String,
+    id: &str,
     dlog_proof: Json<DLogProof>,
 ) -> Result<Json<party1::KeyGenParty1Message2>, String> {
     struct Gotham {}
     impl KeyGen for Gotham {}
-    Gotham::second(state, claim, id, dlog_proof).await
+    Gotham::second(state, claim, id.to_string(), dlog_proof).await
 }
 
 #[post(
@@ -49,12 +49,12 @@ pub async fn wrap_keygen_second(
 pub async fn wrap_keygen_third(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
-    id: String,
+    id: &str,
     party_2_pdl_first_message: Json<party_two::Party2PDLFirstMessage>,
 ) -> Result<Json<party_one::Party1PDLFirstMessage>, String> {
     struct Gotham {}
     impl KeyGen for Gotham {}
-    Gotham::third(state, claim, id, party_2_pdl_first_message).await
+    Gotham::third(state, claim, id.to_string(), party_2_pdl_first_message).await
 }
 
 #[post(
@@ -65,23 +65,23 @@ pub async fn wrap_keygen_third(
 pub async fn wrap_keygen_fourth(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
-    id: String,
+    id: &str,
     party_two_pdl_second_message: Json<party_two::Party2PDLSecondMessage>,
 ) -> Result<Json<party_one::Party1PDLSecondMessage>, String> {
     struct Gotham {}
     impl KeyGen for Gotham {}
-    Gotham::fourth(state, claim, id, party_two_pdl_second_message).await
+    Gotham::fourth(state, claim, id.to_string(), party_two_pdl_second_message).await
 }
 
 #[post("/ecdsa/keygen_v2/<id>/chaincode/first", format = "json")]
 pub async fn wrap_chain_code_first_message(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
-    id: String,
+    id: &str,
 ) -> Result<Json<Party1FirstMessageDHPoK>, String> {
     struct Gotham {}
     impl KeyGen for Gotham {}
-    Gotham::chain_code_first_message(state, claim, id).await
+    Gotham::chain_code_first_message(state, claim, id.to_string()).await
 }
 
 #[post(
@@ -92,12 +92,12 @@ pub async fn wrap_chain_code_first_message(
 pub async fn wrap_chain_code_second_message(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
-    id: String,
+    id: &str,
     cc_party_two_first_message_d_log_proof: Json<DLogProof>,
 ) -> Result<Json<Party1SecondMessageDHPoK>, String> {
     struct Gotham {}
     impl KeyGen for Gotham {}
-    Gotham::chain_code_second_message(state, claim, id, cc_party_two_first_message_d_log_proof)
+    Gotham::chain_code_second_message(state, claim, id.to_string(), cc_party_two_first_message_d_log_proof)
         .await
 }
 
@@ -109,24 +109,24 @@ pub async fn wrap_chain_code_second_message(
 pub async fn wrap_sign_first(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
-    id: String,
+    id: &str,
     eph_key_gen_first_message_party_two: Json<party_two::EphKeyGenFirstMsg>,
 ) -> Result<Json<party_one::EphKeyGenFirstMsg>, String> {
     struct Gotham {}
     impl Sign for Gotham {}
-    Gotham::sign_first(state, claim, id, eph_key_gen_first_message_party_two).await
+    Gotham::sign_first(state, claim, id.to_string(), eph_key_gen_first_message_party_two).await
 }
 
 #[post("/ecdsa/sign/<id>/second", format = "json", data = "<request>")]
 pub async fn wrap_sign_second(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
-    id: String,
+    id: &str,
     request: Json<SignSecondMsgRequest>,
 ) -> Result<Json<party_one::SignatureRecid>, String> {
     struct Gotham {}
     impl Sign for Gotham {}
-    Gotham::sign_second(state, claim, id, request).await
+    Gotham::sign_second(state, claim, id.to_string(), request).await
 }
 
 #[post(
@@ -137,24 +137,24 @@ pub async fn wrap_sign_second(
 pub async fn wrap_sign_first_v2(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
-    id: String,
+    id: &str,
     eph_key_gen_first_message_party_two: Json<party_two::EphKeyGenFirstMsg>,
 ) -> Result<Json<(String, party_one::EphKeyGenFirstMsg)>, String> {
     struct Gotham {}
     impl Sign for Gotham {}
-    Gotham::sign_first_v2(state, claim, id, eph_key_gen_first_message_party_two).await
+    Gotham::sign_first_v2(state, claim, id.to_string(), eph_key_gen_first_message_party_two).await
 }
 
 #[post("/ecdsa/sign/<ssid>/second_v2", format = "json", data = "<request>")]
 pub async fn wrap_sign_second_v2(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
-    ssid: String,
+    ssid: &str,
     request: Json<SignSecondMsgRequest>,
 ) -> Result<Json<party_one::SignatureRecid>, String> {
     struct Gotham {}
     impl Sign for Gotham {}
-    Gotham::sign_second_v2(state, claim, ssid, request).await
+    Gotham::sign_second_v2(state, claim, ssid.to_string(), request).await
 }
 
 #[post(
@@ -164,11 +164,11 @@ format = "json"
 pub async fn wrap_rotate_first(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
-    id: String,
+    id: &str,
 ) -> Result<Json<(coin_flip_optimal_rounds::Party1FirstMessage)>, String> {
     struct Gotham {}
     impl Rotate for Gotham {}
-    Gotham::rotate_first(state, claim, id).await
+    Gotham::rotate_first(state, claim, id.to_string()).await
 }
 
 #[post(
@@ -177,12 +177,12 @@ pub async fn wrap_rotate_first(
 pub async fn wrap_rotate_second(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
-    id: String,
+    id: &str,
     request: Json<coin_flip_optimal_rounds::Party2FirstMessage>,
 ) -> Result<Json<Option<(coin_flip_optimal_rounds::Party1SecondMessage, RotationParty1Message1)>>, String> {
     struct Gotham {}
     impl Rotate for Gotham {}
-    Gotham::rotate_second(state, claim, id, request).await
+    Gotham::rotate_second(state, claim, id.to_string(), request).await
 }
 
 #[post(
@@ -191,12 +191,12 @@ pub async fn wrap_rotate_second(
 pub async fn wrap_rotate_third(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
-    id: String,
+    id: &str,
     request: Json<party_two::Party2PDLFirstMessage>,
 ) -> Result<Json<party_one::Party1PDLFirstMessage>, String> {
     struct Gotham {}
     impl Rotate for Gotham {}
-    Gotham::rotate_third(state, claim, id, request).await
+    Gotham::rotate_third(state, claim, id.to_string(), request).await
 }
 
 
@@ -206,12 +206,12 @@ pub async fn wrap_rotate_third(
 pub async fn wrap_rotate_forth(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
-    id: String,
+    id: &str,
     request:  Json<party_two::Party2PDLSecondMessage>,
 ) -> Result<Json<(party_one::Party1PDLSecondMessage)>, String> {
     struct Gotham {}
     impl Rotate for Gotham {}
-    Gotham::rotate_forth(state, claim, id, request).await
+    Gotham::rotate_forth(state, claim, id.to_string(), request).await
 }
 
 #[get("/health")]
