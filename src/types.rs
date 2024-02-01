@@ -1,13 +1,12 @@
 //! Common types for traits the implementations thereofs at [private_gotham] and [public_gotham]
 use crate::traits::MPCStruct;
 use serde::{Deserialize, Serialize};
-use std::any::Any;
 use std::fmt::{Display, Formatter};
 use thiserror::Error;
-use two_party_ecdsa::kms::ecdsa::two_party::party2;
 use two_party_ecdsa::typetag_value;
 use two_party_ecdsa::typetags::Value;
 use two_party_ecdsa::BigInt;
+use two_party_ecdsa::kms::ecdsa::two_party::party2::Party2SignMessage;
 
 #[derive(Debug, Error, PartialEq, Eq, Clone)]
 /// The DatabaseError defines different types of database errors for better error handling
@@ -136,10 +135,10 @@ impl MPCStruct for EcdsaStruct {
 
     fn to_struct_name(&self) -> String {
         let res = match self {
-            EcdsaStruct::KeyGenFirstMsg => "KeyGenFirstMsg",
-            EcdsaStruct::CommWitness => "CommWitness",
-            EcdsaStruct::EcKeyPair => "EcKeyPair",
-            EcdsaStruct::PaillierKeyPair => "PaillierKeyPair",
+            EcdsaStruct::KeyGenFirstMsg => "Party1KeyGenFirstMsg",
+            EcdsaStruct::CommWitness => "Party1CommWitness",
+            EcdsaStruct::EcKeyPair => "Party1EcKeyPair",
+            EcdsaStruct::PaillierKeyPair => "Party1PaillierKeyPair",
             EcdsaStruct::Party1Private => "Party1Private",
             EcdsaStruct::Party2Public => "Secp256k1Point",
             EcdsaStruct::PDLProver => "PDLProver",
@@ -174,7 +173,7 @@ impl MPCStruct for EcdsaStruct {
 #[derive(Serialize, Deserialize)]
 pub struct SignSecondMsgRequest {
     pub message: BigInt,
-    pub party_two_sign_message: party2::SignMessage,
+    pub party_two_sign_message: Party2SignMessage,
     pub x_pos_child_key: BigInt,
     pub y_pos_child_key: BigInt,
 }

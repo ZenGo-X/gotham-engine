@@ -5,12 +5,13 @@ use config::Value;
 use std::env;
 
 use two_party_ecdsa::kms::ecdsa::two_party::MasterKey1;
-use two_party_ecdsa::party_one::{v, Converter};
+use two_party_ecdsa::party_one::{v, Converter, Party1EphKeyGenFirstMessage, Party1EphEcKeyPair};
 use two_party_ecdsa::{party_one, party_two, BigInt};
 
 use rocket::serde::json::Json;
 use rocket::{async_trait, State};
 use tokio::sync::Mutex;
+use two_party_ecdsa::party_two::Party2EphKeyGenFirstMessage;
 use uuid::Uuid;
 
 #[async_trait]
@@ -19,8 +20,8 @@ pub trait Sign {
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         id: String,
-        eph_key_gen_first_message_party_two: Json<party_two::EphKeyGenFirstMsg>,
-    ) -> Result<Json<party_one::EphKeyGenFirstMsg>, String> {
+        eph_key_gen_first_message_party_two: Json<Party2EphKeyGenFirstMessage>,
+    ) -> Result<Json<Party1EphKeyGenFirstMessage>, String> {
         let db = state.lock().await;
 
         let abort = db
@@ -138,11 +139,11 @@ pub trait Sign {
             &request.party_two_sign_message,
             &eph_key_gen_first_message_party_two
                 .as_any()
-                .downcast_ref::<party_two::EphKeyGenFirstMsg>()
+                .downcast_ref::<Party2EphKeyGenFirstMessage>()
                 .unwrap(),
             &eph_ec_key_pair_party1
                 .as_any()
-                .downcast_ref::<party_one::EphEcKeyPair>()
+                .downcast_ref::<Party1EphEcKeyPair>()
                 .unwrap(),
             &request.message,
         );
@@ -171,8 +172,8 @@ pub trait Sign {
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         id: String,
-        eph_key_gen_first_message_party_two: Json<party_two::EphKeyGenFirstMsg>,
-    ) -> Result<Json<(String, party_one::EphKeyGenFirstMsg)>, String> {
+        eph_key_gen_first_message_party_two: Json<Party2EphKeyGenFirstMessage>,
+    ) -> Result<Json<(String, Party1EphKeyGenFirstMessage)>, String> {
         let db = state.lock().await;
         println!(
             "[cross-session] Sign first round - id = {:?} - customerID = {:?}",
@@ -298,11 +299,11 @@ pub trait Sign {
             .unwrap()
             .get_child(vec![x, y]);
         let key1 = idify(&claim.sub, &ssid, &EcdsaStruct::EphEcKeyPair);
-        let eph_ec_key_pair_party1: party_one::EphEcKeyPair =
+        let eph_ec_key_pair_party1: Party1EphEcKeyPair =
             serde_json::from_slice(&RedisCon::redis_get(key1.clone()).unwrap().as_bytes()).unwrap();
 
         let key2 = idify(&claim.sub, &ssid, &EcdsaStruct::EphKeyGenFirstMsg);
-        let eph_key_gen_first_message_party_two: party_two::EphKeyGenFirstMsg =
+        let eph_key_gen_first_message_party_two: Party2EphKeyGenFirstMessage =
             serde_json::from_slice(&RedisCon::redis_get(key2.clone()).unwrap().as_bytes()).unwrap();
 
         let _ = RedisCon::redis_del(key1);

@@ -8,21 +8,22 @@ use crate::traits::Db;
 use crate::types::SignSecondMsgRequest;
 
 use two_party_ecdsa::{party_one, party_two};
-use two_party_ecdsa::party_one::{KeyGenFirstMsg, KeyGenParty1Message2, DLogProof};
-use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::{Party1FirstMessageDHPoK, Party1SecondMessageDHPoK};
+use two_party_ecdsa::party_one::{Party1KeyGenFirstMessage, Party1KeyGenMessage2, DLogProof, Party1EphKeyGenFirstMessage};
+use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::{DHPoKParty1FirstMessage, DHPoKParty1SecondMessage};
 
 use rocket::serde::json::Json;
 use rocket::{get, http::Status, post, State};
 use tokio::sync::Mutex;
 use two_party_ecdsa::curv::cryptographic_primitives::twoparty::coin_flip_optimal_rounds;
 use two_party_ecdsa::kms::rotation::two_party::party1::RotationParty1Message1;
+use two_party_ecdsa::party_two::Party2EphKeyGenFirstMessage;
 use crate::rotate::Rotate;
 
 #[post("/ecdsa/keygen_v2/first", format = "json")]
 pub async fn wrap_keygen_first(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
-) -> Result<Json<(String, KeyGenFirstMsg)>, String> {
+) -> Result<Json<(String, Party1KeyGenFirstMessage)>, String> {
     struct Gotham {}
     impl KeyGen for Gotham {}
     Gotham::first(state, claim).await
@@ -34,7 +35,7 @@ pub async fn wrap_keygen_second(
     claim: Claims,
     id: &str,
     dlog_proof: Json<DLogProof>,
-) -> Result<Json<KeyGenParty1Message2>, String> {
+) -> Result<Json<Party1KeyGenMessage2>, String> {
     struct Gotham {}
     impl KeyGen for Gotham {}
     Gotham::second(state, claim, id.to_string(), dlog_proof).await
@@ -77,7 +78,7 @@ pub async fn wrap_chain_code_first_message(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
     id: &str,
-) -> Result<Json<Party1FirstMessageDHPoK>, String> {
+) -> Result<Json<DHPoKParty1FirstMessage>, String> {
     struct Gotham {}
     impl KeyGen for Gotham {}
     Gotham::chain_code_first_message(state, claim, id.to_string()).await
@@ -93,7 +94,7 @@ pub async fn wrap_chain_code_second_message(
     claim: Claims,
     id: &str,
     cc_party_two_first_message_d_log_proof: Json<DLogProof>,
-) -> Result<Json<Party1SecondMessageDHPoK>, String> {
+) -> Result<Json<DHPoKParty1SecondMessage>, String> {
     struct Gotham {}
     impl KeyGen for Gotham {}
     Gotham::chain_code_second_message(state, claim, id.to_string(), cc_party_two_first_message_d_log_proof)
@@ -109,8 +110,8 @@ pub async fn wrap_sign_first(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
     id: &str,
-    eph_key_gen_first_message_party_two: Json<party_two::EphKeyGenFirstMsg>,
-) -> Result<Json<party_one::EphKeyGenFirstMsg>, String> {
+    eph_key_gen_first_message_party_two: Json<Party2EphKeyGenFirstMessage>,
+) -> Result<Json<Party1EphKeyGenFirstMessage>, String> {
     struct Gotham {}
     impl Sign for Gotham {}
     Gotham::sign_first(state, claim, id.to_string(), eph_key_gen_first_message_party_two).await
@@ -137,8 +138,8 @@ pub async fn wrap_sign_first_v2(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
     id: &str,
-    eph_key_gen_first_message_party_two: Json<party_two::EphKeyGenFirstMsg>,
-) -> Result<Json<(String, party_one::EphKeyGenFirstMsg)>, String> {
+    eph_key_gen_first_message_party_two: Json<Party2EphKeyGenFirstMessage>,
+) -> Result<Json<(String, Party1EphKeyGenFirstMessage)>, String> {
     struct Gotham {}
     impl Sign for Gotham {}
     Gotham::sign_first_v2(state, claim, id.to_string(), eph_key_gen_first_message_party_two).await
