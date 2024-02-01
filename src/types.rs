@@ -6,7 +6,7 @@ use thiserror::Error;
 use two_party_ecdsa::typetag_value;
 use two_party_ecdsa::typetags::Value;
 use two_party_ecdsa::BigInt;
-use two_party_ecdsa::kms::ecdsa::two_party::party2::Party2SignMessage;
+
 
 #[derive(Debug, Error, PartialEq, Eq, Clone)]
 /// The DatabaseError defines different types of database errors for better error handling
@@ -133,6 +133,7 @@ impl MPCStruct for EcdsaStruct {
         self.to_string() == "Party1MasterKey" || self.to_string() == "Abort"
     }
 
+    // TODO: Add unit tests for below casting
     fn to_struct_name(&self) -> String {
         let res = match self {
             EcdsaStruct::KeyGenFirstMsg => "Party1KeyGenFirstMsg",
@@ -170,13 +171,7 @@ impl MPCStruct for EcdsaStruct {
 }
 
 //TODO move to two-party-ecdsa/kms
-#[derive(Serialize, Deserialize)]
-pub struct SignSecondMsgRequest {
-    pub message: BigInt,
-    pub party_two_sign_message: Party2SignMessage,
-    pub x_pos_child_key: BigInt,
-    pub y_pos_child_key: BigInt,
-}
+
 #[inline(always)]
 pub fn idify(user_id: &String, id: &String, name: &dyn MPCStruct) -> String {
     format!("{}_{}_{}", user_id, id, name.to_string())

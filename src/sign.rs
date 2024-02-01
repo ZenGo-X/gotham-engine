@@ -1,13 +1,13 @@
 use crate::guarder::Claims;
 use crate::traits::{Db, RedisMod};
-use crate::types::{idify, Aborted, DbIndex, EcdsaStruct, SignSecondMsgRequest};
+use crate::types::{idify, Aborted, DbIndex, EcdsaStruct};
 use config::Value;
 use std::env;
 
 use two_party_ecdsa::kms::ecdsa::two_party::MasterKey1;
-use two_party_ecdsa::party_one::{v, Converter, Party1EphKeyGenFirstMessage, Party1EphEcKeyPair};
-use two_party_ecdsa::{party_one, party_two, BigInt};
-
+use two_party_ecdsa::kms::ecdsa::two_party::party2::Party2SignSecondMessage;
+use two_party_ecdsa::party_one::{v, Converter, Party1EphKeyGenFirstMessage, Party1EphEcKeyPair, SignatureRecid};
+use two_party_ecdsa::{BigInt};
 use rocket::serde::json::Json;
 use rocket::{async_trait, State};
 use tokio::sync::Mutex;
@@ -75,8 +75,8 @@ pub trait Sign {
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         id: String,
-        request: Json<SignSecondMsgRequest>,
-    ) -> Result<Json<party_one::SignatureRecid>, String> {
+        request: Json<Party2SignSecondMessage>,
+    ) -> Result<Json<SignatureRecid>, String> {
         let db = state.lock().await;
         if env::var("REDIS_ENV").is_ok() {
             if db.granted(&*request.message.to_hex().to_string(), claim.sub.as_str()) == Ok(false) {
@@ -250,8 +250,8 @@ pub trait Sign {
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         ssid: String,
-        request: Json<SignSecondMsgRequest>,
-    ) -> Result<Json<party_one::SignatureRecid>, String> {
+        request: Json<Party2SignSecondMessage>,
+    ) -> Result<Json<SignatureRecid>, String> {
         let db = state.lock().await;
         if env::var("REDIS_ENV").is_ok() {
             if db.granted(&*request.message.to_hex().to_string(), claim.sub.as_str()) == Ok(false) {

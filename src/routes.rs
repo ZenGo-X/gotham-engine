@@ -5,10 +5,8 @@ use crate::guarder::Claims;
 use crate::keygen::KeyGen;
 use crate::sign::Sign;
 use crate::traits::Db;
-use crate::types::SignSecondMsgRequest;
 
-use two_party_ecdsa::{party_one, party_two};
-use two_party_ecdsa::party_one::{Party1KeyGenFirstMessage, Party1KeyGenMessage2, DLogProof, Party1EphKeyGenFirstMessage};
+use two_party_ecdsa::party_one::{Party1KeyGenFirstMessage, Party1KeyGenMessage2, DLogProof, Party1EphKeyGenFirstMessage, SignatureRecid, Party1PDLFirstMessage, Party1PDLSecondMessage};
 use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::{DHPoKParty1FirstMessage, DHPoKParty1SecondMessage};
 
 use rocket::serde::json::Json;
@@ -16,7 +14,8 @@ use rocket::{get, http::Status, post, State};
 use tokio::sync::Mutex;
 use two_party_ecdsa::curv::cryptographic_primitives::twoparty::coin_flip_optimal_rounds;
 use two_party_ecdsa::kms::rotation::two_party::party1::RotationParty1Message1;
-use two_party_ecdsa::party_two::Party2EphKeyGenFirstMessage;
+use two_party_ecdsa::party_two::{Party2EphKeyGenFirstMessage, Party2PDLFirstMessage, Party2PDLSecondMessage};
+use two_party_ecdsa::kms::ecdsa::two_party::party2::Party2SignSecondMessage;
 use crate::rotate::Rotate;
 
 #[post("/ecdsa/keygen_v2/first", format = "json")]
@@ -50,8 +49,8 @@ pub async fn wrap_keygen_third(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
     id: &str,
-    party_2_pdl_first_message: Json<party_two::Party2PDLFirstMessage>,
-) -> Result<Json<party_one::Party1PDLFirstMessage>, String> {
+    party_2_pdl_first_message: Json<Party2PDLFirstMessage>,
+) -> Result<Json<Party1PDLFirstMessage>, String> {
     struct Gotham {}
     impl KeyGen for Gotham {}
     Gotham::third(state, claim, id.to_string(), party_2_pdl_first_message).await
@@ -66,8 +65,8 @@ pub async fn wrap_keygen_fourth(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
     id: &str,
-    party_two_pdl_second_message: Json<party_two::Party2PDLSecondMessage>,
-) -> Result<Json<party_one::Party1PDLSecondMessage>, String> {
+    party_two_pdl_second_message: Json<Party2PDLSecondMessage>,
+) -> Result<Json<Party1PDLSecondMessage>, String> {
     struct Gotham {}
     impl KeyGen for Gotham {}
     Gotham::fourth(state, claim, id.to_string(), party_two_pdl_second_message).await
@@ -122,8 +121,8 @@ pub async fn wrap_sign_second(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
     id: &str,
-    request: Json<SignSecondMsgRequest>,
-) -> Result<Json<party_one::SignatureRecid>, String> {
+    request: Json<Party2SignSecondMessage>,
+) -> Result<Json<SignatureRecid>, String> {
     struct Gotham {}
     impl Sign for Gotham {}
     Gotham::sign_second(state, claim, id.to_string(), request).await
@@ -150,8 +149,8 @@ pub async fn wrap_sign_second_v2(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
     ssid: &str,
-    request: Json<SignSecondMsgRequest>,
-) -> Result<Json<party_one::SignatureRecid>, String> {
+    request: Json<Party2SignSecondMessage>,
+) -> Result<Json<SignatureRecid>, String> {
     struct Gotham {}
     impl Sign for Gotham {}
     Gotham::sign_second_v2(state, claim, ssid.to_string(), request).await
@@ -192,8 +191,8 @@ pub async fn wrap_rotate_third(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
     id: &str,
-    request: Json<party_two::Party2PDLFirstMessage>,
-) -> Result<Json<party_one::Party1PDLFirstMessage>, String> {
+    request: Json<Party2PDLFirstMessage>,
+) -> Result<Json<Party1PDLFirstMessage>, String> {
     struct Gotham {}
     impl Rotate for Gotham {}
     Gotham::rotate_third(state, claim, id.to_string(), request).await
@@ -207,8 +206,8 @@ pub async fn wrap_rotate_forth(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
     id: &str,
-    request:  Json<party_two::Party2PDLSecondMessage>,
-) -> Result<Json<party_one::Party1PDLSecondMessage>, String> {
+    request:  Json<Party2PDLSecondMessage>,
+) -> Result<Json<Party1PDLSecondMessage>, String> {
     struct Gotham {}
     impl Rotate for Gotham {}
     Gotham::rotate_forth(state, claim, id.to_string(), request).await

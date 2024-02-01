@@ -18,7 +18,7 @@ pub trait Db: Send + Sync {
     /// * `table_name` - The table name which is derived from [MPCStruct]
     /// * `value` - The value to be inserted in the db which is a trait object of the trait  [Value]
     /// # Examples:
-    /// ```
+    ///
     /// db.insert(
     ///             &DbIndex {
     ///                customer_id: claim.sub.to_string(),
@@ -32,7 +32,7 @@ pub trait Db: Send + Sync {
     ///                 "Failed to insert into DB PDLDecommit, id: {}",
     ///                id
     ///            )))?;
-    /// ```
+    ///
     async fn insert(
         &self,
         key: &DbIndex,
@@ -45,7 +45,7 @@ pub trait Db: Send + Sync {
     /// * `table_name` - The table name which is derived from [MPCStruct]
     /// * `value` - The value to be inserted in the db which is a trait object of the trait  [Value]
     /// # Examples
-    /// ```
+    ///
     /// let party_one_pdl_decommit =
     ///             db.get(&DbIndex {
     ///                 customer_id: claim.sub.to_string(),
@@ -59,7 +59,7 @@ pub trait Db: Send + Sync {
     ///                 .ok_or(format!("No data for such identifier {}", id))?;
     /// //downcasting the result:
     /// party_one_pdl_decommit.as_any().downcast_ref::<party_one::PDLdecommit>().unwrap()
-    /// ```
+    ///
     async fn get(
         &self,
         key: &DbIndex,
