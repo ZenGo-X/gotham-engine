@@ -8,15 +8,14 @@ use crate::traits::Db;
 use crate::types::SignSecondMsgRequest;
 
 use two_party_ecdsa::{party_one, party_two};
-use two_party_ecdsa::party_one::{KeyGenFirstMsg, DLogProof};
-use two_party_ecdsa::kms::ecdsa::two_party::{party1};
+use two_party_ecdsa::party_one::{KeyGenFirstMsg, KeyGenParty1Message2, DLogProof};
 use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::{Party1FirstMessageDHPoK, Party1SecondMessageDHPoK};
 
 use rocket::serde::json::Json;
 use rocket::{get, http::Status, post, State};
 use tokio::sync::Mutex;
 use two_party_ecdsa::curv::cryptographic_primitives::twoparty::coin_flip_optimal_rounds;
-use two_party_ecdsa::kms::ecdsa::two_party::party1::RotationParty1Message1;
+use two_party_ecdsa::kms::rotation::two_party::party1::RotationParty1Message1;
 use crate::rotate::Rotate;
 
 #[post("/ecdsa/keygen_v2/first", format = "json")]
@@ -35,7 +34,7 @@ pub async fn wrap_keygen_second(
     claim: Claims,
     id: &str,
     dlog_proof: Json<DLogProof>,
-) -> Result<Json<party1::KeyGenParty1Message2>, String> {
+) -> Result<Json<KeyGenParty1Message2>, String> {
     struct Gotham {}
     impl KeyGen for Gotham {}
     Gotham::second(state, claim, id.to_string(), dlog_proof).await
@@ -165,7 +164,7 @@ pub async fn wrap_rotate_first(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
     id: &str,
-) -> Result<Json<(coin_flip_optimal_rounds::Party1FirstMessage)>, String> {
+) -> Result<Json<coin_flip_optimal_rounds::Party1FirstMessage>, String> {
     struct Gotham {}
     impl Rotate for Gotham {}
     Gotham::rotate_first(state, claim, id.to_string()).await
@@ -208,7 +207,7 @@ pub async fn wrap_rotate_forth(
     claim: Claims,
     id: &str,
     request:  Json<party_two::Party2PDLSecondMessage>,
-) -> Result<Json<(party_one::Party1PDLSecondMessage)>, String> {
+) -> Result<Json<party_one::Party1PDLSecondMessage>, String> {
     struct Gotham {}
     impl Rotate for Gotham {}
     Gotham::rotate_forth(state, claim, id.to_string(), request).await

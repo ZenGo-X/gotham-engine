@@ -9,15 +9,11 @@ use rocket::State;
 use tokio::sync::Mutex;
 use two_party_ecdsa::curv::cryptographic_primitives::twoparty::coin_flip_optimal_rounds;
 use two_party_ecdsa::curv::elliptic::curves::traits::ECScalar;
-use two_party_ecdsa::kms::ecdsa::two_party::party1::RotationParty1Message1;
-use two_party_ecdsa::kms::ecdsa::two_party::party1::RotateCommitMessage1;
 use two_party_ecdsa::kms::ecdsa::two_party::MasterKey1;
-use two_party_ecdsa::kms::rotation::two_party::party1::Rotation1;
-use two_party_ecdsa::{BigInt, party_one, party_two, Secp256k1Scalar};
+use two_party_ecdsa::kms::rotation::two_party::party1::{RotateCommitMessage1, Rotation1, RotationParty1Message1};
+use two_party_ecdsa::{party_one, party_two};
 use two_party_ecdsa::kms::rotation::two_party::Rotation;
 
-// https://github.com/ZenGo-X/gotham-city/blob/a762b3c13a2aa64f09c25e20e9b5a72d09078f01/gotham-server/src/routes/ecdsa.rs#L353
-// https://github.com/ZenGo-X/gotham-city/blob/a762b3c13a2aa64f09c25e20e9b5a72d09078f01/gotham-client/src/ecdsa/rotate.rs
 #[async_trait]
 pub trait Rotate {
     async fn rotate_first(
@@ -109,7 +105,7 @@ pub trait Rotate {
         claim: Claims,
         id: String,
         rotation_party_two_second: Json<party_two::Party2PDLSecondMessage>,
-    ) -> Result<Json<(party_one::Party1PDLSecondMessage)>, String> {
+    ) -> Result<Json<party_one::Party1PDLSecondMessage>, String> {
         let db = state.lock().await;
 
         let tmp = db_get!(db, claim.sub, id, RotateFirstMsg);

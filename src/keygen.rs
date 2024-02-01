@@ -5,7 +5,7 @@ use crate::types::{Alpha, DbIndex, EcdsaStruct};
 use two_party_ecdsa::{GE, party_one, party_two};
 use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::{Party1FirstMessageDHPoK, Party1SecondMessageDHPoK};
 use two_party_ecdsa::kms::chain_code::two_party::party1::ChainCode1;
-use two_party_ecdsa::kms::ecdsa::two_party::{MasterKey1, party1};
+use two_party_ecdsa::kms::ecdsa::two_party::{MasterKey1};
 
 use log::{error, warn};
 use rocket::serde::json::Json;
@@ -104,7 +104,7 @@ pub trait KeyGen {
         claim: Claims,
         id: String,
         dlog_proof: Json<party_one::DLogProof>,
-    ) -> Result<Json<party1::KeyGenParty1Message2>, String> {
+    ) -> Result<Json<party_one::KeyGenParty1Message2>, String> {
         let db = state.lock().await;
         let party2_public: GE = dlog_proof.0.pk;
         db.insert(
