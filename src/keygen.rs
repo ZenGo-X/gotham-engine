@@ -3,9 +3,7 @@ use crate::traits::Db;
 use crate::types::{Alpha, DbIndex, EcdsaStruct};
 
 use two_party_ecdsa::{GE, party_one, party_two};
-use two_party_ecdsa::party_one::{KeyGenFirstMsg, DLogProof, HDPos, v, CommWitness, EcKeyPair, Party1Private, PaillierKeyPair};
-use two_party_ecdsa::party_two::{PDLFirstMessage as Party2PDLFirstMsg};
-use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::{Party1FirstMessage, Party1SecondMessage};
+use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::{Party1FirstMessageDHPoK, Party1SecondMessageDHPoK};
 use two_party_ecdsa::kms::chain_code::two_party::party1::ChainCode1;
 use two_party_ecdsa::kms::ecdsa::two_party::{MasterKey1, party1};
 
@@ -22,7 +20,7 @@ pub trait KeyGen {
     async fn first(
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
-    ) -> Result<Json<(String, KeyGenFirstMsg)>, String> {
+    ) -> Result<Json<(String, party_one::KeyGenFirstMsg)>, String> {
         let db = state.lock().await;
 
         //do not run in a local env
@@ -60,10 +58,10 @@ pub trait KeyGen {
                 id: id.clone(),
             },
             &EcdsaStruct::POS,
-            &HDPos { pos: 0u32 },
+            &party_one::HDPos { pos: 0u32 },
         )
-            .await
-            .or(Err("Failed to insert into db"))?;
+        .await
+        .or(Err("Failed to insert into db"))?;
         db.insert(
             &DbIndex {
                 customerId: claim.sub.to_string(),
@@ -72,8 +70,8 @@ pub trait KeyGen {
             &EcdsaStruct::KeyGenFirstMsg,
             &key_gen_first_msg,
         )
-            .await
-            .or(Err("Failed to insert into db"))?;
+        .await
+        .or(Err("Failed to insert into db"))?;
 
         db.insert(
             &DbIndex {
@@ -83,8 +81,8 @@ pub trait KeyGen {
             &EcdsaStruct::CommWitness,
             &comm_witness,
         )
-            .await
-            .or(Err("Failed to insert into db"))?;
+        .await
+        .or(Err("Failed to insert into db"))?;
 
         db.insert(
             &DbIndex {
@@ -94,8 +92,8 @@ pub trait KeyGen {
             &EcdsaStruct::EcKeyPair,
             &ec_key_pair,
         )
-            .await
-            .or(Err("Failed to insert into db"))?;
+        .await
+        .or(Err("Failed to insert into db"))?;
 
         Ok(Json((id.clone(), key_gen_first_msg)))
     }
@@ -105,7 +103,7 @@ pub trait KeyGen {
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         id: String,
-        dlog_proof: Json<DLogProof>,
+        dlog_proof: Json<party_one::DLogProof>,
     ) -> Result<Json<party1::KeyGenParty1Message2>, String> {
         let db = state.lock().await;
         let party2_public: GE = dlog_proof.0.pk;
@@ -117,8 +115,8 @@ pub trait KeyGen {
             &EcdsaStruct::Party2Public,
             &party2_public,
         )
-            .await
-            .or(Err("Failed to insert into db"))?;
+        .await
+        .or(Err("Failed to insert into db"))?;
 
         let comm_witness = db
             .get(
@@ -145,8 +143,8 @@ pub trait KeyGen {
 
         let (kg_party_one_second_message, paillier_key_pair, party_one_private) =
             MasterKey1::key_gen_second_message(
-                comm_witness.as_any().downcast_ref::<CommWitness>().unwrap(),
-                ec_key_pair.as_any().downcast_ref::<EcKeyPair>().unwrap(),
+                comm_witness.as_any().downcast_ref::<party_one::CommWitness>().unwrap(),
+                ec_key_pair.as_any().downcast_ref::<party_one::EcKeyPair>().unwrap(),
                 &dlog_proof.0,
             );
 
@@ -158,8 +156,8 @@ pub trait KeyGen {
             &EcdsaStruct::PaillierKeyPair,
             &paillier_key_pair,
         )
-            .await
-            .or(Err("Failed to insert into db"))?;
+        .await
+        .or(Err("Failed to insert into db"))?;
 
         db.insert(
             &DbIndex {
@@ -169,8 +167,8 @@ pub trait KeyGen {
             &EcdsaStruct::Party1Private,
             &party_one_private,
         )
-            .await
-            .or(Err("Failed to insert into db"))?;
+        .await
+        .or(Err("Failed to insert into db"))?;
 
         Ok(Json(kg_party_one_second_message))
     }
@@ -179,8 +177,8 @@ pub trait KeyGen {
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         id: String,
-        party_2_pdl_first_message: Json<party_two::PDLFirstMessage>,
-    ) -> Result<Json<party_one::PDLFirstMessage>, String> {
+        party_2_pdl_first_message: Json<party_two::Party2PDLFirstMessage>,
+    ) -> Result<Json<party_one::Party1PDLFirstMessage>, String> {
         let db = state.lock().await;
 
         let party_one_private = db
@@ -200,7 +198,7 @@ pub trait KeyGen {
                 &party_2_pdl_first_message.0,
                 &party_one_private
                     .as_any()
-                    .downcast_ref::<Party1Private>()
+                    .downcast_ref::<party_one::Party1Private>()
                     .unwrap(),
             );
 
@@ -212,11 +210,11 @@ pub trait KeyGen {
             &EcdsaStruct::PDLDecommit,
             &party_one_pdl_decommit,
         )
-            .await
-            .or(Err(format!(
-                "Failed to insert into DB PDLDecommit, id: {}",
-                id
-            )))?;
+        .await
+        .or(Err(format!(
+            "Failed to insert into DB PDLDecommit, id: {}",
+            id
+        )))?;
 
         db.insert(
             &DbIndex {
@@ -226,8 +224,8 @@ pub trait KeyGen {
             &EcdsaStruct::Alpha,
             &Alpha { value: alpha },
         )
-            .await
-            .or(Err(format!("Failed to insert into DB Alpha, id: {}", id)))?;
+        .await
+        .or(Err(format!("Failed to insert into DB Alpha, id: {}", id)))?;
 
         db.insert(
             &DbIndex {
@@ -237,11 +235,11 @@ pub trait KeyGen {
             &EcdsaStruct::Party2PDLFirstMsg,
             &party_2_pdl_first_message.0,
         )
-            .await
-            .or(Err(format!(
-                "Failed to insert into DB Party2PDLFirstMsg, id: {}",
-                id
-            )))?;
+        .await
+        .or(Err(format!(
+            "Failed to insert into DB Party2PDLFirstMsg, id: {}",
+            id
+        )))?;
 
         Ok(Json(party_one_third_message))
     }
@@ -249,8 +247,8 @@ pub trait KeyGen {
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         id: String,
-        party_two_pdl_second_message: Json<party_two::PDLSecondMessage>,
-    ) -> Result<Json<party_one::PDLSecondMessage>, String> {
+        party_two_pdl_second_message: Json<party_two::Party2PDLSecondMessage>,
+    ) -> Result<Json<party_one::Party1PDLSecondMessage>, String> {
         let db = state.lock().await;
 
         let party_one_private = db
@@ -310,18 +308,18 @@ pub trait KeyGen {
         let res = MasterKey1::key_gen_fourth_message(
             party_2_pdl_first_message
                 .as_any()
-                .downcast_ref::<Party2PDLFirstMsg>()
+                .downcast_ref::<party_two::Party2PDLFirstMessage>()
                 .unwrap()
                 .clone(),
             &party_two_pdl_second_message.0,
             party_one_private
                 .as_any()
-                .downcast_ref::<Party1Private>()
+                .downcast_ref::<party_one::Party1Private>()
                 .unwrap()
                 .clone(),
             party_one_pdl_decommit
                 .as_any()
-                .downcast_ref::<party_one::PDLdecommit>()
+                .downcast_ref::<party_one::Party1PDLDecommit>()
                 .unwrap()
                 .clone(),
             alpha
@@ -338,7 +336,7 @@ pub trait KeyGen {
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         id: String,
-    ) -> Result<Json<Party1FirstMessage>, String> {
+    ) -> Result<Json<Party1FirstMessageDHPoK>, String> {
         let db = state.lock().await;
 
         let (cc_party_one_first_message, cc_comm_witness, cc_ec_key_pair1) =
@@ -352,8 +350,8 @@ pub trait KeyGen {
             &EcdsaStruct::CCKeyGenFirstMsg,
             &cc_party_one_first_message,
         )
-            .await
-            .or(Err("Failed to insert into db"))?;
+        .await
+        .or(Err("Failed to insert into db"))?;
 
         db.insert(
             &DbIndex {
@@ -363,8 +361,8 @@ pub trait KeyGen {
             &EcdsaStruct::CCCommWitness,
             &cc_comm_witness,
         )
-            .await
-            .or(Err("Failed to insert into db"))?;
+        .await
+        .or(Err("Failed to insert into db"))?;
 
         db.insert(
             &DbIndex {
@@ -374,8 +372,8 @@ pub trait KeyGen {
             &EcdsaStruct::CCEcKeyPair,
             &cc_ec_key_pair1,
         )
-            .await
-            .or(Err("Failed to insert into db"))?;
+        .await
+        .or(Err("Failed to insert into db"))?;
 
         Ok(Json(cc_party_one_first_message))
     }
@@ -383,8 +381,8 @@ pub trait KeyGen {
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         id: String,
-        cc_party_two_first_message_d_log_proof: Json<DLogProof>,
-    ) -> Result<Json<Party1SecondMessage>, String> {
+        cc_party_two_first_message_d_log_proof: Json<party_one::DLogProof>,
+    ) -> Result<Json<Party1SecondMessageDHPoK>, String> {
         let db = state.lock().await;
         let cc_comm_witness = db
             .get(
@@ -430,8 +428,8 @@ pub trait KeyGen {
             &EcdsaStruct::CC,
             &party1_cc,
         )
-            .await
-            .or(Err("Failed to insert into db"))?;
+        .await
+        .or(Err("Failed to insert into db"))?;
 
         //set master key
         let party2_public = db
@@ -502,18 +500,18 @@ pub trait KeyGen {
                 .chain_code,
             party_one_private
                 .as_any()
-                .downcast_ref::<Party1Private>()
+                .downcast_ref::<party_one::Party1Private>()
                 .unwrap()
                 .clone(),
             &comm_witness
                 .as_any()
-                .downcast_ref::<CommWitness>()
+                .downcast_ref::<party_one::CommWitness>()
                 .unwrap()
                 .public_share,
             party2_public.as_any().downcast_ref::<GE>().unwrap(),
             paillier_key_pair
                 .as_any()
-                .downcast_ref::<PaillierKeyPair>()
+                .downcast_ref::<party_one::PaillierKeyPair>()
                 .unwrap()
                 .clone(),
         );
@@ -526,8 +524,8 @@ pub trait KeyGen {
             &EcdsaStruct::Party1MasterKey,
             &master_key,
         )
-            .await
-            .or(Err("Failed to insert into db"))?;
+        .await
+        .or(Err("Failed to insert into db"))?;
 
         Ok(Json(party1_cc_res))
     }
