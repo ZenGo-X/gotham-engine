@@ -99,14 +99,12 @@ pub trait Sign {
             .or(Err("Failed to get from db"))?
             .ok_or(format!("No data for such identifier {}", id))?;
 
-        let x: BigInt = request.x_pos_child_key.clone();
-        let y: BigInt = request.y_pos_child_key.clone();
 
         let child_master_key = master_key
             .as_any()
             .downcast_ref::<MasterKey1>()
             .unwrap()
-            .get_child(vec![x, y]);
+            .get_child(request.pos_child_key.clone());
 
         //: party_one::EphEcKeyPair
         let eph_ec_key_pair_party1 = db
@@ -288,14 +286,11 @@ pub trait Sign {
             .or(Err("Failed to get from db"))?
             .ok_or(format!("No data for such identifier {}", id))?;
 
-        let x: BigInt = request.x_pos_child_key.clone();
-        let y: BigInt = request.y_pos_child_key.clone();
-
         let child_master_key = master_key
             .as_any()
             .downcast_ref::<MasterKey1>()
             .unwrap()
-            .get_child(vec![x, y]);
+            .get_child(request.pos_child_key.clone());
         let key1 = idify(&claim.sub, &ssid, &EcdsaStruct::EphEcKeyPair);
         let eph_ec_key_pair_party1: party_one::EphEcKeyPair =
             serde_json::from_slice(&RedisCon::redis_get(key1.clone()).unwrap().as_bytes()).unwrap();
@@ -335,12 +330,8 @@ pub trait Sign {
                 eph_key_gen_first_message_party_two
             );
             println!(
-                "x_pos_child_key: {}",
-                request.x_pos_child_key.clone().to_string()
-            );
-            println!(
-                "y_pos_child_key: {}",
-                request.y_pos_child_key.clone().to_string()
+                "pos_child_key: {:?}",
+                request.pos_child_key.clone()
             );
             println!("public: {:?}", master_key
                 .as_any()
