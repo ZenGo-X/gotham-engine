@@ -63,10 +63,7 @@ pub trait Sign {
         let tmp = db_get_required!(db, claim.sub, id, Party1MasterKey);
         let master_key = db_cast!(tmp, MasterKey1);
 
-        let x: BigInt = request.x_pos_child_key.clone();
-        let y: BigInt = request.y_pos_child_key.clone();
-
-        let child_master_key = master_key.get_child(vec![x, y]);
+        let child_master_key = master_key.get_child(request.pos_child_key.clone());
 
         //: party_one::EphEcKeyPair
 
@@ -194,10 +191,7 @@ pub trait Sign {
         let tmp = db_get_required!(db, claim.sub, id, Party1MasterKey);
         let master_key = db_cast!(tmp, MasterKey1);
 
-        let x: BigInt = request.x_pos_child_key.clone();
-        let y: BigInt = request.y_pos_child_key.clone();
-
-        let child_master_key = master_key.get_child(vec![x, y]);
+        let child_master_key = master_key.get_child(request.pos_child_key.clone());
 
         let key1 = idify(&claim.sub, &ssid, &EcdsaStruct::EphEcKeyPair);
         let eph_ec_key_pair_party1: Party1EphEcKeyPair =
@@ -238,12 +232,8 @@ pub trait Sign {
                 eph_key_gen_first_message_party_two
             );
             println!(
-                "x_pos_child_key: {}",
-                request.x_pos_child_key.clone().to_string()
-            );
-            println!(
-                "y_pos_child_key: {}",
-                request.y_pos_child_key.clone().to_string()
+                "pos_child_key: {:?}",
+                request.pos_child_key.clone()
             );
             println!(
                 "public: {:?}",
