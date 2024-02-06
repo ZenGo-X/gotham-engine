@@ -1,12 +1,12 @@
 //! Common types for traits the implementations thereofs at [private_gotham] and [public_gotham]
 use crate::traits::MPCStruct;
 use serde::{Deserialize, Serialize};
-use std::any::Any;
 use std::fmt::{Display, Formatter};
 use thiserror::Error;
-use two_party_ecdsa::kms::ecdsa::two_party::party2;
-use two_party_ecdsa::party_one::Value;
+use two_party_ecdsa::typetag_value;
+use two_party_ecdsa::typetags::Value;
 use two_party_ecdsa::BigInt;
+
 
 #[derive(Debug, Error, PartialEq, Eq, Clone)]
 /// The DatabaseError defines different types of database errors for better error handling
@@ -84,38 +84,19 @@ pub enum EcdsaStruct {
     EphEcKeyPair,
     EphKeyGenFirstMsg,
 
+    RotateCommitMessage1,
+    RotateRandom1,
+    RotateFirstMsg,
+    RotatePrivateNew,
+    RotatePdlDecom,
+    RotateParty2First,
+    RotateParty1Second,
+    RotateAlpha,
+
+
     POS,
     Abort,
 }
-
-impl EcdsaStruct {
-    fn to_struct_name(&self) -> String {
-        let res = match self {
-            EcdsaStruct::KeyGenFirstMsg => "KeyGenFirstMsg",
-            EcdsaStruct::CommWitness => "CommWitness",
-            EcdsaStruct::EcKeyPair => "EcKeyPair",
-            EcdsaStruct::PaillierKeyPair => "PaillierKeyPair",
-            EcdsaStruct::Party1Private => "Party1Private",
-            EcdsaStruct::Party2Public => "Secp256k1Point",
-            EcdsaStruct::PDLProver => "PDLProver",
-            EcdsaStruct::PDLDecommit => "PDLdecommit",
-            EcdsaStruct::Alpha => "Alpha",
-            EcdsaStruct::Party2PDLFirstMsg => "PDLFirstMessage",
-            EcdsaStruct::CCKeyGenFirstMsg => "Party1FirstMessage",
-            EcdsaStruct::CCCommWitness => "CommWitnessDHPoK",
-            EcdsaStruct::CCEcKeyPair => "EcKeyPairDHPoK",
-            EcdsaStruct::CC => "ChainCode1",
-            EcdsaStruct::Party1MasterKey => "MasterKey1",
-            EcdsaStruct::EphEcKeyPair => "EphEcKeyPair",
-            EcdsaStruct::EphKeyGenFirstMsg => "EphKeyGenFirstMsg",
-            EcdsaStruct::POS => "POS",
-            EcdsaStruct::Abort => "v"
-        };
-
-        res.to_string()
-    }
-}
-
 
 /// Wrapper struct for alpha values. They implement the Value trait in order to serialize/deserialize trait objects. Generics was not an option
 /// since they are used inside KeyGen and Sign traits which are treated as trait objects
@@ -124,44 +105,15 @@ pub struct Alpha {
     pub value: BigInt,
 }
 
-impl Display for Alpha {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
+typetag_value!(Alpha);
 
-#[typetag::serde]
-impl Value for Alpha {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-
-    fn type_name(&self) -> &str {
-        "Alpha"
-    }
-}
-
-#[derive(Serialize, Deserialize,Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct Aborted {
     pub(crate) isAborted: String,
 }
 
-impl Display for Aborted {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
+typetag_value!(Aborted);
 
-#[typetag::serde]
-impl Value for Aborted {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-
-    fn type_name(&self) -> &str {
-        "Aborted"
-    }
-}
 ///common functions for the members of EcdsaStruct struct to strigify and format
 impl MPCStruct for EcdsaStruct {
     fn to_string(&self) -> String {
@@ -181,19 +133,45 @@ impl MPCStruct for EcdsaStruct {
         self.to_string() == "Party1MasterKey" || self.to_string() == "Abort"
     }
 
+    // TODO: Add unit tests for below casting
     fn to_struct_name(&self) -> String {
-        self.to_struct_name()
+        let res = match self {
+            EcdsaStruct::KeyGenFirstMsg => "Party1KeyGenFirstMsg",
+            EcdsaStruct::CommWitness => "Party1CommWitness",
+            EcdsaStruct::EcKeyPair => "Party1EcKeyPair",
+            EcdsaStruct::PaillierKeyPair => "Party1PaillierKeyPair",
+            EcdsaStruct::Party1Private => "Party1Private",
+            EcdsaStruct::Party2Public => "Secp256k1Point",
+            EcdsaStruct::PDLProver => "PDLProver",
+            EcdsaStruct::PDLDecommit => "Party1PDLDecommit",
+            EcdsaStruct::Alpha => "Alpha",
+            EcdsaStruct::Party2PDLFirstMsg => "Party2PDLFirstMessage",
+            EcdsaStruct::CCKeyGenFirstMsg => "Party1FirstMessageDHPoK",
+            EcdsaStruct::CCCommWitness => "DHPoKCommWitness",
+            EcdsaStruct::CCEcKeyPair => "DHPoKEcKeyPair",
+            EcdsaStruct::CC => "ChainCode1",
+            EcdsaStruct::Party1MasterKey => "MasterKey1",
+            EcdsaStruct::EphEcKeyPair => "Party1EphEcKeyPair",
+            EcdsaStruct::EphKeyGenFirstMsg => "Party2EphKeyGenFirstMessage",
+            EcdsaStruct::POS => "POS",
+            EcdsaStruct::Abort => "v",
+
+            EcdsaStruct::RotateCommitMessage1 => "RotateCommitMessage1",
+            EcdsaStruct::RotateRandom1 => "Rotation",
+            EcdsaStruct::RotateFirstMsg => "RotationParty1Message1",
+            EcdsaStruct::RotatePrivateNew => "Party1Private",
+            EcdsaStruct::RotatePdlDecom => "Party1PDLDecommit",
+            EcdsaStruct::RotateParty2First => "Party2PDLFirstMessage",
+            EcdsaStruct::RotateParty1Second => "Party1PDLFirstMessage",
+            EcdsaStruct::RotateAlpha => "RotateAlpha",
+        };
+
+        res.to_string()
     }
 }
 
 //TODO move to two-party-ecdsa/kms
-#[derive(Serialize, Deserialize)]
-pub struct SignSecondMsgRequest {
-    pub message: BigInt,
-    pub party_two_sign_message: party2::SignMessage,
-    pub x_pos_child_key: BigInt,
-    pub y_pos_child_key: BigInt,
-}
+
 #[inline(always)]
 pub fn idify(user_id: &String, id: &String, name: &dyn MPCStruct) -> String {
     format!("{}_{}_{}", user_id, id, name.to_string())
