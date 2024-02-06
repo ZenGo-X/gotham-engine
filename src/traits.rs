@@ -2,8 +2,7 @@
 //! while it differentiates implementation of keygen and sign with trait objects for DB management,user authorization and tx authorization
 use std::env;
 
-use crate::types::{DatabaseError, DbIndex};
-
+use crate::types::{DbIndex};
 
 use redis::{Commands, Connection, RedisResult};
 use rocket::async_trait;
@@ -19,6 +18,7 @@ pub trait Db: Send + Sync {
     /// * `value` - The value to be inserted in the db which is a trait object of the trait  [Value]
     /// # Examples:
     ///
+    /// /*
     /// db.insert(
     ///             &DbIndex {
     ///                customer_id: claim.sub.to_string(),
@@ -38,7 +38,7 @@ pub trait Db: Send + Sync {
         key: &DbIndex,
         table_name: &dyn MPCStruct,
         value: &dyn Value,
-    ) -> Result<(), DatabaseError>;
+    ) -> Result<(), String>;
     ///get a value from the DB
     /// # Arguments
     /// * `key` - A [DbIndex] struct which acts as a key index in the DB.
@@ -64,11 +64,11 @@ pub trait Db: Send + Sync {
         &self,
         key: &DbIndex,
         table_name: &dyn MPCStruct,
-    ) -> Result<Option<Box<dyn Value>>, DatabaseError>;
+    ) -> Result<Option<Box<dyn Value>>, String>;
     async fn has_active_share(&self, customerId: &str) -> Result<bool, String>;
 
     /// the granted function implements the logic of tx authorization. If no tx authorization is needed the function returns always true
-    fn granted(&self, message: &str, customer_id: &str) -> Result<bool, DatabaseError>;
+    fn granted(&self, message: &str, customer_id: &str) -> Result<bool, String>;
 }
 
 /// Common trait both for private and public for redis api

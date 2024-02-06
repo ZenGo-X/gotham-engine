@@ -4,15 +4,17 @@ use rocket::serde::json::Json;
 use crate::guarder::Claims;
 use crate::traits::Db;
 use crate::types::{Alpha, EcdsaStruct};
-use crate::{db_cast, db_get, db_insert};
+use crate::{db_cast, db_get, db_get_required, db_insert};
 use rocket::State;
 use tokio::sync::Mutex;
 use two_party_ecdsa::curv::cryptographic_primitives::twoparty::coin_flip_optimal_rounds;
 use two_party_ecdsa::curv::elliptic::curves::traits::ECScalar;
 use two_party_ecdsa::kms::ecdsa::two_party::MasterKey1;
-use two_party_ecdsa::kms::rotation::two_party::party1::{RotateCommitMessage1, Rotation1, RotationParty1Message1};
-use two_party_ecdsa::{party_one, party_two};
+use two_party_ecdsa::kms::rotation::two_party::party1::{
+    RotateCommitMessage1, Rotation1, RotationParty1Message1,
+};
 use two_party_ecdsa::kms::rotation::two_party::Rotation;
+use two_party_ecdsa::{party_one, party_two};
 
 #[async_trait]
 pub trait Rotate {
@@ -25,7 +27,13 @@ pub trait Rotate {
 
         let (party1_first, rotate_commit_message) = Rotation1::key_rotate_first_message();
 
-        db_insert!(db, claim.sub, id, RotateCommitMessage1, rotate_commit_message);
+        db_insert!(
+            db,
+            claim.sub,
+            id,
+            RotateCommitMessage1,
+            &rotate_commit_message
+        );
 
         Ok(Json(party1_first))
     }
@@ -35,16 +43,24 @@ pub trait Rotate {
         claim: Claims,
         id: String,
         coin_flip_party2_first: Json<coin_flip_optimal_rounds::Party2FirstMessage>,
-    ) -> Result<Json<Option<(coin_flip_optimal_rounds::Party1SecondMessage, RotationParty1Message1)>>, String> {
+    ) -> Result<
+        Json<
+            Option<(
+                coin_flip_optimal_rounds::Party1SecondMessage,
+                RotationParty1Message1,
+            )>,
+        >,
+        String,
+    > {
         let db = state.lock().await;
 
-        let tmp = db_get!(db, claim.sub, id, RotateCommitMessage1);
+        let tmp = db_get_required!(db, claim.sub, id, RotateCommitMessage1);
         let rotate_commit_message = db_cast!(tmp, RotateCommitMessage1);
 
         let (coin_flip_party1_second, random1) =
             Rotation1::key_rotate_second_message(&coin_flip_party2_first.0, &rotate_commit_message);
 
-        let tmp = db_get!(db, claim.sub, id, Party1MasterKey);
+        let tmp = db_get_required!(db, claim.sub, id, Party1MasterKey);
         let party_one_master_key = db_cast!(tmp, MasterKey1);
 
         if party_one::Party1Private::check_rotated_key_bounds(
@@ -55,14 +71,14 @@ pub trait Rotate {
             return Ok(Json(None));
         }
 
-        db_insert!(db, claim.sub, id, RotateRandom1, random1);
+        db_insert!(db, claim.sub, id, RotateRandom1, &random1);
 
         let (rotation_party_one_first, party_one_private_new) =
             party_one_master_key.rotation_first_message(&random1);
 
-        db_insert!(db, claim.sub, id, RotateFirstMsg, rotation_party_one_first);
+        db_insert!(db, claim.sub, id, RotateFirstMsg, &rotation_party_one_first);
 
-        db_insert!(db, claim.sub, id, RotatePrivateNew, party_one_private_new);
+        db_insert!(db, claim.sub, id, RotatePrivateNew, &party_one_private_new);
 
         Ok(Json(Some((
             coin_flip_party1_second,
@@ -78,7 +94,7 @@ pub trait Rotate {
     ) -> Result<Json<party_one::Party1PDLFirstMessage>, String> {
         let db = state.lock().await;
 
-        let tmp = db_get!(db, claim.sub, id, RotatePrivateNew);
+        let tmp = db_get_required!(db, claim.sub, id, RotatePrivateNew);
         let rotate_party_one_private = db_cast!(tmp, party_one::Party1Private);
 
         let (rotation_party_one_second, party_one_pdl_decommit, party_one_alpha) =
@@ -87,15 +103,29 @@ pub trait Rotate {
                 &rotate_party_one_private,
             );
 
-        let party_one_alpha = Alpha { value: party_one_alpha,  };
+        let party_one_alpha = Alpha {
+            value: party_one_alpha,
+        };
 
-        db_insert!(db, claim.sub, id, RotateAlpha, party_one_alpha);
+        db_insert!(db, claim.sub, id, RotateAlpha, &party_one_alpha);
 
-        db_insert!(db, claim.sub, id, RotatePdlDecom, party_one_pdl_decommit);
+        db_insert!(db, claim.sub, id, RotatePdlDecom, &party_one_pdl_decommit);
 
-        db_insert!(db, claim.sub, id, RotateParty2First, rotation_party_two_first.0);
+        db_insert!(
+            db,
+            claim.sub,
+            id,
+            RotateParty2First,
+            &rotation_party_two_first.0
+        );
 
-        db_insert!(db, claim.sub, id, RotateParty1Second, rotation_party_one_second);
+        db_insert!(
+            db,
+            claim.sub,
+            id,
+            RotateParty1Second,
+            &rotation_party_one_second
+        );
 
         Ok(Json(rotation_party_one_second))
     }
@@ -108,29 +138,28 @@ pub trait Rotate {
     ) -> Result<Json<party_one::Party1PDLSecondMessage>, String> {
         let db = state.lock().await;
 
-        let tmp = db_get!(db, claim.sub, id, RotateFirstMsg);
-        let rotation_party_one_first =
-            db_cast!(tmp, RotationParty1Message1);
+        let tmp = db_get_required!(db, claim.sub, id, RotateFirstMsg);
+        let rotation_party_one_first = db_cast!(tmp, RotationParty1Message1);
 
-        let tmp = db_get!(db, claim.sub, id, RotatePrivateNew);
+        let tmp = db_get_required!(db, claim.sub, id, RotatePrivateNew);
         let rotate_party_one_private = db_cast!(tmp, party_one::Party1Private);
 
-        let tmp = db_get!(db, claim.sub, id, RotateRandom1);
+        let tmp = db_get_required!(db, claim.sub, id, RotateRandom1);
         let random = db_cast!(tmp, Rotation);
 
-        // let tmp = db_get!(db, claim.sub, id, RotateParty1Second);
+        // let tmp = db_get_required!(db, claim.sub, id, RotateParty1Second);
         // let rotation_party_one_second = db_cast!(tmp, party_one::PDLSecondMessage);
 
-        let tmp = db_get!(db, claim.sub, id, RotateParty2First);
+        let tmp = db_get_required!(db, claim.sub, id, RotateParty2First);
         let rotation_party_two_first = db_cast!(tmp, party_two::Party2PDLFirstMessage);
 
-        let tmp = db_get!(db, claim.sub, id, RotateAlpha);
+        let tmp = db_get_required!(db, claim.sub, id, RotateAlpha);
         let party_one_alpha = db_cast!(tmp, Alpha);
 
-        let tmp = db_get!(db, claim.sub, id, RotatePdlDecom);
+        let tmp = db_get_required!(db, claim.sub, id, RotatePdlDecom);
         let party_one_pdl_decommit = db_cast!(tmp, party_one::Party1PDLDecommit);
 
-        let mk_tmp = db_get!(db, claim.sub, id, Party1MasterKey);
+        let mk_tmp = db_get_required!(db, claim.sub, id, Party1MasterKey);
         let party_one_master_key_temp = db_cast!(mk_tmp, MasterKey1);
         let party_one_master_key = party_one_master_key_temp.clone();
 
@@ -141,7 +170,7 @@ pub trait Rotate {
             rotation_party_two_first,
             &rotation_party_two_second.0,
             party_one_pdl_decommit.clone(),
-            party_one_alpha.clone().value
+            party_one_alpha.clone().value,
         );
 
         if rotate_party_two_second.is_err() {
@@ -151,7 +180,13 @@ pub trait Rotate {
         let (rotation_party_one_third, party_one_master_key_rotated) =
             rotate_party_two_second.unwrap();
 
-        db_insert!(db, claim.sub, id, Party1MasterKey, party_one_master_key_rotated);
+        db_insert!(
+            db,
+            claim.sub,
+            id,
+            Party1MasterKey,
+            &party_one_master_key_rotated
+        );
 
         Ok(Json(rotation_party_one_third))
     }

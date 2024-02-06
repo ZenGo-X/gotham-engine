@@ -8,6 +8,7 @@ use two_party_ecdsa::typetags::Value;
 use two_party_ecdsa::BigInt;
 
 
+// TODO: use 'thiserror' and this enum in code
 #[derive(Debug, Error, PartialEq, Eq, Clone)]
 /// The DatabaseError defines different types of database errors for better error handling
 pub enum DatabaseError {
@@ -93,7 +94,6 @@ pub enum EcdsaStruct {
     RotateParty1Second,
     RotateAlpha,
 
-
     POS,
     Abort,
 }
@@ -108,11 +108,11 @@ pub struct Alpha {
 typetag_value!(Alpha);
 
 #[derive(Serialize, Deserialize, Debug)]
-pub(crate) struct Aborted {
-    pub(crate) isAborted: String,
+pub(crate) struct Abort {
+    pub(crate) blocked: bool,
 }
 
-typetag_value!(Aborted);
+typetag_value!(Abort);
 
 ///common functions for the members of EcdsaStruct struct to strigify and format
 impl MPCStruct for EcdsaStruct {
