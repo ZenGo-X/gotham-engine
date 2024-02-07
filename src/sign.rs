@@ -1,17 +1,19 @@
-use std::env;
 use crate::guarder::Claims;
 use crate::traits::{Db, RedisMod};
-use crate::types::{DbIndex, EcdsaStruct, SignSecondMsgRequest, idify, Aborted};
+use crate::types::{idify, Abort, DbIndex, EcdsaStruct};
 use config::Value;
-
-use two_party_ecdsa::kms::ecdsa::two_party::MasterKey1;
-use two_party_ecdsa::party_one::{Converter, v};
-use two_party_ecdsa::{party_one, party_two, BigInt};
+use std::env;
 
 use rocket::serde::json::Json;
 use rocket::{async_trait, State};
 use tokio::sync::Mutex;
+use two_party_ecdsa::kms::ecdsa::two_party::party2::Party2SignSecondMessage;
+use two_party_ecdsa::kms::ecdsa::two_party::MasterKey1;
+use two_party_ecdsa::party_one::{Converter, Party1EphEcKeyPair, Party1EphKeyGenFirstMessage, Party1SignatureRecid};
+use two_party_ecdsa::party_two::Party2EphKeyGenFirstMessage;
+use two_party_ecdsa::BigInt;
 use uuid::Uuid;
+use crate::{db_cast, db_get, db_get_required, db_insert};
 
 #[async_trait]
 pub trait Sign {
@@ -19,54 +21,24 @@ pub trait Sign {
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         id: String,
-        eph_key_gen_first_message_party_two: Json<party_two::EphKeyGenFirstMsg>,
-    ) -> Result<Json<party_one::EphKeyGenFirstMsg>, String> {
+        eph_key_gen_first_message_party_two: Json<Party2EphKeyGenFirstMessage>,
+    ) -> Result<Json<Party1EphKeyGenFirstMessage>, String> {
         let db = state.lock().await;
 
-        let abort = db
-            .get(
-                &DbIndex {
-                    customerId: claim.sub.to_string(),
-                    id: id.clone(),
-                },
-                &EcdsaStruct::Abort,
-            )
-            .await
-            .unwrap_or_else(|err|
-                panic!("DatabaseError: {}", err))
-            .unwrap_or(
-                Box::new(v { value: "false".to_string() }));
+        let tmp = db_get!(db, claim.sub, id, Abort)
+            .unwrap_or(Box::new(Abort { blocked: false }));
+        let to_abort = db_cast!(tmp, Abort);
 
-        let abort_res = abort.as_any().downcast_ref::<v>().unwrap();
-
-        if abort_res.value == "true" {
-            panic!("Tainted user");
+        if to_abort.blocked == true {
+            panic!("customer_id {} exists in Abort table and thus is blocked", claim.sub.to_string());
         }
 
         let (sign_party_one_first_message, eph_ec_key_pair_party1) =
             MasterKey1::sign_first_message();
 
-        db.insert(
-            &DbIndex {
-                customerId: claim.sub.to_string(),
-                id: id.clone(),
-            },
-            &EcdsaStruct::EphKeyGenFirstMsg,
-            &eph_key_gen_first_message_party_two.0,
-        )
-            .await
-            .or(Err("Failed to insert into db"))?;
+        db_insert!(db, claim.sub, id, EphKeyGenFirstMsg, &eph_key_gen_first_message_party_two.0);
 
-        db.insert(
-            &DbIndex {
-                customerId: claim.sub.to_string(),
-                id: id.clone(),
-            },
-            &EcdsaStruct::EphEcKeyPair,
-            &eph_ec_key_pair_party1,
-        )
-            .await
-            .or(Err("Failed to insert into db"))?;
+        db_insert!(db, claim.sub, id, EphEcKeyPair, &eph_ec_key_pair_party1);
 
         Ok(Json(sign_party_one_first_message))
     }
@@ -74,93 +46,44 @@ pub trait Sign {
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         id: String,
-        request: Json<SignSecondMsgRequest>,
-    ) -> Result<Json<party_one::SignatureRecid>, String> {
+        request: Json<Party2SignSecondMessage>,
+    ) -> Result<Json<Party1SignatureRecid>, String> {
         let db = state.lock().await;
         if env::var("REDIS_ENV").is_ok() {
-            if db.granted(&*request.message.to_hex().to_string(), claim.sub.as_str())==Ok(false) {
+            if db.granted(&*request.message.to_hex().to_string(), claim.sub.as_str()) == Ok(false) {
                 panic!(
-                    "Unauthorized transaction from redis-pps: {:?}",
-                    id.clone().to_string()
+                    "Unauthorized transaction from redis-pps for customer_id {}, id {}:",
+                    claim.sub.as_str(), id.as_str()
                 );
             }
         }
 
         //: MasterKey1
-        let master_key = db
-            .get(
-                &DbIndex {
-                    customerId: claim.sub.to_string(),
-                    id: id.clone(),
-                },
-                &EcdsaStruct::Party1MasterKey,
-            )
-            .await
-            .or(Err("Failed to get from db"))?
-            .ok_or(format!("No data for such identifier {}", id))?;
 
+        let tmp = db_get_required!(db, claim.sub, id, Party1MasterKey);
+        let master_key = db_cast!(tmp, MasterKey1);
 
-        let child_master_key = master_key
-            .as_any()
-            .downcast_ref::<MasterKey1>()
-            .unwrap()
-            .get_child(request.pos_child_key.clone());
+        let child_master_key = master_key.get_child(request.pos_child_key.clone());
 
         //: party_one::EphEcKeyPair
-        let eph_ec_key_pair_party1 = db
-            .get(
-                &DbIndex {
-                    customerId: claim.sub.to_string(),
-                    id: id.clone(),
-                },
-                &EcdsaStruct::EphEcKeyPair,
-            )
-            .await
-            .or(Err("Failed to get from db"))?
-            .ok_or(format!("No data for such identifier {}", id))?;
 
-        //: party_two::EphKeyGenFirstMsg
-        let eph_key_gen_first_message_party_two = db
-            .get(
-                &DbIndex {
-                    customerId: claim.sub.to_string(),
-                    id: id.clone(),
-                },
-                &EcdsaStruct::EphKeyGenFirstMsg,
-            )
-            .await
-            .or(Err("Failed to get from db"))?
-            .ok_or(format!("No data for such identifier {}", id))?;
+        let tmp = db_get_required!(db, claim.sub, id, EphEcKeyPair);
+        let eph_ec_key_pair_party1 = db_cast!(tmp, Party1EphEcKeyPair);
+
+
+        let tmp = db_get_required!(db, claim.sub, id, EphKeyGenFirstMsg);
+        let eph_key_gen_first_message_party_two = db_cast!(tmp, Party2EphKeyGenFirstMessage);
 
         let signature_with_recid = child_master_key.sign_second_message(
             &request.party_two_sign_message,
-            &eph_key_gen_first_message_party_two
-                .as_any()
-                .downcast_ref::<party_two::EphKeyGenFirstMsg>()
-                .unwrap(),
-            &eph_ec_key_pair_party1
-                .as_any()
-                .downcast_ref::<party_one::EphEcKeyPair>()
-                .unwrap(),
+            &eph_key_gen_first_message_party_two,
+            &eph_ec_key_pair_party1,
             &request.message,
         );
 
         if signature_with_recid.is_err() {
-            let value = v {
-                value: "true".parse().unwrap(),
-            };
-            println!("signature failed, user tainted[{:?}]", id);
-            db.insert(
-                &DbIndex {
-                    customerId: claim.sub.to_string(),
-                    id: id.clone(),
-                },
-                &EcdsaStruct::Abort,
-                &value,
-            )
-                .await
-                .or(Err("Failed to insert into db"))?;
-            panic!("Server sign_second: validation of signature failed. Potential adversary")
+            db_insert!(db, claim.sub, id, Abort, &Abort { blocked: true });
+            panic!("sign_second failed for customer_id {}, id {}. Inserted into Abort table",  claim.sub, id);
         };
 
         Ok(Json(signature_with_recid.unwrap()))
@@ -169,38 +92,28 @@ pub trait Sign {
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         id: String,
-        eph_key_gen_first_message_party_two: Json<party_two::EphKeyGenFirstMsg>,
-    ) -> Result<Json<(String, party_one::EphKeyGenFirstMsg)>, String> {
+        eph_key_gen_first_message_party_two: Json<Party2EphKeyGenFirstMessage>,
+    ) -> Result<Json<(String, Party1EphKeyGenFirstMessage)>, String> {
         let db = state.lock().await;
         println!(
             "[cross-session] Sign first round - id = {:?} - customerID = {:?}",
             id, &claim.sub
         );
 
-        let abort = db
-            .get(
-                &DbIndex {
-                    customerId: claim.sub.to_string(),
-                    id: id.clone(),
-                },
-                &EcdsaStruct::Abort,
-            )
-            .await
-            .unwrap_or_else(|err|
-                panic!("DatabaseError: {}", err))
-            .unwrap_or(
-            Box::new(v { value: "false".to_string() }));
+        let tmp = db_get!(db, claim.sub, id, Abort)
+            .unwrap_or(Box::new(Abort { blocked: false }));
+        let to_abort = db_cast!(tmp, Abort);
 
-        let abort_res = abort.as_any().downcast_ref::<v>().unwrap();
-
-        if abort_res.value == "true" {
-            panic!("Tainted user");
+        if to_abort.blocked == true {
+            panic!("customer_id {} exists in Abort table and thus is blocked", claim.sub.to_string());
         }
 
         struct RedisCon {}
         impl RedisMod for RedisCon {}
 
-        let (sign_party_one_first_message, eph_ec_key_pair_party1) = MasterKey1::sign_first_message();
+        let (sign_party_one_first_message, eph_ec_key_pair_party1) =
+            MasterKey1::sign_first_message();
+
         let sid = Uuid::new_v4().to_string();
         let ssid = String::from(id + "," + &*sid);
         println!("Server side - sign first ssid={:?}", ssid);
@@ -211,7 +124,8 @@ pub trait Sign {
             key.clone(),
             serde_json::to_string(&eph_key_gen_first_message_party_two.0).unwrap(),
         )
-            .is_ok();
+        .is_ok();
+
         let mut err_msg: String = format!(
             "redis error during set key-value = {:?} - {:?}",
             key.clone().to_string(),
@@ -229,7 +143,7 @@ pub trait Sign {
             key.clone(),
             serde_json::to_string(&eph_ec_key_pair_party1).unwrap(),
         )
-            .is_ok();
+        .is_ok();
         err_msg = format!(
             "redis error during set key-value = {:?} - {:?}",
             key.clone().to_string(),
@@ -246,11 +160,11 @@ pub trait Sign {
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         ssid: String,
-        request: Json<SignSecondMsgRequest>,
-    ) -> Result<Json<party_one::SignatureRecid>, String> {
+        request: Json<Party2SignSecondMessage>,
+    ) -> Result<Json<Party1SignatureRecid>, String> {
         let db = state.lock().await;
         if env::var("REDIS_ENV").is_ok() {
-            if db.granted(&*request.message.to_hex().to_string(), claim.sub.as_str())==Ok(false) {
+            if db.granted(&*request.message.to_hex().to_string(), claim.sub.as_str()) == Ok(false) {
                 panic!(
                     "Unauthorized transaction from redis-pps: {:?}",
                     ssid.clone().to_string()
@@ -274,29 +188,17 @@ pub trait Sign {
         println!("sid = {:?}", ssid.split(",").collect::<Vec<_>>()[1]);
 
         //get the master key for that userid
-        let master_key = db
-            .get(
-                &DbIndex {
-                    customerId: claim.sub.to_string(),
-                    id: id.clone().to_string(),
-                },
-                &EcdsaStruct::Party1MasterKey,
-            )
-            .await
-            .or(Err("Failed to get from db"))?
-            .ok_or(format!("No data for such identifier {}", id))?;
+        let tmp = db_get_required!(db, claim.sub, id, Party1MasterKey);
+        let master_key = db_cast!(tmp, MasterKey1);
 
-        let child_master_key = master_key
-            .as_any()
-            .downcast_ref::<MasterKey1>()
-            .unwrap()
-            .get_child(request.pos_child_key.clone());
+        let child_master_key = master_key.get_child(request.pos_child_key.clone());
+
         let key1 = idify(&claim.sub, &ssid, &EcdsaStruct::EphEcKeyPair);
-        let eph_ec_key_pair_party1: party_one::EphEcKeyPair =
+        let eph_ec_key_pair_party1: Party1EphEcKeyPair =
             serde_json::from_slice(&RedisCon::redis_get(key1.clone()).unwrap().as_bytes()).unwrap();
 
         let key2 = idify(&claim.sub, &ssid, &EcdsaStruct::EphKeyGenFirstMsg);
-        let eph_key_gen_first_message_party_two: party_two::EphKeyGenFirstMsg =
+        let eph_key_gen_first_message_party_two: Party2EphKeyGenFirstMessage =
             serde_json::from_slice(&RedisCon::redis_get(key2.clone()).unwrap().as_bytes()).unwrap();
 
         let _ = RedisCon::redis_del(key1);
@@ -333,26 +235,17 @@ pub trait Sign {
                 "pos_child_key: {:?}",
                 request.pos_child_key.clone()
             );
-            println!("public: {:?}", master_key
-                .as_any()
-                .downcast_ref::<MasterKey1>()
-                .unwrap().public);
-            println!("private {:?}", master_key
-                .as_any()
-                .downcast_ref::<MasterKey1>()
-                .unwrap().private);
+            println!(
+                "public: {:?}",
+                master_key.public
+            );
+            println!(
+                "private {:?}",
+                master_key.private
+            );
 
-            let item = Aborted {
-                isAborted: "true".to_string(),
-            };
-
-            db.insert(&DbIndex {
-                customerId: claim.sub.to_string(),
-                id: id.clone().to_string(),
-            }, &EcdsaStruct::Abort, &item)
-                .await
-                .or(Err("Failed to insert into db"))?;
-            panic!("Server sign_second: verification of signature failed. Potential adversary")
+            db_insert!(db, claim.sub, id, Abort, &Abort { blocked: true });
+            panic!("sign_second failed for customer_id {}, id {}. Inserted into Abort table",  claim.sub, id);
         };
 
         Ok(Json(signature_with_recid.unwrap()))
