@@ -9,7 +9,7 @@ use rocket::{async_trait, State};
 use tokio::sync::Mutex;
 use two_party_ecdsa::kms::ecdsa::two_party::party2::Party2SignSecondMessage;
 use two_party_ecdsa::kms::ecdsa::two_party::MasterKey1;
-use two_party_ecdsa::party_one::{Converter, Party1EphEcKeyPair, Party1EphKeyGenFirstMessage, SignatureRecid};
+use two_party_ecdsa::party_one::{Converter, Party1EphEcKeyPair, Party1EphKeyGenFirstMessage, Party1SignatureRecid};
 use two_party_ecdsa::party_two::Party2EphKeyGenFirstMessage;
 use two_party_ecdsa::BigInt;
 use uuid::Uuid;
@@ -47,7 +47,7 @@ pub trait Sign {
         claim: Claims,
         id: String,
         request: Json<Party2SignSecondMessage>,
-    ) -> Result<Json<SignatureRecid>, String> {
+    ) -> Result<Json<Party1SignatureRecid>, String> {
         let db = state.lock().await;
         if env::var("REDIS_ENV").is_ok() {
             if db.granted(&*request.message.to_hex().to_string(), claim.sub.as_str()) == Ok(false) {
@@ -161,7 +161,7 @@ pub trait Sign {
         claim: Claims,
         ssid: String,
         request: Json<Party2SignSecondMessage>,
-    ) -> Result<Json<SignatureRecid>, String> {
+    ) -> Result<Json<Party1SignatureRecid>, String> {
         let db = state.lock().await;
         if env::var("REDIS_ENV").is_ok() {
             if db.granted(&*request.message.to_hex().to_string(), claim.sub.as_str()) == Ok(false) {

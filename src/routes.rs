@@ -6,7 +6,7 @@ use crate::keygen::KeyGen;
 use crate::sign::Sign;
 use crate::traits::Db;
 
-use two_party_ecdsa::party_one::{Party1KeyGenFirstMessage, Party1KeyGenSecondMessage, DLogProof, Party1EphKeyGenFirstMessage, SignatureRecid, Party1PDLFirstMessage, Party1PDLSecondMessage};
+use two_party_ecdsa::party_one::{Party1KeyGenFirstMessage, Party1KeyGenSecondMessage, DLogProof, Party1EphKeyGenFirstMessage, Party1SignatureRecid, Party1PDLFirstMessage, Party1PDLSecondMessage};
 use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::{DHPoKParty1FirstMessage, DHPoKParty1SecondMessage};
 
 use crate::rotate::Rotate;
@@ -135,7 +135,7 @@ pub async fn wrap_sign_second(
     claim: Claims,
     id: &str,
     request: Json<Party2SignSecondMessage>,
-) -> Result<Json<SignatureRecid>, String> {
+) -> Result<Json<Party1SignatureRecid>, String> {
     struct Gotham {}
     impl Sign for Gotham {}
     Gotham::sign_second(state, claim, id.to_string(), request).await
@@ -169,7 +169,7 @@ pub async fn wrap_sign_second_v2(
     claim: Claims,
     ssid: &str,
     request: Json<Party2SignSecondMessage>,
-) -> Result<Json<SignatureRecid>, String> {
+) -> Result<Json<Party1SignatureRecid>, String> {
     struct Gotham {}
     impl Sign for Gotham {}
     Gotham::sign_second_v2(state, claim, ssid.to_string(), request).await
