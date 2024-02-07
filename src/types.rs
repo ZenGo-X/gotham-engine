@@ -136,7 +136,7 @@ impl MPCStruct for EcdsaStruct {
     // TODO: Add unit tests for below casting
     fn to_struct_name(&self) -> String {
         let res = match self {
-            EcdsaStruct::KeyGenFirstMsg => "Party1KeyGenFirstMsg",
+            EcdsaStruct::KeyGenFirstMsg => "Party1KeyGenFirstMessage",
             EcdsaStruct::CommWitness => "Party1CommWitness",
             EcdsaStruct::EcKeyPair => "Party1EcKeyPair",
             EcdsaStruct::PaillierKeyPair => "Party1PaillierKeyPair",
@@ -146,7 +146,7 @@ impl MPCStruct for EcdsaStruct {
             EcdsaStruct::PDLDecommit => "Party1PDLDecommit",
             EcdsaStruct::Alpha => "Alpha",
             EcdsaStruct::Party2PDLFirstMsg => "Party2PDLFirstMessage",
-            EcdsaStruct::CCKeyGenFirstMsg => "Party1FirstMessageDHPoK",
+            EcdsaStruct::CCKeyGenFirstMsg => "DHPoKParty1FirstMessage",
             EcdsaStruct::CCCommWitness => "DHPoKCommWitness",
             EcdsaStruct::CCEcKeyPair => "DHPoKEcKeyPair",
             EcdsaStruct::CC => "ChainCode1",
@@ -154,7 +154,7 @@ impl MPCStruct for EcdsaStruct {
             EcdsaStruct::EphEcKeyPair => "Party1EphEcKeyPair",
             EcdsaStruct::EphKeyGenFirstMsg => "Party2EphKeyGenFirstMessage",
             EcdsaStruct::POS => "POS",
-            EcdsaStruct::Abort => "v",
+            EcdsaStruct::Abort => "Abort",
 
             EcdsaStruct::RotateCommitMessage1 => "RotateCommitMessage1",
             EcdsaStruct::RotateRandom1 => "Rotation",
