@@ -14,11 +14,12 @@ use rocket::serde::json::Json;
 use rocket::{get, http::Status, post, State};
 use tokio::sync::Mutex;
 use two_party_ecdsa::curv::cryptographic_primitives::twoparty::coin_flip_optimal_rounds;
-use two_party_ecdsa::kms::ecdsa::two_party::party2::Party2SignSecondMessage;
+
 use two_party_ecdsa::kms::rotation::two_party::party1::RotationParty1Message1;
 use two_party_ecdsa::party_two::{
     Party2EphKeyGenFirstMessage, Party2PDLFirstMessage, Party2PDLSecondMessage,
 };
+use crate::types::{Party2SignSecondMessage, Party2SignSecondMessageVector};
 
 #[post("/ecdsa/keygen_v2/first", format = "json")]
 pub async fn wrap_keygen_first(
@@ -173,6 +174,40 @@ pub async fn wrap_sign_second_v2(
     struct Gotham {}
     impl Sign for Gotham {}
     Gotham::sign_second_v2(state, claim, ssid.to_string(), request).await
+}
+
+#[post(
+"/ecdsa/sign/<id>/first_v3",
+format = "json",
+data = "<eph_key_gen_first_message_party_two>"
+)]
+pub async fn wrap_sign_first_v3(
+    state: &State<Mutex<Box<dyn Db>>>,
+    claim: Claims,
+    id: &str,
+    eph_key_gen_first_message_party_two: Json<Party2EphKeyGenFirstMessage>,
+) -> Result<Json<(String, Party1EphKeyGenFirstMessage)>, String> {
+    struct Gotham {}
+    impl Sign for Gotham {}
+    Gotham::sign_first_v3(
+        state,
+        claim,
+        id.to_string(),
+        eph_key_gen_first_message_party_two,
+    )
+        .await
+}
+
+#[post("/ecdsa/sign/<ssid>/second_v3", format = "json", data = "<request>")]
+pub async fn wrap_sign_second_v3(
+    state: &State<Mutex<Box<dyn Db>>>,
+    claim: Claims,
+    ssid: &str,
+    request: Json<Party2SignSecondMessageVector>,
+) -> Result<Json<Party1SignatureRecid>, String> {
+    struct Gotham {}
+    impl Sign for Gotham {}
+    Gotham::sign_second_v3(state, claim, ssid.to_string(), request).await
 }
 
 #[post("/ecdsa/rotate/<id>/first", format = "json")]

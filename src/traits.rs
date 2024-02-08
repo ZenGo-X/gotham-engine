@@ -18,7 +18,7 @@ pub trait Db: Send + Sync {
     /// * `value` - The value to be inserted in the db which is a trait object of the trait  [Value]
     /// # Examples:
     ///
-    /// /*
+    ///
     /// db.insert(
     ///             &DbIndex {
     ///                customer_id: claim.sub.to_string(),

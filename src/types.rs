@@ -6,6 +6,7 @@ use thiserror::Error;
 use two_party_ecdsa::typetag_value;
 use two_party_ecdsa::typetags::Value;
 use two_party_ecdsa::BigInt;
+use two_party_ecdsa::kms::ecdsa::two_party::party2::Party2SignMessage;
 
 
 // TODO: use 'thiserror' and this enum in code
@@ -114,6 +115,23 @@ pub(crate) struct Abort {
 
 typetag_value!(Abort);
 
+
+
+#[derive(Serialize, Deserialize)]
+pub struct Party2SignSecondMessageVector {
+    pub message: BigInt,
+    pub party_two_sign_message: Party2SignMessage,
+    pub pos_child_key: Vec<BigInt>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Party2SignSecondMessage {
+    pub message: BigInt,
+    pub party_two_sign_message: Party2SignMessage,
+    pub x_pos_child_key: BigInt,
+    pub y_pos_child_key: BigInt,
+}
+
 ///common functions for the members of EcdsaStruct struct to strigify and format
 impl MPCStruct for EcdsaStruct {
     fn to_string(&self) -> String {
@@ -136,7 +154,7 @@ impl MPCStruct for EcdsaStruct {
     // TODO: Add unit tests for below casting
     fn to_struct_name(&self) -> String {
         let res = match self {
-            EcdsaStruct::KeyGenFirstMsg => "Party1KeyGenFirstMsg",
+            EcdsaStruct::KeyGenFirstMsg => "Party1KeyGenFirstMessage",
             EcdsaStruct::CommWitness => "Party1CommWitness",
             EcdsaStruct::EcKeyPair => "Party1EcKeyPair",
             EcdsaStruct::PaillierKeyPair => "Party1PaillierKeyPair",
@@ -146,15 +164,15 @@ impl MPCStruct for EcdsaStruct {
             EcdsaStruct::PDLDecommit => "Party1PDLDecommit",
             EcdsaStruct::Alpha => "Alpha",
             EcdsaStruct::Party2PDLFirstMsg => "Party2PDLFirstMessage",
-            EcdsaStruct::CCKeyGenFirstMsg => "Party1FirstMessageDHPoK",
+            EcdsaStruct::CCKeyGenFirstMsg => "DHPoKParty1FirstMessage",
             EcdsaStruct::CCCommWitness => "DHPoKCommWitness",
             EcdsaStruct::CCEcKeyPair => "DHPoKEcKeyPair",
             EcdsaStruct::CC => "ChainCode1",
             EcdsaStruct::Party1MasterKey => "MasterKey1",
             EcdsaStruct::EphEcKeyPair => "Party1EphEcKeyPair",
             EcdsaStruct::EphKeyGenFirstMsg => "Party2EphKeyGenFirstMessage",
-            EcdsaStruct::POS => "POS",
-            EcdsaStruct::Abort => "v",
+            EcdsaStruct::POS => "Party1HDPos",
+            EcdsaStruct::Abort => "Abort",
 
             EcdsaStruct::RotateCommitMessage1 => "RotateCommitMessage1",
             EcdsaStruct::RotateRandom1 => "Rotation",
