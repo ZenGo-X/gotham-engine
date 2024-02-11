@@ -14,12 +14,13 @@ use rocket::serde::json::Json;
 use rocket::{get, http::Status, post, State};
 use tokio::sync::Mutex;
 use two_party_ecdsa::curv::cryptographic_primitives::twoparty::coin_flip_optimal_rounds;
+use two_party_ecdsa::kms::ecdsa::two_party::party2::{Party2SignSecondMessage, Party2SignSecondMessageVector};
 
 use two_party_ecdsa::kms::rotation::two_party::party1::RotationParty1Message1;
 use two_party_ecdsa::party_two::{
     Party2EphKeyGenFirstMessage, Party2PDLFirstMessage, Party2PDLSecondMessage,
 };
-use crate::types::{Party2SignSecondMessage, Party2SignSecondMessageVector};
+
 
 #[post("/ecdsa/keygen_v2/first", format = "json")]
 pub async fn wrap_keygen_first(

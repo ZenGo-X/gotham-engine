@@ -115,23 +115,6 @@ pub(crate) struct Abort {
 
 typetag_value!(Abort);
 
-
-
-#[derive(Serialize, Deserialize)]
-pub struct Party2SignSecondMessageVector {
-    pub message: BigInt,
-    pub party_two_sign_message: Party2SignMessage,
-    pub pos_child_key: Vec<BigInt>,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-pub struct Party2SignSecondMessage {
-    pub message: BigInt,
-    pub party_two_sign_message: Party2SignMessage,
-    pub x_pos_child_key: BigInt,
-    pub y_pos_child_key: BigInt,
-}
-
 ///common functions for the members of EcdsaStruct struct to strigify and format
 impl MPCStruct for EcdsaStruct {
     fn to_string(&self) -> String {

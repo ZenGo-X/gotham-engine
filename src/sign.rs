@@ -1,6 +1,6 @@
 use crate::guarder::Claims;
 use crate::traits::{Db, RedisMod};
-use crate::types::{idify, Abort, DbIndex, EcdsaStruct, Party2SignSecondMessage, Party2SignSecondMessageVector};
+use crate::types::{idify, Abort, DbIndex, EcdsaStruct};
 use config::Value;
 use std::env;
 use std::os::macos::raw::stat;
@@ -12,6 +12,7 @@ use two_party_ecdsa::kms::ecdsa::two_party::MasterKey1;
 use two_party_ecdsa::party_one::{Converter, Party1EphEcKeyPair, Party1EphKeyGenFirstMessage, Party1SignatureRecid};
 use two_party_ecdsa::party_two::Party2EphKeyGenFirstMessage;
 use two_party_ecdsa::BigInt;
+use two_party_ecdsa::kms::ecdsa::two_party::party2::{Party2SignSecondMessage, Party2SignSecondMessageVector};
 use uuid::Uuid;
 use crate::{db_cast, db_get, db_get_required, db_insert};
 
