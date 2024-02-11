@@ -3,7 +3,6 @@ use crate::traits::{Db, RedisMod};
 use crate::types::{idify, Abort, DbIndex, EcdsaStruct};
 use config::Value;
 use std::env;
-use std::os::macos::raw::stat;
 
 use rocket::serde::json::Json;
 use rocket::{async_trait, error, info, State};
