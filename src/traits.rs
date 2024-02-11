@@ -1,6 +1,7 @@
 //! The traits that define the common logic  with default implementation for keygen and sign
 //! while it differentiates implementation of keygen and sign with trait objects for DB management,user authorization and tx authorization
 use std::env;
+use log::info;
 
 use crate::types::{DbIndex};
 
@@ -75,27 +76,27 @@ pub trait Db: Send + Sync {
 pub trait RedisMod {
     fn redis_get(key: String) -> RedisResult<String> {
         let mut con = Self::redis_get_connection()?;
-        println!("[redis getting  key] {:?}", key);
+        info!("[redis getting  key] {:?}", key);
         let res = con.get(key)?;
         Ok(res)
     }
 
     fn redis_del(key: String) -> RedisResult<String> {
         let mut con = Self::redis_get_connection()?;
-        println!("[redis deleting  key] {:?}", key);
+        info!("[redis deleting  key] {:?}", key);
         let res: String = con.del(key)?;
         Ok(res)
     }
 
     fn redis_set(key: String, value: String) -> RedisResult<String> {
         let mut con = Self::redis_get_connection()?;
-        println!(
+        info!(
             "[redis will write key - value ] = {:?}-{:?}",
             key.clone(),
             value.clone()
         );
         let res: String = con.set(key.clone(), value.clone())?;
-        println!(
+        info!(
             "[redis wrote key - value ] = {:?}-{:?}",
             key.clone(),
             value.clone()
@@ -107,10 +108,10 @@ pub trait RedisMod {
         let redis_ip = env::var("ELASTICACHE_URL");
         let redis = String::from("redis://");
         let redis_url_var = String::from(redis + redis_ip.clone().unwrap().as_str());
-        println!("[redis connecting to] {:?}", redis_url_var);
+        info!("[redis connecting to] {:?}", redis_url_var);
         let client = redis::Client::open(redis_url_var)?;
         let info = client.get_connection_info();
-        println!("{:?}", info);
+        info!("{:?}", info);
         client.get_connection()
     }
 }
