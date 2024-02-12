@@ -27,6 +27,8 @@ pub async fn wrap_keygen_first(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
 ) -> Result<Json<(String, Party1KeyGenFirstMessage)>, String> {
+    println!("Derivation /ecdsa/keygen_v2/first");
+
     struct Gotham {}
     impl KeyGen for Gotham {}
     Gotham::first(state, claim).await
@@ -39,6 +41,7 @@ pub async fn wrap_keygen_second(
     id: &str,
     dlog_proof: Json<DLogProof>,
 ) -> Result<Json<Party1KeyGenSecondMessage>, String> {
+    println!("Derivation /ecdsa/keygen_v2/{}/second", id);
     struct Gotham {}
     impl KeyGen for Gotham {}
     Gotham::second(state, claim, id.to_string(), dlog_proof).await
@@ -55,6 +58,7 @@ pub async fn wrap_keygen_third(
     id: &str,
     party_2_pdl_first_message: Json<Party2PDLFirstMessage>,
 ) -> Result<Json<Party1PDLFirstMessage>, String> {
+    println!("Derivation /ecdsa/keygen_v2/{}/third", id);
     struct Gotham {}
     impl KeyGen for Gotham {}
     Gotham::third(state, claim, id.to_string(), party_2_pdl_first_message).await
@@ -71,6 +75,7 @@ pub async fn wrap_keygen_fourth(
     id: &str,
     party_two_pdl_second_message: Json<Party2PDLSecondMessage>,
 ) -> Result<Json<Party1PDLSecondMessage>, String> {
+    println!("Derivation /ecdsa/keygen_v2/{}/fourth", id);
     struct Gotham {}
     impl KeyGen for Gotham {}
     Gotham::fourth(state, claim, id.to_string(), party_two_pdl_second_message).await
@@ -82,6 +87,7 @@ pub async fn wrap_chain_code_first_message(
     claim: Claims,
     id: &str,
 ) -> Result<Json<DHPoKParty1FirstMessage>, String> {
+    println!("Derivation /ecdsa/keygen_v2/{}/chaincode/first", id);
     struct Gotham {}
     impl KeyGen for Gotham {}
     Gotham::chain_code_first_message(state, claim, id.to_string()).await
@@ -98,6 +104,7 @@ pub async fn wrap_chain_code_second_message(
     id: &str,
     cc_party_two_first_message_d_log_proof: Json<DLogProof>,
 ) -> Result<Json<DHPoKParty1SecondMessage>, String> {
+    println!("Derivation /ecdsa/keygen_v2/{}/chaincode/second", id);
     struct Gotham {}
     impl KeyGen for Gotham {}
     Gotham::chain_code_second_message(
@@ -120,6 +127,8 @@ pub async fn wrap_sign_first(
     id: &str,
     eph_key_gen_first_message_party_two: Json<Party2EphKeyGenFirstMessage>,
 ) -> Result<Json<Party1EphKeyGenFirstMessage>, String> {
+    println!("Derivation /ecdsa/sign/{}/first", id);
+
     struct Gotham {}
     impl Sign for Gotham {}
     Gotham::sign_first(
@@ -138,6 +147,8 @@ pub async fn wrap_sign_second(
     id: &str,
     request: Json<Party2SignSecondMessage>,
 ) -> Result<Json<Party1SignatureRecid>, String> {
+    println!("Derivation /ecdsa/sign/{}/second", id);
+
     struct Gotham {}
     impl Sign for Gotham {}
     Gotham::sign_second(state, claim, id.to_string(), request).await
@@ -154,6 +165,8 @@ pub async fn wrap_sign_first_v2(
     id: &str,
     eph_key_gen_first_message_party_two: Json<Party2EphKeyGenFirstMessage>,
 ) -> Result<Json<(String, Party1EphKeyGenFirstMessage)>, String> {
+    println!("Derivation /ecdsa/sign/{}/first_v2", id);
+
     struct Gotham {}
     impl Sign for Gotham {}
     Gotham::sign_first_v2(
@@ -172,6 +185,8 @@ pub async fn wrap_sign_second_v2(
     ssid: &str,
     request: Json<Party2SignSecondMessage>,
 ) -> Result<Json<Party1SignatureRecid>, String> {
+    println!("Derivation /ecdsa/sign/{}/second_v2", ssid);
+
     struct Gotham {}
     impl Sign for Gotham {}
     Gotham::sign_second_v2(state, claim, ssid.to_string(), request).await
@@ -188,6 +203,8 @@ pub async fn wrap_sign_first_v3(
     id: &str,
     eph_key_gen_first_message_party_two: Json<Party2EphKeyGenFirstMessage>,
 ) -> Result<Json<(String, Party1EphKeyGenFirstMessage)>, String> {
+    println!("Derivation /ecdsa/sign/{}/first_v3", id);
+
     struct Gotham {}
     impl Sign for Gotham {}
     Gotham::sign_first_v3(
@@ -206,6 +223,8 @@ pub async fn wrap_sign_second_v3(
     ssid: &str,
     request: Json<Party2SignSecondMessageVector>,
 ) -> Result<Json<Party1SignatureRecid>, String> {
+    println!("Derivation /ecdsa/sign/{}/second_v3", ssid);
+
     struct Gotham {}
     impl Sign for Gotham {}
     Gotham::sign_second_v3(state, claim, ssid.to_string(), request).await
