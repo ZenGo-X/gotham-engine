@@ -287,6 +287,6 @@ pub async fn wrap_rotate_forth(
 
 #[get("/health")]
 pub fn ping() -> Status {
-    // TODO: Add logic for health check
+    println!("pong");
     Status::Ok
 }
