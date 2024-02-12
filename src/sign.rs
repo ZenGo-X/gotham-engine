@@ -197,7 +197,6 @@ async fn sign_first_helper(
         error!("{:?}", err_msg);
         return Err(format!("{}", err_msg));
     }
-    println!("Derivation sign_first_helper for ssid {} successful", ssid);
 
     Ok(Json((ssid.clone(), sign_party_one_first_message)))
 }
@@ -252,7 +251,6 @@ async fn sign_second_helper(
         panic!("sign_second failed for customer_id {}, ssid {}, id: {}, sid: {}. \
             Inserted into Abort table",  claim.sub, ssid, id, sid);
     };
-    println!("Derivation sign_second_helper for ssid {} successful", ssid);
 
     Ok(Json(signature_with_recid.unwrap()))
 }
