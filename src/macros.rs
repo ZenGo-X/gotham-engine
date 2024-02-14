@@ -20,9 +20,6 @@ macro_rules! db_get {
     }
 }
 
-fn db_get() {
-
-}
 
 
 // TODO: find a way to prevent code duplication.

@@ -163,10 +163,6 @@ pub trait KeyGen {
         Ok(Json(res.unwrap()))
     }
 
-    fn db_insert() {
-
-    }
-
     async fn chain_code_first_message(
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,

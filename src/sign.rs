@@ -12,6 +12,7 @@ use two_party_ecdsa::party_one::{Converter, Party1EphEcKeyPair, Party1EphKeyGenF
 use two_party_ecdsa::party_two::Party2EphKeyGenFirstMessage;
 use two_party_ecdsa::BigInt;
 use two_party_ecdsa::kms::ecdsa::two_party::party2::{Party2SignSecondMessage, Party2SignSecondMessageVector};
+use two_party_ecdsa::kms::Errors;
 use uuid::Uuid;
 use crate::{db_cast, db_get, db_get_required, db_insert};
 
@@ -30,7 +31,8 @@ pub trait Sign {
         let to_abort = db_cast!(tmp, Abort);
 
         if to_abort.blocked == true {
-            panic!("customer_id {} exists in Abort table and thus is blocked", claim.sub.to_string());
+            return Err(format!("customer_id {} exists in Abort table and thus is blocked",
+                               claim.sub.to_string()));
         }
 
         let (sign_party_one_first_message, eph_ec_key_pair_party1) =
@@ -51,9 +53,8 @@ pub trait Sign {
         let db = state.lock().await;
         if env::var("REDIS_ENV").is_ok() {
             if db.granted(&*request.message.to_hex().to_string(), claim.sub.as_str()) == Ok(false) {
-                panic!(
-                    "Unauthorized transaction from redis-pps for customer_id {}, id {}:",
-                    claim.sub.as_str(), id.as_str()
+                return Err(format!("Unauthorized transaction from redis-pps for customer_id {}, id {}:",
+                    claim.sub.as_str(), id.as_str())
                 );
             }
         }
@@ -84,12 +85,13 @@ pub trait Sign {
             &request.message,
         );
 
-        if signature_with_recid.is_err() {
-            db_insert!(db, claim.sub, id, Abort, &Abort { blocked: true });
-            panic!("sign_second failed for customer_id {}, id {}. Inserted into Abort table",  claim.sub, id);
-        };
-
-        Ok(Json(signature_with_recid.unwrap()))
+        match signature_with_recid {
+            Ok(sig) => Ok(Json(sig)),
+            Err(_) => {
+                db_insert!(db, claim.sub, id, Abort, &Abort { blocked: true });
+                Err(format!("sign_second failed for customer_id {}, id {}. Inserted into Abort table",  claim.sub, id))
+            }
+        }
     }
 
     async fn sign_first_v2(
@@ -149,11 +151,13 @@ async fn sign_first_helper(
     let to_abort = db_cast!(tmp, Abort);
 
     if to_abort.blocked == true {
-        panic!("customer_id {} exists in Abort table and thus is blocked", claim.sub.to_string());
+        return Err(format!("customer_id {} exists in Abort table and thus is blocked", claim.sub.to_string()))
     }
 
     struct RedisCon {}
     impl RedisMod for RedisCon {}
+
+    let mut connection = RedisCon::get_connection()?;
 
     let (sign_party_one_first_message, eph_ec_key_pair_party1) =
         MasterKey1::sign_first_message();
@@ -163,40 +167,17 @@ async fn sign_first_helper(
 
     //write to redis db table as customerid_ssid_EphKeyGenFirstMsg:value
     let mut key: String = idify(&claim.sub, &ssid, &EcdsaStruct::EphKeyGenFirstMsg);
-    let mut res = RedisCon::redis_set(
-        key.clone(),
-        serde_json::to_string(&eph_key_gen_first_message_party_two.0).unwrap(),
-    )
-        .is_ok();
-
-    let mut err_msg: String = format!(
-        "redis error during set key-value = {:?} - {:?}",
-        key.clone().to_string(),
-        serde_json::to_string(&eph_key_gen_first_message_party_two.0).unwrap(),
-    );
-
-    if !res {
-        error!("{:?}", err_msg);
-        return Err(format!("{}", err_msg));
-    }
+    let mut res = RedisCon::set(&mut connection,
+        &key.clone(),
+        &serde_json::to_string(&eph_key_gen_first_message_party_two.0).unwrap(),
+    )?;
 
     //write to redis db table as customerid_ssid_EphEcKeyPair:value
     key = idify(&claim.sub, &ssid, &EcdsaStruct::EphEcKeyPair);
-    res = RedisCon::redis_set(
-        key.clone(),
-        serde_json::to_string(&eph_ec_key_pair_party1).unwrap(),
-    )
-        .is_ok();
-
-    err_msg = format!(
-        "redis error during set key-value = {:?} - {:?}",
-        key.clone().to_string(),
-        serde_json::to_string(&eph_ec_key_pair_party1).unwrap()
-    );
-    if !res {
-        error!("{:?}", err_msg);
-        return Err(format!("{}", err_msg));
-    }
+    res = RedisCon::set(&mut connection,
+        &key.clone(),
+        &serde_json::to_string(&eph_ec_key_pair_party1).unwrap(),
+    )?;
 
     Ok(Json((ssid.clone(), sign_party_one_first_message)))
 }
@@ -208,19 +189,23 @@ async fn sign_second_helper(
 ) -> Result<Json<Party1SignatureRecid>, String> {
     let db = state.lock().await;
     if env::var("REDIS_ENV").is_ok() {
-        if db.granted(&*request.message.to_hex().to_string(), claim.sub.as_str()) == Ok(false) {
-            panic!(
-                "Unauthorized transaction from redis-pps: {:?}",
-                ssid.clone().to_string()
-            );
+        if db.granted(request.message.to_hex().to_string().as_str(), claim.sub.as_str()) == Ok(false) {
+            return Err(format!("Unauthorized transaction from redis-pps: {}", ssid));
         }
     }
 
     struct RedisCon {}
     impl RedisMod for RedisCon {}
 
-    let id: &str = ssid.split(",").collect::<Vec<_>>()[0];
-    let sid: &str = ssid.split(",").collect::<Vec<_>>()[1];
+    let mut connection = RedisCon::get_connection()?;
+
+    let ssid_vec = ssid.split(",").collect::<Vec<_>>();
+    if ssid_vec.len() != 2 {
+        return Err("ssid must include only two values: 'id' and 'sid'".to_string());
+    }
+
+    let id: &str = ssid_vec[0];
+    let sid: &str = ssid_vec[1];
 
     //get the master key for that userid
     let tmp = db_get_required!(db, claim.sub, id, Party1MasterKey);
@@ -230,14 +215,14 @@ async fn sign_second_helper(
 
     let key1 = idify(&claim.sub, &ssid, &EcdsaStruct::EphEcKeyPair);
     let eph_ec_key_pair_party1: Party1EphEcKeyPair =
-        serde_json::from_slice(&RedisCon::redis_get(key1.clone()).unwrap().as_bytes()).unwrap();
+        serde_json::from_slice(&RedisCon::get(&mut connection, &key1).unwrap().as_bytes()).unwrap();
 
     let key2 = idify(&claim.sub, &ssid, &EcdsaStruct::EphKeyGenFirstMsg);
     let eph_key_gen_first_message_party_two: Party2EphKeyGenFirstMessage =
-        serde_json::from_slice(&RedisCon::redis_get(key2.clone()).unwrap().as_bytes()).unwrap();
+        serde_json::from_slice(&RedisCon::get(&mut connection, &key2).unwrap().as_bytes()).unwrap();
 
-    let _ = RedisCon::redis_del(key1);
-    let _ = RedisCon::redis_del(key2);
+    let _ = RedisCon::del(&mut connection, &key1);
+    let _ = RedisCon::del(&mut connection, &key2);
 
     let signature_with_recid = child_master_key.sign_second_message(
         &request.party_two_sign_message,
@@ -246,11 +231,12 @@ async fn sign_second_helper(
         &request.message,
     );
 
-    if signature_with_recid.is_err() {
-        db_insert!(db, claim.sub, id, Abort, &Abort { blocked: true });
-        panic!("sign_second failed for customer_id {}, ssid {}, id: {}, sid: {}. \
-            Inserted into Abort table",  claim.sub, ssid, id, sid);
-    };
-
-    Ok(Json(signature_with_recid.unwrap()))
+    match signature_with_recid {
+        Ok(sig) => Ok(Json(sig)),
+        Err(err) => {
+            db_insert!(db, claim.sub, id, Abort, &Abort { blocked: true });
+            Err(format!("sign_second failed for customer_id {}, ssid {}, id: {}, sid: {}. \
+            Inserted into Abort table",  claim.sub, ssid, id, sid))
+        }
+    }
 }
