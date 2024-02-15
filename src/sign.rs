@@ -201,7 +201,7 @@ async fn sign_second_helper(
 
     let ssid_vec = ssid.split(",").collect::<Vec<_>>();
     if ssid_vec.len() != 2 {
-        return Err("ssid must include only two values: 'id' and 'sid'".to_string());
+        return Err("ssid must include only two values: id,sid".to_string());
     }
 
     let id: &str = ssid_vec[0];
@@ -214,19 +214,23 @@ async fn sign_second_helper(
     let child_master_key = master_key.get_child(request.pos_child_key.clone());
 
     let key1 = idify(&claim.sub, &ssid, &EcdsaStruct::EphEcKeyPair);
-    let eph_ec_key_pair_party1: Party1EphEcKeyPair =
-        serde_json::from_slice(&RedisCon::get(&mut connection, &key1).unwrap().as_bytes()).unwrap();
+    let eph_ec_key_pair_party1 =
+        serde_json::from_slice(
+            &RedisCon::get(&mut connection, &key1)?.as_bytes()
+        ).unwrap();
 
     let key2 = idify(&claim.sub, &ssid, &EcdsaStruct::EphKeyGenFirstMsg);
-    let eph_key_gen_first_message_party_two: Party2EphKeyGenFirstMessage =
-        serde_json::from_slice(&RedisCon::get(&mut connection, &key2).unwrap().as_bytes()).unwrap();
+    let eph_key_gen_first_message_party2 =
+        serde_json::from_slice(
+            &RedisCon::get(&mut connection, &key2)?.as_bytes()
+        ).unwrap();
 
     let _ = RedisCon::del(&mut connection, &key1);
     let _ = RedisCon::del(&mut connection, &key2);
 
     let signature_with_recid = child_master_key.sign_second_message(
         &request.party_two_sign_message,
-        &eph_key_gen_first_message_party_two,
+        &eph_key_gen_first_message_party2,
         &eph_ec_key_pair_party1,
         &request.message,
     );

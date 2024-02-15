@@ -20,7 +20,7 @@ impl<'a> FromRequest<'a> for Claims {
             Outcome::Success(claims)
         } else {
             // Handle the case when there are no Authorization headers
-            Outcome::Error((Status::BadRequest, ()))
+            Outcome::Error((Status::Unauthorized, ()))
         }
     }
 }

@@ -77,62 +77,41 @@ pub trait Db: Send + Sync {
 pub trait RedisMod {
     fn get(connection: &mut Connection, key: &String) -> Result<String, String> {
         info!("Getting from Redis key [{:?}]", key);
-        let res: Result<String, RedisError> = connection.get(key);
-        match res {
-            Ok(res) => { Ok(res) }
-            Err(err) => {
-                Err(format!("Failed getting from Redis at key [{}] with error: {}", key, err))
-            }
-        }
+        connection.get(key).map_err(|err| {
+            format!("Failed getting from Redis at key [{}] with error: {}", key, err)
+        })
     }
 
     fn del(connection: &mut Connection, key: &String) -> Result<(), String> {
         info!("Deleting from Redis key [{}]", key);
-        let res: Result<String, RedisError> = connection.del(key);
-        match res {
-            Ok(_) => { Ok(()) }
-            Err(err) => {
-                Err(format!("Failed deleting from Redis at key [{}] with error: {}", key, err))
-            }
-        }
+        connection.del(key).map_err(|err| {
+            format!("Failed deleting from Redis at key [{}] with error: {}", key, err)
+        })
     }
 
     fn set(connection: &mut Connection, key: &String, value: &String) ->  Result<(), String> {
         info!("Setting to Redis at key [{}]", key);
-        let res: Result<String, RedisError> = connection.set(key, value);
-        match res {
-            Ok(_) => { Ok(()) }
-            Err(err) => {
-                Err(format!("Failed setting to Redis at key [{}] with error: {}", key, err))
-            }
-        }
+        connection.set(key, value).map_err(|err| {
+            format!("Failed setting to Redis at key [{}] with error: {}", key, err)
+        })
     }
 
     fn get_connection() -> Result<Connection, String> {
-        let elasticache_url = match env::var("ELASTICACHE_URL") {
-            Ok(url) => { url },
-            Err(err) => {
-                return Err(format!("Invalid 'ELASTICACHE_URL' environment variable {}", err));
-            }
-        };
+        let elasticache_url = env::var("ELASTICACHE_URL").map_err(|err| {
+            format!("Invalid 'ELASTICACHE_URL' environment variable {}", err)
+        })?;
 
         let redis_location = format!("redis://{}", elasticache_url);
 
         info!("Connecting to Redis at [{:?}]", redis_location);
 
-        let client = match redis::Client::open(redis_location.clone()) {
-            Ok(client) => { client },
-            Err(err) => {
-                return Err(format!("Creating connection to {} failed with error: {}", redis_location, err));
-            }
-        };
+        let client = redis::Client::open(redis_location.clone()).map_err(|err| {
+            format!("Creating connection to {} failed with error: {}", redis_location, err)
+        })?;
 
-        match client.get_connection(){
-            Ok(connection) => { Ok(connection) },
-            Err(err) => {
-                return Err(format!("Getting connection to {} failed with error: {}", redis_location, err));
-            }
-        }
+        client.get_connection().map_err(|err| {
+            format!("Getting connection to {} failed with error: {}", redis_location, err)
+        })
     }
 }
 

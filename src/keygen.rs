@@ -12,6 +12,7 @@ use log::{error, warn};
 use rocket::serde::json::Json;
 use rocket::{async_trait, State};
 use std::env;
+use rocket::futures::TryFutureExt;
 use tokio::sync::Mutex;
 use two_party_ecdsa::party_one::{
     DLogProof, Party1CommWitness, Party1EcKeyPair, Party1HDPos, Party1KeyGenFirstMessage,
@@ -30,30 +31,19 @@ pub trait KeyGen {
         claim: Claims,
     ) -> Result<Json<(String, Party1KeyGenFirstMessage)>, String> {
         let db = state.lock().await;
-
         //do not run in a local env
         if env::var("REDIS_ENV").is_ok() {
             match db.has_active_share(&claim.sub).await {
-                Err(e) => {
-                    let msg = format!(
-                        "Error when searching for active shares of customerId {}",
-                        &claim.sub
-                    );
-                    error!("{}: {:?}", msg, e);
-                    return Err(format!("{}", msg));
-                }
-                Ok(result) => {
-                    if result {
-                        let msg = format!("User {} already has an active share", &claim.sub);
-                        warn!("{}", msg);
-                        let should_fail_keygen = env::var("FAIL_KEYGEN_IF_ACTIVE_SHARE_EXISTS");
-                        if should_fail_keygen.is_ok() && should_fail_keygen.unwrap() == "true" {
-                            warn!("Abort KeyGen");
-                            return Err(format!("{}", msg));
-                        }
+                Ok(true) => {
+                    let should_fail_keygen = env::var("FAIL_KEYGEN_IF_ACTIVE_SHARE_EXISTS");
+                    if should_fail_keygen.is_ok() && should_fail_keygen.unwrap() == "true" {
+                        return Err(format!("User {} already has an active share, abort KeyGen",
+                                           &claim.sub));
                     }
-                }
-            }
+                },
+                Err(err) => { return Err(err); },
+                Ok(false) => {}
+            };
         }
 
         let (key_gen_first_msg, comm_witness, ec_key_pair) =
