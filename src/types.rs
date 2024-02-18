@@ -6,6 +6,7 @@ use thiserror::Error;
 use two_party_ecdsa::typetag_value;
 use two_party_ecdsa::typetags::Value;
 use two_party_ecdsa::BigInt;
+use two_party_ecdsa::kms::ecdsa::two_party::party2::Party2SignMessage;
 
 
 // TODO: use 'thiserror' and this enum in code
@@ -153,7 +154,7 @@ impl MPCStruct for EcdsaStruct {
             EcdsaStruct::Party1MasterKey => "MasterKey1",
             EcdsaStruct::EphEcKeyPair => "Party1EphEcKeyPair",
             EcdsaStruct::EphKeyGenFirstMsg => "Party2EphKeyGenFirstMessage",
-            EcdsaStruct::POS => "POS",
+            EcdsaStruct::POS => "Party1HDPos",
             EcdsaStruct::Abort => "Abort",
 
             EcdsaStruct::RotateCommitMessage1 => "RotateCommitMessage1",

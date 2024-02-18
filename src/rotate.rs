@@ -174,7 +174,7 @@ pub trait Rotate {
         );
 
         if rotate_party_two_second.is_err() {
-            panic!("rotation failed for customerId: {}, id: {}", claim.sub, id);
+            return Err(format!("rotation failed for customerId: {}, id: {}", claim.sub, id));
         }
 
         let (rotation_party_one_third, party_one_master_key_rotated) =
