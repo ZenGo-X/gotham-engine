@@ -151,7 +151,7 @@ async fn sign_first_helper(
     let to_abort = db_cast!(tmp, Abort);
 
     if to_abort.blocked == true {
-        return Err(format!("customer_id {} exists in Abort table and thus is blocked", claim.sub.to_string()))
+        return Err(format!("customer_id {} exists in Abort table and thus is blocked", claim.sub.to_string()));
     }
 
     struct RedisCon {}
@@ -167,17 +167,21 @@ async fn sign_first_helper(
 
     //write to redis db table as customerid_ssid_EphKeyGenFirstMsg:value
     let mut key: String = idify(&claim.sub, &ssid, &EcdsaStruct::EphKeyGenFirstMsg);
-    let mut res = RedisCon::set(&mut connection,
+    if let Err(err) = RedisCon::set(&mut connection,
         &key.clone(),
         &serde_json::to_string(&eph_key_gen_first_message_party_two.0).unwrap(),
-    )?;
+    ) {
+        return Err(err);
+    }
 
     //write to redis db table as customerid_ssid_EphEcKeyPair:value
     key = idify(&claim.sub, &ssid, &EcdsaStruct::EphEcKeyPair);
-    res = RedisCon::set(&mut connection,
+    if let Err(err) = RedisCon::set(&mut connection,
         &key.clone(),
         &serde_json::to_string(&eph_ec_key_pair_party1).unwrap(),
-    )?;
+    ) {
+        return Err(err);
+    }
 
     Ok(Json((ssid.clone(), sign_party_one_first_message)))
 }
