@@ -30,7 +30,8 @@ pub trait Sign {
         let to_abort = db_cast!(tmp, Abort);
 
         if to_abort.blocked == true {
-            panic!("customer_id {} exists in Abort table and thus is blocked", claim.sub.to_string());
+            return Err(format!("customer_id {} exists in Abort table and thus is blocked",
+                               claim.sub.to_string()));
         }
 
         let (sign_party_one_first_message, eph_ec_key_pair_party1) =
@@ -51,9 +52,8 @@ pub trait Sign {
         let db = state.lock().await;
         if env::var("REDIS_ENV").is_ok() {
             if db.granted(&*request.message.to_hex().to_string(), claim.sub.as_str()) == Ok(false) {
-                panic!(
-                    "Unauthorized transaction from redis-pps for customer_id {}, id {}:",
-                    claim.sub.as_str(), id.as_str()
+                return Err(format!("Unauthorized transaction from redis-pps for customer_id {}, id {}:",
+                    claim.sub.as_str(), id.as_str())
                 );
             }
         }
@@ -84,12 +84,13 @@ pub trait Sign {
             &request.message,
         );
 
-        if signature_with_recid.is_err() {
-            db_insert!(db, claim.sub, id, Abort, &Abort { blocked: true });
-            panic!("sign_second failed for customer_id {}, id {}. Inserted into Abort table",  claim.sub, id);
-        };
-
-        Ok(Json(signature_with_recid.unwrap()))
+        match signature_with_recid {
+            Ok(sig) => Ok(Json(sig)),
+            Err(_) => {
+                db_insert!(db, claim.sub, id, Abort, &Abort { blocked: true });
+                Err(format!("sign_second failed for customer_id {}, id {}. Inserted into Abort table",  claim.sub, id))
+            }
+        }
     }
 
     async fn sign_first_v2(
@@ -149,7 +150,7 @@ async fn sign_first_helper(
     let to_abort = db_cast!(tmp, Abort);
 
     if to_abort.blocked == true {
-        panic!("customer_id {} exists in Abort table and thus is blocked", claim.sub.to_string());
+        return Err(format!("customer_id {} exists in Abort table and thus is blocked", claim.sub.to_string()));
     }
 
     struct RedisCon {}
@@ -163,39 +164,20 @@ async fn sign_first_helper(
 
     //write to redis db table as customerid_ssid_EphKeyGenFirstMsg:value
     let mut key: String = idify(&claim.sub, &ssid, &EcdsaStruct::EphKeyGenFirstMsg);
-    let mut res = RedisCon::redis_set(
+    if let Err(err) = RedisCon::redis_set(
         key.clone(),
         serde_json::to_string(&eph_key_gen_first_message_party_two.0).unwrap(),
-    )
-        .is_ok();
-
-    let mut err_msg: String = format!(
-        "redis error during set key-value = {:?} - {:?}",
-        key.clone().to_string(),
-        serde_json::to_string(&eph_key_gen_first_message_party_two.0).unwrap(),
-    );
-
-    if !res {
-        error!("{:?}", err_msg);
-        return Err(format!("{}", err_msg));
+    ) {
+        return Err(err.to_string());
     }
 
     //write to redis db table as customerid_ssid_EphEcKeyPair:value
     key = idify(&claim.sub, &ssid, &EcdsaStruct::EphEcKeyPair);
-    res = RedisCon::redis_set(
+    if let Err(err) = RedisCon::redis_set(
         key.clone(),
         serde_json::to_string(&eph_ec_key_pair_party1).unwrap(),
-    )
-        .is_ok();
-
-    err_msg = format!(
-        "redis error during set key-value = {:?} - {:?}",
-        key.clone().to_string(),
-        serde_json::to_string(&eph_ec_key_pair_party1).unwrap()
-    );
-    if !res {
-        error!("{:?}", err_msg);
-        return Err(format!("{}", err_msg));
+    ) {
+        return Err(err.to_string());
     }
 
     Ok(Json((ssid.clone(), sign_party_one_first_message)))
@@ -208,11 +190,8 @@ async fn sign_second_helper(
 ) -> Result<Json<Party1SignatureRecid>, String> {
     let db = state.lock().await;
     if env::var("REDIS_ENV").is_ok() {
-        if db.granted(&*request.message.to_hex().to_string(), claim.sub.as_str()) == Ok(false) {
-            panic!(
-                "Unauthorized transaction from redis-pps: {:?}",
-                ssid.clone().to_string()
-            );
+        if db.granted(request.message.to_hex().to_string().as_str(), claim.sub.as_str()) == Ok(false) {
+            return Err(format!("Unauthorized transaction from redis-pps: {}", ssid));
         }
     }
 
@@ -246,11 +225,12 @@ async fn sign_second_helper(
         &request.message,
     );
 
-    if signature_with_recid.is_err() {
-        db_insert!(db, claim.sub, id, Abort, &Abort { blocked: true });
-        panic!("sign_second failed for customer_id {}, ssid {}, id: {}, sid: {}. \
-            Inserted into Abort table",  claim.sub, ssid, id, sid);
-    };
-
-    Ok(Json(signature_with_recid.unwrap()))
+    match signature_with_recid {
+        Ok(sig) => Ok(Json(sig)),
+        Err(err) => {
+            db_insert!(db, claim.sub, id, Abort, &Abort { blocked: true });
+            Err(format!("sign_second failed for customer_id {}, ssid {}, id: {}, sid: {}. \
+            Inserted into Abort table",  claim.sub, ssid, id, sid))
+        }
+    }
 }
