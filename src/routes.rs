@@ -22,32 +22,32 @@ use two_party_ecdsa::party_two::{
 };
 
 
-#[post("/ecdsa/keygen_v2/first", format = "json")]
+#[post("/ecdsa/keygen/first", format = "json")]
 pub async fn wrap_keygen_first(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
 ) -> Result<Json<(String, Party1KeyGenFirstMessage)>, String> {
-    println!("/ecdsa/keygen_v2/first | claim: {:?}", claim);
+    println!("/ecdsa/keygen/first | claim: {:?}", claim);
     struct Gotham {}
     impl KeyGen for Gotham {}
     Gotham::first(state, claim).await
 }
 
-#[post("/ecdsa/keygen_v2/<id>/second", format = "json", data = "<dlog_proof>")]
+#[post("/ecdsa/keygen/<id>/second", format = "json", data = "<dlog_proof>")]
 pub async fn wrap_keygen_second(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
     id: &str,
     dlog_proof: Json<DLogProof>,
 ) -> Result<Json<Party1KeyGenSecondMessage>, String> {
-    println!("/ecdsa/keygen_v2/{}/second | claim: {:?}", id, claim);
+    println!("/ecdsa/keygen/{}/second | claim: {:?}", id, claim);
     struct Gotham {}
     impl KeyGen for Gotham {}
     Gotham::second(state, claim, id.to_string(), dlog_proof).await
 }
 
 #[post(
-    "/ecdsa/keygen_v2/<id>/third",
+    "/ecdsa/keygen/<id>/third",
     format = "json",
     data = "<party_2_pdl_first_message>"
 )]
@@ -57,7 +57,7 @@ pub async fn wrap_keygen_third(
     id: &str,
     party_2_pdl_first_message: Json<Party2PDLFirstMessage>,
 ) -> Result<Json<Party1PDLFirstMessage>, String> {
-    println!("/ecdsa/keygen_v2/{}/third | claim: {:?}", id, claim);
+    println!("/ecdsa/keygen/{}/third | claim: {:?}", id, claim);
 
     struct Gotham {}
     impl KeyGen for Gotham {}
@@ -65,7 +65,7 @@ pub async fn wrap_keygen_third(
 }
 
 #[post(
-    "/ecdsa/keygen_v2/<id>/fourth",
+    "/ecdsa/keygen/<id>/fourth",
     format = "json",
     data = "<party_two_pdl_second_message>"
 )]
@@ -75,20 +75,20 @@ pub async fn wrap_keygen_fourth(
     id: &str,
     party_two_pdl_second_message: Json<Party2PDLSecondMessage>,
 ) -> Result<Json<Party1PDLSecondMessage>, String> {
-    println!("/ecdsa/keygen_v2/{}/fourth | claim: {:?}", id, claim);
+    println!("/ecdsa/keygen/{}/fourth | claim: {:?}", id, claim);
 
     struct Gotham {}
     impl KeyGen for Gotham {}
     Gotham::fourth(state, claim, id.to_string(), party_two_pdl_second_message).await
 }
 
-#[post("/ecdsa/keygen_v2/<id>/chaincode/first", format = "json")]
+#[post("/ecdsa/keygen/<id>/chaincode/first", format = "json")]
 pub async fn wrap_chain_code_first_message(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
     id: &str,
 ) -> Result<Json<DHPoKParty1FirstMessage>, String> {
-    println!("/ecdsa/keygen_v2/{}/chaincode/first | claim: {:?}", id, claim);
+    println!("/ecdsa/keygen/{}/chaincode/first | claim: {:?}", id, claim);
 
     struct Gotham {}
     impl KeyGen for Gotham {}
@@ -96,7 +96,7 @@ pub async fn wrap_chain_code_first_message(
 }
 
 #[post(
-    "/ecdsa/keygen_v2/<id>/chaincode/second",
+    "/ecdsa/keygen/<id>/chaincode/second",
     format = "json",
     data = "<cc_party_two_first_message_d_log_proof>"
 )]
@@ -106,7 +106,7 @@ pub async fn wrap_chain_code_second_message(
     id: &str,
     cc_party_two_first_message_d_log_proof: Json<DLogProof>,
 ) -> Result<Json<DHPoKParty1SecondMessage>, String> {
-    println!("/ecdsa/keygen_v2/{}/chaincode/second | claim: {:?}", id, claim);
+    println!("/ecdsa/keygen/{}/chaincode/second | claim: {:?}", id, claim);
 
     struct Gotham {}
     impl KeyGen for Gotham {}
