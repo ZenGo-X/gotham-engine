@@ -105,13 +105,10 @@ pub trait RedisMod {
     }
 
     fn redis_get_connection() -> RedisResult<Connection> {
-        let redis_ip = env::var("ELASTICACHE_URL");
-        let redis = String::from("redis://");
-        let redis_url_var = String::from(redis + redis_ip.clone().unwrap().as_str());
-        info!("[redis connecting to] {:?}", redis_url_var);
-        let client = redis::Client::open(redis_url_var)?;
+        let redis_ip = env::var("ELASTICACHE_URL").unwrap_or("127.0.0.1".to_string());
+        let client = redis::Client::open(format!("redis://{}", redis_ip))?;
         let info = client.get_connection_info();
-        info!("{:?}", info);
+        info!("Redis connection info: {:?}", info);
         client.get_connection()
     }
 }
