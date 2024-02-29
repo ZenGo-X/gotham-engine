@@ -37,11 +37,11 @@ pub trait KeyGen {
                 Ok(true) => {
                     let should_fail_keygen = env::var("FAIL_KEYGEN_IF_ACTIVE_SHARE_EXISTS");
                     if should_fail_keygen.is_ok() && should_fail_keygen.unwrap() == "true" {
-                        return Err(format!("User {} already has an active share, abort KeyGen",
+                        return Err(format!("customerId {} already has an active share, abort KeyGen",
                                            &claim.sub));
                     }
                 },
-                Err(err) => { return Err(err); },
+                Err(err) => { return Err(format!("Error when searching for active shares of customerId {}: {}", &claim.sub, err)); },
                 Ok(false) => {}
             };
         }
