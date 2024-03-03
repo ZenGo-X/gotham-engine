@@ -18,29 +18,18 @@ macro_rules! db_get {
             }
             Err(err) => {
                 //Db error
-                return Err(format!("Failed to get from {} with customerId: {}, id: {} with error:\n{}",
+                let txt = format!("Failed to get from {} with customerId: {}, id: {} with error:\n{}",
                     stringify!($enum_ident),
                     $customer_id,
                     $id,
                     err
-                ));
+                );
+                return Err(txt);
             }
         }
-        // .as_any().downcast_ref::<$cast_type>() {
-        //     None => {
-        //         Cast error
-                // return Err(format!("Unable to cast to {}", stringify!($cast_type)))
-            // }
-            // Some(v) => { v.clone() }    // Cust success
-        // }
     }
 }
 
-
-
-// TODO: find a way to prevent code duplication.
-// With macro invocation inside a macro there is the error:
-// "type annotations needed"
 #[macro_export]
 macro_rules! db_get_required {
     ($db:expr, $customer_id:expr, $id:expr, $enum_ident:ident, $cast_type:ty) => {
@@ -53,38 +42,43 @@ macro_rules! db_get_required {
         )
         .await
         {
-            Ok(Some(val)) => { val }    // Db get success
+            Ok(Some(val)) => {
+                // Db get success
+                val
+            }
             Ok(None) => {
                 // Empty result
-                return Err(format!("Value from {} with customerId: {}, id: {} is required",
+                let txt = format!("Value from {} with customerId: {}, id: {} is required",
                     stringify!($enum_ident),
                     $customer_id,
                     $id
-                ));
+                );
+                println!("{}", txt);
+                return Err(txt);
             }
             Err(err) => {
                 //Db error
-                return Err(format!("Failed to get from {} with customerId: {}, id: {} with error:\n{}",
+                let txt = format!("Failed to get from {} with customerId: {}, id: {} with error:\n{}",
                     stringify!($enum_ident),
                     $customer_id,
                     $id,
                     err
-                ));
+                );
+                println!("{}", txt);
+                return Err(txt);
             }
         }
         .as_any().downcast_ref::<$cast_type>() {
             None => {
                 // Cast error
-                return Err(format!("Unable to cast to {}", stringify!($cast_type)))
+                let txt = format!("Unable to cast to {}", stringify!($cast_type));
+                println!("{}", txt);
+                return Err(txt)
             }
             Some(v) => { v.clone() }    // Cust success
         }
     }
 }
-
-
-
-
 
 #[macro_export]
 macro_rules! db_insert {
@@ -98,19 +92,19 @@ macro_rules! db_insert {
             $new_value,
         )
         .await {
-            Ok(_) => {},
+            Ok(_) => { },
             Err(err) => {
-                return Err(format!("Failed to insert into {} with customerId: {}, id: {} with error:\n{}",
+                let txt = format!("Failed to insert into {} with customerId: {}, id: {} with error:\n{}",
                     stringify!($enum_ident),
                     $customer_id,
                     $id,
-                    err))
+                    err);
+                println!("{}", txt);
+                return Err(txt)
             }
         }
     };
 }
-
-//TODO: db_insert abort after error
 
 #[macro_export]
 macro_rules! db_cast {
@@ -118,33 +112,11 @@ macro_rules! db_cast {
       match $value.as_any().downcast_ref::<$cast_type>() {
             None => {
                 // Cast error
-                return Err(format!("Unable to cast to {}", stringify!($cast_type)))
+                let txt = format!("Unable to cast to {}", stringify!($cast_type));
+                println!("{}", txt);
+                return Err(txt)
             }
             Some(val) => { val.clone() }    // Cust success
         }
     };
 }
-
-
-/*
-    let x = match result {
-        Ok(Some(val)) => {
-            match val.as_any().downcast_ref::<Abort>() {
-                Some(v) => { v },
-                None => {
-                    // Incorrect Type
-                    return Err(format!(""));
-                }
-            }
-        }
-        Ok(None) => {
-            // Empty result
-            return Err(format!(""));
-        }
-        Err(err) => {
-            //Get error
-            return Err(format!("{}",err));
-        }
-    };
-
-     */
