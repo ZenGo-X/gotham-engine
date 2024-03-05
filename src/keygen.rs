@@ -13,7 +13,7 @@ use rocket::serde::json::Json;
 use rocket::{async_trait, State};
 use std::env;
 use rocket::futures::TryFutureExt;
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, MutexGuard};
 use two_party_ecdsa::party_one::{
     DLogProof, Party1CommWitness, Party1EcKeyPair, Party1HDPos, Party1KeyGenFirstMessage,
     Party1KeyGenSecondMessage, Party1PDLDecommit, Party1PDLFirstMessage, Party1PDLSecondMessage,
@@ -25,12 +25,12 @@ use uuid::Uuid;
 
 #[async_trait]
 pub trait KeyGen {
+
     ///first round of Keygen
     async fn first(
-        state: &State<Mutex<Box<dyn Db>>>,
+        db: &MutexGuard<Box<dyn Db>>,
         claim: Claims,
     ) -> Result<Json<(String, Party1KeyGenFirstMessage)>, String> {
-        let db = state.lock().await;
         //do not run in a local env
         if env::var("REDIS_ENV").is_ok() {
             match db.has_active_share(&claim.sub).await {
@@ -66,12 +66,11 @@ pub trait KeyGen {
 
     //second round of Keygen
     async fn second(
-        state: &State<Mutex<Box<dyn Db>>>,
+        db: &MutexGuard<Box<dyn Db>>,
         claim: Claims,
         id: String,
         dlog_proof: Json<DLogProof>,
     ) -> Result<Json<Party1KeyGenSecondMessage>, String> {
-        let db = state.lock().await;
         let party2_public: GE = dlog_proof.0.pk;
 
 
@@ -94,12 +93,11 @@ pub trait KeyGen {
     }
 
     async fn third(
-        state: &State<Mutex<Box<dyn Db>>>,
+        db: &MutexGuard<Box<dyn Db>>,
         claim: Claims,
         id: String,
         party_2_pdl_first_message: Json<Party2PDLFirstMessage>,
     ) -> Result<Json<Party1PDLFirstMessage>, String> {
-        let db = state.lock().await;
 
         let tmp = db_get_required!(db, claim.sub, id, Party1Private);
         let party_one_private = db_cast!(tmp, Party1Private);
@@ -120,12 +118,11 @@ pub trait KeyGen {
         Ok(Json(party_one_third_message))
     }
     async fn fourth(
-        state: &State<Mutex<Box<dyn Db>>>,
+        db: &MutexGuard<Box<dyn Db>>,
         claim: Claims,
         id: String,
         party_two_pdl_second_message: Json<Party2PDLSecondMessage>,
     ) -> Result<Json<Party1PDLSecondMessage>, String> {
-        let db = state.lock().await;
 
         let tmp = db_get_required!(db, claim.sub, id, Party1Private);
         let party_one_private = db_cast!(tmp, Party1Private);
@@ -154,11 +151,10 @@ pub trait KeyGen {
     }
 
     async fn chain_code_first_message(
-        state: &State<Mutex<Box<dyn Db>>>,
+        db: &MutexGuard<Box<dyn Db>>,
         claim: Claims,
         id: String,
     ) -> Result<Json<DHPoKParty1FirstMessage>, String> {
-        let db = state.lock().await;
 
         let (cc_party_one_first_message, cc_comm_witness, cc_ec_key_pair1) =
             ChainCode1::chain_code_first_message();
@@ -172,12 +168,11 @@ pub trait KeyGen {
         Ok(Json(cc_party_one_first_message))
     }
     async fn chain_code_second_message(
-        state: &State<Mutex<Box<dyn Db>>>,
+        db: &MutexGuard<Box<dyn Db>>,
         claim: Claims,
         id: String,
         cc_party_two_first_message_d_log_proof: Json<DLogProof>,
     ) -> Result<Json<DHPoKParty1SecondMessage>, String> {
-        let db = state.lock().await;
 
         let tmp = db_get_required!(db, claim.sub, id, CCCommWitness);
         let cc_comm_witness = db_cast!(tmp, DHPoKCommWitness);
