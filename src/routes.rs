@@ -32,7 +32,7 @@ pub async fn wrap_keygen_first(
     impl KeyGen for Gotham {}
     let db = state.lock().await;
 
-    Gotham::first(&db, claim).await
+    Gotham::first(&db, claim).await.map(|x| Json(x))
 }
 
 #[post("/ecdsa/keygen_v2/<id>/second", format = "json", data = "<dlog_proof>")]
@@ -47,7 +47,7 @@ pub async fn wrap_keygen_second(
     impl KeyGen for Gotham {}
     let db = state.lock().await;
 
-    Gotham::second(&db, claim, id.to_string(), dlog_proof).await
+    Gotham::second(&db, claim, id.to_string(), dlog_proof.0).await.map(|x| Json(x))
 }
 
 #[post(
@@ -67,7 +67,7 @@ pub async fn wrap_keygen_third(
     impl KeyGen for Gotham {}
     let db = state.lock().await;
 
-    Gotham::third(&db, claim, id.to_string(), party_2_pdl_first_message).await
+    Gotham::third(&db, claim, id.to_string(), party_2_pdl_first_message.0).await.map(|x| Json(x))
 }
 
 #[post(
@@ -87,7 +87,7 @@ pub async fn wrap_keygen_fourth(
     impl KeyGen for Gotham {}
     let db = state.lock().await;
 
-    Gotham::fourth(&db, claim, id.to_string(), party_two_pdl_second_message).await
+    Gotham::fourth(&db, claim, id.to_string(), party_two_pdl_second_message.0).await.map(|x| Json(x))
 }
 
 #[post("/ecdsa/keygen_v2/<id>/chaincode/first", format = "json")]
@@ -102,7 +102,7 @@ pub async fn wrap_chain_code_first_message(
     impl KeyGen for Gotham {}
     let db = state.lock().await;
 
-    Gotham::chain_code_first_message(&db, claim, id.to_string()).await
+    Gotham::chain_code_first_message(&db, claim, id.to_string()).await.map(|x| Json(x))
 }
 
 #[post(
@@ -126,9 +126,9 @@ pub async fn wrap_chain_code_second_message(
         &db,
         claim,
         id.to_string(),
-        cc_party_two_first_message_d_log_proof,
+        cc_party_two_first_message_d_log_proof.0,
     )
-    .await
+    .await.map(|x| Json(x))
 }
 
 #[post(

@@ -30,7 +30,7 @@ pub trait KeyGen {
     async fn first(
         db: &MutexGuard<Box<dyn Db>>,
         claim: Claims,
-    ) -> Result<Json<(String, Party1KeyGenFirstMessage)>, String> {
+    ) -> Result<(String, Party1KeyGenFirstMessage), String> {
         //do not run in a local env
         if env::var("REDIS_ENV").is_ok() {
             match db.has_active_share(&claim.sub).await {
@@ -61,7 +61,7 @@ pub trait KeyGen {
 
         db_insert!(db, claim.sub, id, EcKeyPair, &ec_key_pair);
 
-        Ok(Json((id.clone(), key_gen_first_msg)))
+        Ok((id.clone(), key_gen_first_msg))
     }
 
     //second round of Keygen
@@ -69,10 +69,10 @@ pub trait KeyGen {
         db: &MutexGuard<Box<dyn Db>>,
         claim: Claims,
         id: String,
-        dlog_proof: Json<DLogProof>,
-    ) -> Result<Json<Party1KeyGenSecondMessage>, String> {
-        let party2_public: GE = dlog_proof.0.pk;
+        dlog_proof: DLogProof,
+    ) -> Result<Party1KeyGenSecondMessage, String> {
 
+        let party2_public: GE = dlog_proof.pk;
 
         db_insert!(db, claim.sub, id, Party2Public, &party2_public);
 
@@ -83,28 +83,28 @@ pub trait KeyGen {
         let ec_key_pair = db_cast!(tmp, Party1EcKeyPair);
 
         let (kg_party_one_second_message, paillier_key_pair, party_one_private) =
-            MasterKey1::key_gen_second_message(comm_witness, ec_key_pair, &dlog_proof.0);
+            MasterKey1::key_gen_second_message(comm_witness, ec_key_pair, &dlog_proof);
 
         db_insert!(db, claim.sub, id, PaillierKeyPair, &paillier_key_pair);
 
         db_insert!(db, claim.sub, id, Party1Private, &party_one_private);
 
-        Ok(Json(kg_party_one_second_message))
+        Ok(kg_party_one_second_message)
     }
 
     async fn third(
         db: &MutexGuard<Box<dyn Db>>,
         claim: Claims,
         id: String,
-        party_2_pdl_first_message: Json<Party2PDLFirstMessage>,
-    ) -> Result<Json<Party1PDLFirstMessage>, String> {
+        party_2_pdl_first_message: Party2PDLFirstMessage,
+    ) -> Result<Party1PDLFirstMessage, String> {
 
         let tmp = db_get_required!(db, claim.sub, id, Party1Private);
         let party_one_private = db_cast!(tmp, Party1Private);
 
         let (party_one_third_message, party_one_pdl_decommit, alpha) =
             MasterKey1::key_gen_third_message(
-                &party_2_pdl_first_message.0,
+                &party_2_pdl_first_message,
                 &party_one_private,
             );
 
@@ -113,16 +113,16 @@ pub trait KeyGen {
         let alpha = Alpha { value: alpha };
         db_insert!(db, claim.sub, id, Alpha, &alpha);
 
-        db_insert!(db, claim.sub, id, Party2PDLFirstMsg, &party_2_pdl_first_message.0);
+        db_insert!(db, claim.sub, id, Party2PDLFirstMsg, &party_2_pdl_first_message);
 
-        Ok(Json(party_one_third_message))
+        Ok(party_one_third_message)
     }
     async fn fourth(
         db: &MutexGuard<Box<dyn Db>>,
         claim: Claims,
         id: String,
-        party_two_pdl_second_message: Json<Party2PDLSecondMessage>,
-    ) -> Result<Json<Party1PDLSecondMessage>, String> {
+        party_two_pdl_second_message: Party2PDLSecondMessage,
+    ) -> Result<Party1PDLSecondMessage, String> {
 
         let tmp = db_get_required!(db, claim.sub, id, Party1Private);
         let party_one_private = db_cast!(tmp, Party1Private);
@@ -140,21 +140,21 @@ pub trait KeyGen {
 
         let res = MasterKey1::key_gen_fourth_message(
             party_2_pdl_first_message,
-            &party_two_pdl_second_message.0,
+            &party_two_pdl_second_message,
             party_one_private.clone(),
             party_one_pdl_decommit.clone(),
             alpha.value.clone(),
         );
 
         assert!(res.is_ok());
-        Ok(Json(res.unwrap()))
+        Ok(res.unwrap())
     }
 
     async fn chain_code_first_message(
         db: &MutexGuard<Box<dyn Db>>,
         claim: Claims,
         id: String,
-    ) -> Result<Json<DHPoKParty1FirstMessage>, String> {
+    ) -> Result<DHPoKParty1FirstMessage, String> {
 
         let (cc_party_one_first_message, cc_comm_witness, cc_ec_key_pair1) =
             ChainCode1::chain_code_first_message();
@@ -165,21 +165,21 @@ pub trait KeyGen {
 
         db_insert!(db, claim.sub, id, CCEcKeyPair, &cc_ec_key_pair1);
 
-        Ok(Json(cc_party_one_first_message))
+        Ok(cc_party_one_first_message)
     }
     async fn chain_code_second_message(
         db: &MutexGuard<Box<dyn Db>>,
         claim: Claims,
         id: String,
-        cc_party_two_first_message_d_log_proof: Json<DLogProof>,
-    ) -> Result<Json<DHPoKParty1SecondMessage>, String> {
+        cc_party_two_first_message_d_log_proof: DLogProof,
+    ) -> Result<DHPoKParty1SecondMessage, String> {
 
         let tmp = db_get_required!(db, claim.sub, id, CCCommWitness);
         let cc_comm_witness = db_cast!(tmp, DHPoKCommWitness);
 
         let party1_cc_res = ChainCode1::chain_code_second_message(
             cc_comm_witness.clone(),
-            &cc_party_two_first_message_d_log_proof.0,
+            &cc_party_two_first_message_d_log_proof,
         );
 
         let party2_pub = &cc_party_two_first_message_d_log_proof.pk;
@@ -219,6 +219,6 @@ pub trait KeyGen {
 
         db_insert!(db, claim.sub, id, Party1MasterKey, &master_key);
 
-        Ok(Json(party1_cc_res))
+        Ok(party1_cc_res)
     }
 }
