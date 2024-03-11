@@ -11,7 +11,7 @@ macro_rules! db_get {
         )
         .await
         .unwrap_or_else(|err| { panic!(
-            "Failed to get from {} with customerId: {}, id: {} with error:\n{}",
+            "Failed to get from {} with customerId: {}, id: {} with error:\n{:?}",
             stringify!($enum_ident),
             $id,
             $customer_id,
@@ -37,7 +37,7 @@ macro_rules! db_get_required {
         )
         .await
         .unwrap_or_else(|err| { panic!(
-            "Failed to get from {} with customerId: {}, id: {} with error:\n{}",
+            "Failed to get from {} with customerId: {}, id: {} with error:\n{:?}",
             stringify!($enum_ident),
             $customer_id,
             $id,
@@ -69,7 +69,7 @@ macro_rules! db_insert {
         )
         .await
         .unwrap_or_else(|err| { panic!(
-            "Failed to insert into {} with customerId: {}, id: {} with error:\n{}",
+            "Failed to insert into {} with customerId: {}, id: {} with error:\n{:?}",
             stringify!($enum_ident),
             $customer_id,
             $id,
