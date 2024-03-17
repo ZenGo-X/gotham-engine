@@ -61,8 +61,8 @@ pub trait Sign {
 
         //: MasterKey1
 
-        let tmp = db_get_required!(db, claim.sub, id, Party1MasterKey);
-        let master_key = db_cast!(tmp, MasterKey1);
+        let master_key = db_get_required!(db, claim.sub, id, Party1MasterKey, MasterKey1);
+        // let master_key = db_cast!(tmp, MasterKey1);
 
         let x: BigInt = request.x_pos_child_key.clone();
         let y: BigInt = request.y_pos_child_key.clone();
@@ -71,12 +71,12 @@ pub trait Sign {
 
         //: party_one::EphEcKeyPair
 
-        let tmp = db_get_required!(db, claim.sub, id, EphEcKeyPair);
-        let eph_ec_key_pair_party1 = db_cast!(tmp, Party1EphEcKeyPair);
+        let eph_ec_key_pair_party1 = db_get_required!(db, claim.sub, id, EphEcKeyPair, Party1EphEcKeyPair);
+        // let eph_ec_key_pair_party1 = db_cast!(tmp, Party1EphEcKeyPair);
 
 
-        let tmp = db_get_required!(db, claim.sub, id, EphKeyGenFirstMsg);
-        let eph_key_gen_first_message_party_two = db_cast!(tmp, Party2EphKeyGenFirstMessage);
+        let eph_key_gen_first_message_party_two = db_get_required!(db, claim.sub, id, EphKeyGenFirstMsg, Party2EphKeyGenFirstMessage);
+        // let eph_key_gen_first_message_party_two = db_cast!(tmp, Party2EphKeyGenFirstMessage);
 
         let signature_with_recid = child_master_key.sign_second_message(
             &request.party_two_sign_message,
@@ -212,8 +212,8 @@ async fn sign_second_helper(
     let sid: &str = ssid_vec[1];
 
     //get the master key for that userid
-    let tmp = db_get_required!(db, claim.sub, id, Party1MasterKey);
-    let master_key = db_cast!(tmp, MasterKey1);
+    let master_key = db_get_required!(db, claim.sub, id, Party1MasterKey, MasterKey1);
+    // let master_key = db_cast!(tmp, MasterKey1);
 
     let child_master_key = master_key.get_child(request.pos_child_key.clone());
 

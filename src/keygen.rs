@@ -76,14 +76,14 @@ pub trait KeyGen {
 
         db_insert!(db, claim.sub, id, Party2Public, &party2_public);
 
-        let tmp = db_get_required!(db, claim.sub, id, CommWitness);
-        let comm_witness = db_cast!(tmp, Party1CommWitness);
+        let comm_witness = db_get_required!(db, claim.sub, id, CommWitness, Party1CommWitness);
+        // let comm_witness = db_cast!(tmp, Party1CommWitness);
 
-        let tmp = db_get_required!(db, claim.sub, id, EcKeyPair);
-        let ec_key_pair = db_cast!(tmp, Party1EcKeyPair);
+        let ec_key_pair = db_get_required!(db, claim.sub, id, EcKeyPair, Party1EcKeyPair);
+        // let ec_key_pair = db_cast!(tmp, Party1EcKeyPair);
 
         let (kg_party_one_second_message, paillier_key_pair, party_one_private) =
-            MasterKey1::key_gen_second_message(comm_witness, ec_key_pair, &dlog_proof);
+            MasterKey1::key_gen_second_message(&comm_witness, &ec_key_pair, &dlog_proof);
 
         db_insert!(db, claim.sub, id, PaillierKeyPair, &paillier_key_pair);
 
@@ -99,8 +99,8 @@ pub trait KeyGen {
         party_2_pdl_first_message: Party2PDLFirstMessage,
     ) -> Result<Party1PDLFirstMessage, String> {
 
-        let tmp = db_get_required!(db, claim.sub, id, Party1Private);
-        let party_one_private = db_cast!(tmp, Party1Private);
+        let party_one_private = db_get_required!(db, claim.sub, id, Party1Private, Party1Private);
+        // let party_one_private = db_cast!(tmp, Party1Private);
 
         let (party_one_third_message, party_one_pdl_decommit, alpha) =
             MasterKey1::key_gen_third_message(
@@ -124,22 +124,22 @@ pub trait KeyGen {
         party_two_pdl_second_message: Party2PDLSecondMessage,
     ) -> Result<Party1PDLSecondMessage, String> {
 
-        let tmp = db_get_required!(db, claim.sub, id, Party1Private);
-        let party_one_private = db_cast!(tmp, Party1Private);
+        let party_one_private = db_get_required!(db, claim.sub, id, Party1Private, Party1Private);
+        // let party_one_private = db_cast!(tmp, Party1Private);
 
-        let tmp = db_get_required!(db, claim.sub, id, Party2PDLFirstMsg);
-        let party_2_pdl_first_message = db_cast!(tmp, Party2PDLFirstMessage);
+        let party_2_pdl_first_message = db_get_required!(db, claim.sub, id, Party2PDLFirstMsg, Party2PDLFirstMessage);
+        // let party_2_pdl_first_message = db_cast!(tmp, Party2PDLFirstMessage);
 
-        let tmp = db_get_required!(db, claim.sub, id, PDLDecommit);
-        let party_one_pdl_decommit = db_cast!(tmp, Party1PDLDecommit);
+        let party_one_pdl_decommit = db_get_required!(db, claim.sub, id, PDLDecommit, Party1PDLDecommit);
+        // let party_one_pdl_decommit = db_cast!(tmp, Party1PDLDecommit);
 
-        let tmp = db_get_required!(db, claim.sub, id, Alpha);
-        let alpha = db_cast!(tmp, Alpha);
+        let alpha = db_get_required!(db, claim.sub, id, Alpha, Alpha);
+        // let alpha = db_cast!(tmp, Alpha);
 
         // let dl: &mut dyn Value = party_one_pdl_decommit.borrow_mut();
 
         let res = MasterKey1::key_gen_fourth_message(
-            party_2_pdl_first_message,
+            &party_2_pdl_first_message,
             &party_two_pdl_second_message,
             party_one_private.clone(),
             party_one_pdl_decommit.clone(),
@@ -174,8 +174,8 @@ pub trait KeyGen {
         cc_party_two_first_message_d_log_proof: DLogProof,
     ) -> Result<DHPoKParty1SecondMessage, String> {
 
-        let tmp = db_get_required!(db, claim.sub, id, CCCommWitness);
-        let cc_comm_witness = db_cast!(tmp, DHPoKCommWitness);
+        let cc_comm_witness = db_get_required!(db, claim.sub, id, CCCommWitness, DHPoKCommWitness);
+        // let cc_comm_witness = db_cast!(tmp, DHPoKCommWitness);
 
         let party1_cc_res = ChainCode1::chain_code_second_message(
             cc_comm_witness.clone(),
@@ -184,8 +184,8 @@ pub trait KeyGen {
 
         let party2_pub = &cc_party_two_first_message_d_log_proof.pk;
 
-        let tmp = db_get_required!(db, claim.sub, id, CCEcKeyPair);
-        let cc_ec_key_pair_party1 = db_cast!(tmp, DHPoKEcKeyPair);
+        let cc_ec_key_pair_party1 = db_get_required!(db, claim.sub, id, CCEcKeyPair, DHPoKEcKeyPair);
+        // let cc_ec_key_pair_party1 = db_cast!(tmp, DHPoKEcKeyPair);
 
         let party1_cc = ChainCode1::compute_chain_code(
             &cc_ec_key_pair_party1.clone(),
@@ -194,26 +194,26 @@ pub trait KeyGen {
 
         db_insert!(db, claim.sub, id, CC, &party1_cc);
 
-        let tmp = db_get_required!(db, claim.sub, id, Party2Public);
-        let party2_public = db_cast!(tmp, GE);
+        let party2_public = db_get_required!(db, claim.sub, id, Party2Public, GE);
+        // let party2_public = db_cast!(tmp, GE);
 
-        let tmp = db_get_required!(db, claim.sub, id, PaillierKeyPair);
-        let paillier_key_pair = db_cast!(tmp, Party1PaillierKeyPair);
+        let paillier_key_pair = db_get_required!(db, claim.sub, id, PaillierKeyPair, Party1PaillierKeyPair);
+        // let paillier_key_pair = db_cast!(tmp, Party1PaillierKeyPair);
 
-        let tmp = db_get_required!(db, claim.sub, id, CC);
-        let party1_cc = db_cast!(tmp, ChainCode1);
+        let party1_cc = db_get_required!(db, claim.sub, id, CC, ChainCode1);
+        // let party1_cc = db_cast!(tmp, ChainCode1);
 
-        let tmp = db_get_required!(db, claim.sub, id, Party1Private);
-        let party_one_private = db_cast!(tmp, Party1Private);
+        let party_one_private = db_get_required!(db, claim.sub, id, Party1Private, Party1Private);
+        // let party_one_private = db_cast!(tmp, Party1Private);
 
-        let tmp = db_get_required!(db, claim.sub, id, CommWitness);
-        let comm_witness = db_cast!(tmp, Party1CommWitness);
+        let comm_witness = db_get_required!(db, claim.sub, id, CommWitness, Party1CommWitness);
+        // let comm_witness = db_cast!(tmp, Party1CommWitness);
 
         let master_key = MasterKey1::set_master_key(
             &party1_cc.chain_code,
             party_one_private.clone(),
             &comm_witness.public_share,
-            party2_public,
+            &party2_public,
             paillier_key_pair.clone(),
         );
 
