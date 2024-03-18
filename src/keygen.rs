@@ -78,10 +78,8 @@ pub trait KeyGen {
         db_insert!(db, claim.sub, id, Party2Public, &party2_public);
 
         let comm_witness = db_get_required!(db, claim.sub, id, CommWitness, Party1CommWitness);
-        // let comm_witness = db_cast!(tmp, Party1CommWitness);
 
         let ec_key_pair = db_get_required!(db, claim.sub, id, EcKeyPair, Party1EcKeyPair);
-        // let ec_key_pair = db_cast!(tmp, Party1EcKeyPair);
 
         let (kg_party_one_second_message, paillier_key_pair, party_one_private) =
             MasterKey1::key_gen_second_message(&comm_witness, &ec_key_pair, &dlog_proof.0);
@@ -102,7 +100,6 @@ pub trait KeyGen {
         let db = state.lock().await;
 
         let party_one_private = db_get_required!(db, claim.sub, id, Party1Private, Party1Private);
-        // let party_one_private = db_cast!(tmp, Party1Private);
 
         let (party_one_third_message, party_one_pdl_decommit, alpha) =
             MasterKey1::key_gen_third_message(
@@ -127,44 +124,13 @@ pub trait KeyGen {
     ) -> Result<Json<Party1PDLSecondMessage>, String> {
         let db = state.lock().await;
 
-        // let x = match match db.get(
-        //     &crate::types::DbIndex {
-        //         customerId: claim.sub.to_string(),
-        //         id: id.to_string(),
-        //     },
-        //     &EcdsaStruct::Party1Private,
-        // )
-        // .await
-        // {
-        //     Ok(Some(val)) => { val }
-        //     Ok(None) => {
-        //         // Empty result
-        //         return Err(format!(""));
-        //     }
-        //     Err(err) => {
-        //         //Get error
-        //         return Err(format!("{}",err));
-        //     }
-        // }
-        // .as_any().downcast_ref::<Party1Private>() {
-        //     None => {
-        //         // Cast error
-        //         return Err(format!(""))
-        //     }
-        //     Some(v) => { v }
-        // };
-
         let party_one_private = db_get_required!(db, claim.sub, id, Party1Private, Party1Private);
-        // let party_one_private = db_cast!(tmp, Party1Private);
 
         let party_2_pdl_first_message = db_get_required!(db, claim.sub, id, Party2PDLFirstMsg, Party2PDLFirstMessage);
-        // let party_2_pdl_first_message = db_cast!(tmp, Party2PDLFirstMessage);
 
         let party_one_pdl_decommit = db_get_required!(db, claim.sub, id, PDLDecommit, Party1PDLDecommit);
-        // let party_one_pdl_decommit = db_cast!(tmp, Party1PDLDecommit);
 
         let alpha = db_get_required!(db, claim.sub, id, Alpha, Alpha);
-        // let alpha = db_cast!(tmp, Alpha);
 
         // let dl: &mut dyn Value = party_one_pdl_decommit.borrow_mut();
 
@@ -207,7 +173,6 @@ pub trait KeyGen {
         let db = state.lock().await;
 
         let cc_comm_witness = db_get_required!(db, claim.sub, id, CCCommWitness, DHPoKCommWitness);
-        // let cc_comm_witness = db_cast!(tmp, DHPoKCommWitness);
 
         let party1_cc_res = ChainCode1::chain_code_second_message(
             cc_comm_witness.clone(),
@@ -217,7 +182,6 @@ pub trait KeyGen {
         let party2_pub = &cc_party_two_first_message_d_log_proof.pk;
 
         let cc_ec_key_pair_party1 = db_get_required!(db, claim.sub, id, CCEcKeyPair, DHPoKEcKeyPair);
-        // let cc_ec_key_pair_party1 = db_cast!(tmp, DHPoKEcKeyPair);
 
         let party1_cc = ChainCode1::compute_chain_code(
             &cc_ec_key_pair_party1.clone(),
@@ -227,19 +191,14 @@ pub trait KeyGen {
         db_insert!(db, claim.sub, id, CC, &party1_cc);
 
         let party2_public = db_get_required!(db, claim.sub, id, Party2Public, GE);
-        // let party2_public = db_cast!(tmp, GE);
 
         let paillier_key_pair = db_get_required!(db, claim.sub, id, PaillierKeyPair, Party1PaillierKeyPair);
-        // let paillier_key_pair = db_cast!(tmp, Party1PaillierKeyPair);
 
         let party1_cc = db_get_required!(db, claim.sub, id, CC, ChainCode1);
-        // let party1_cc = db_cast!(tmp, ChainCode1);
 
         let party_one_private = db_get_required!(db, claim.sub, id, Party1Private, Party1Private);
-        // let party_one_private = db_cast!(tmp, Party1Private);
 
         let comm_witness = db_get_required!(db, claim.sub, id, CommWitness, Party1CommWitness);
-        // let comm_witness = db_cast!(tmp, Party1CommWitness);
 
         let master_key = MasterKey1::set_master_key(
             &party1_cc.chain_code,
