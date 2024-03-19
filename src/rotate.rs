@@ -15,6 +15,8 @@ use two_party_ecdsa::kms::rotation::two_party::party1::{
 };
 use two_party_ecdsa::kms::rotation::two_party::Rotation;
 use two_party_ecdsa::{party_one, party_two};
+use two_party_ecdsa::party_one::{Party1PDLDecommit, Party1Private};
+use two_party_ecdsa::party_two::Party2PDLFirstMessage;
 
 #[async_trait]
 pub trait Rotate {
@@ -54,16 +56,14 @@ pub trait Rotate {
     > {
         let db = state.lock().await;
 
-        let tmp = db_get_required!(db, claim.sub, id, RotateCommitMessage1);
-        let rotate_commit_message = db_cast!(tmp, RotateCommitMessage1);
+        let rotate_commit_message = db_get_required!(db, claim.sub, id, RotateCommitMessage1, RotateCommitMessage1);
 
         let (coin_flip_party1_second, random1) =
             Rotation1::key_rotate_second_message(&coin_flip_party2_first.0, &rotate_commit_message);
 
-        let tmp = db_get_required!(db, claim.sub, id, Party1MasterKey);
-        let party_one_master_key = db_cast!(tmp, MasterKey1);
+        let party_one_master_key = db_get_required!(db, claim.sub, id, Party1MasterKey, MasterKey1);
 
-        if party_one::Party1Private::check_rotated_key_bounds(
+        if Party1Private::check_rotated_key_bounds(
             &party_one_master_key.private,
             &random1.rotation.to_big_int(),
         ) {
@@ -94,8 +94,7 @@ pub trait Rotate {
     ) -> Result<Json<party_one::Party1PDLFirstMessage>, String> {
         let db = state.lock().await;
 
-        let tmp = db_get_required!(db, claim.sub, id, RotatePrivateNew);
-        let rotate_party_one_private = db_cast!(tmp, party_one::Party1Private);
+        let rotate_party_one_private = db_get_required!(db, claim.sub, id, RotatePrivateNew, Party1Private);
 
         let (rotation_party_one_second, party_one_pdl_decommit, party_one_alpha) =
             MasterKey1::rotation_second_message(
@@ -138,36 +137,30 @@ pub trait Rotate {
     ) -> Result<Json<party_one::Party1PDLSecondMessage>, String> {
         let db = state.lock().await;
 
-        let tmp = db_get_required!(db, claim.sub, id, RotateFirstMsg);
-        let rotation_party_one_first = db_cast!(tmp, RotationParty1Message1);
+        let rotation_party_one_first = db_get_required!(db, claim.sub, id, RotateFirstMsg, RotationParty1Message1);
 
-        let tmp = db_get_required!(db, claim.sub, id, RotatePrivateNew);
-        let rotate_party_one_private = db_cast!(tmp, party_one::Party1Private);
+        let rotate_party_one_private = db_get_required!(db, claim.sub, id, RotatePrivateNew, Party1Private);
 
-        let tmp = db_get_required!(db, claim.sub, id, RotateRandom1);
-        let random = db_cast!(tmp, Rotation);
+        let random = db_get_required!(db, claim.sub, id, RotateRandom1, Rotation);
 
         // let tmp = db_get_required!(db, claim.sub, id, RotateParty1Second);
         // let rotation_party_one_second = db_cast!(tmp, party_one::PDLSecondMessage);
 
-        let tmp = db_get_required!(db, claim.sub, id, RotateParty2First);
-        let rotation_party_two_first = db_cast!(tmp, party_two::Party2PDLFirstMessage);
+        let rotation_party_two_first = db_get_required!(db, claim.sub, id, RotateParty2First, Party2PDLFirstMessage);
 
-        let tmp = db_get_required!(db, claim.sub, id, RotateAlpha);
-        let party_one_alpha = db_cast!(tmp, Alpha);
+        let party_one_alpha = db_get_required!(db, claim.sub, id, RotateAlpha, Alpha);
 
-        let tmp = db_get_required!(db, claim.sub, id, RotatePdlDecom);
-        let party_one_pdl_decommit = db_cast!(tmp, party_one::Party1PDLDecommit);
+        let party_one_pdl_decommit = db_get_required!(db, claim.sub, id, RotatePdlDecom, Party1PDLDecommit);
 
-        let mk_tmp = db_get_required!(db, claim.sub, id, Party1MasterKey);
-        let party_one_master_key_temp = db_cast!(mk_tmp, MasterKey1);
+        let party_one_master_key_temp = db_get_required!(db, claim.sub, id, Party1MasterKey, MasterKey1);
+
         let party_one_master_key = party_one_master_key_temp.clone();
 
         let rotate_party_two_second = party_one_master_key.rotation_third_message(
-            rotation_party_one_first,
+            &rotation_party_one_first,
             rotate_party_one_private.clone(),
-            random,
-            rotation_party_two_first,
+            &random,
+            &rotation_party_two_first,
             &rotation_party_two_second.0,
             party_one_pdl_decommit.clone(),
             party_one_alpha.clone().value,

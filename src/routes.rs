@@ -11,7 +11,7 @@ use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_v
 
 use crate::rotate::Rotate;
 use rocket::serde::json::Json;
-use rocket::{get, http::Status, post, State};
+use rocket::{get, http::Status, info, post, State};
 use tokio::sync::Mutex;
 use two_party_ecdsa::curv::cryptographic_primitives::twoparty::coin_flip_optimal_rounds;
 use two_party_ecdsa::kms::ecdsa::two_party::party2::{Party2SignSecondMessage, Party2SignSecondMessageVector};
@@ -27,7 +27,7 @@ pub async fn wrap_keygen_first(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
 ) -> Result<Json<(String, Party1KeyGenFirstMessage)>, String> {
-    println!("/ecdsa/keygen_v2/first | claim: {:?}", claim);
+    println!("/ecdsa/keygen_v2/first | {:?}", claim);
     struct Gotham {}
     impl KeyGen for Gotham {}
     Gotham::first(state, claim).await
@@ -40,7 +40,7 @@ pub async fn wrap_keygen_second(
     id: &str,
     dlog_proof: Json<DLogProof>,
 ) -> Result<Json<Party1KeyGenSecondMessage>, String> {
-    println!("/ecdsa/keygen_v2/{}/second | claim: {:?}", id, claim);
+    println!("/ecdsa/keygen_v2/{}/second | {:?}", id, claim);
     struct Gotham {}
     impl KeyGen for Gotham {}
     Gotham::second(state, claim, id.to_string(), dlog_proof).await
@@ -57,7 +57,7 @@ pub async fn wrap_keygen_third(
     id: &str,
     party_2_pdl_first_message: Json<Party2PDLFirstMessage>,
 ) -> Result<Json<Party1PDLFirstMessage>, String> {
-    println!("/ecdsa/keygen_v2/{}/third | claim: {:?}", id, claim);
+    println!("/ecdsa/keygen_v2/{}/third | {:?}", id, claim);
 
     struct Gotham {}
     impl KeyGen for Gotham {}
@@ -75,7 +75,7 @@ pub async fn wrap_keygen_fourth(
     id: &str,
     party_two_pdl_second_message: Json<Party2PDLSecondMessage>,
 ) -> Result<Json<Party1PDLSecondMessage>, String> {
-    println!("/ecdsa/keygen_v2/{}/fourth | claim: {:?}", id, claim);
+    println!("/ecdsa/keygen_v2/{}/fourth | {:?}", id, claim);
 
     struct Gotham {}
     impl KeyGen for Gotham {}
@@ -88,7 +88,7 @@ pub async fn wrap_chain_code_first_message(
     claim: Claims,
     id: &str,
 ) -> Result<Json<DHPoKParty1FirstMessage>, String> {
-    println!("/ecdsa/keygen_v2/{}/chaincode/first | claim: {:?}", id, claim);
+    println!("/ecdsa/keygen_v2/{}/chaincode/first | {:?}", id, claim);
 
     struct Gotham {}
     impl KeyGen for Gotham {}
@@ -106,7 +106,7 @@ pub async fn wrap_chain_code_second_message(
     id: &str,
     cc_party_two_first_message_d_log_proof: Json<DLogProof>,
 ) -> Result<Json<DHPoKParty1SecondMessage>, String> {
-    println!("/ecdsa/keygen_v2/{}/chaincode/second | claim: {:?}", id, claim);
+    println!("/ecdsa/keygen_v2/{}/chaincode/second | {:?}", id, claim);
 
     struct Gotham {}
     impl KeyGen for Gotham {}
@@ -130,7 +130,7 @@ pub async fn wrap_sign_first(
     id: &str,
     eph_key_gen_first_message_party_two: Json<Party2EphKeyGenFirstMessage>,
 ) -> Result<Json<Party1EphKeyGenFirstMessage>, String> {
-    println!("/ecdsa/sign/{}/first | claim: {:?}", id, claim);
+    println!("/ecdsa/sign/{}/first | {:?}", id, claim);
 
     struct Gotham {}
     impl Sign for Gotham {}
@@ -150,7 +150,7 @@ pub async fn wrap_sign_second(
     id: &str,
     request: Json<Party2SignSecondMessage>,
 ) -> Result<Json<Party1SignatureRecid>, String> {
-    println!("/ecdsa/sign/{}/second | claim: {:?}", id, claim);
+    println!("/ecdsa/sign/{}/second | {:?}", id, claim);
 
     struct Gotham {}
     impl Sign for Gotham {}
@@ -168,7 +168,7 @@ pub async fn wrap_sign_first_v2(
     id: &str,
     eph_key_gen_first_message_party_two: Json<Party2EphKeyGenFirstMessage>,
 ) -> Result<Json<(String, Party1EphKeyGenFirstMessage)>, String> {
-    println!("/ecdsa/sign/{}/first_v2 | claim: {:?}", id, claim);
+    println!("/ecdsa/sign/{}/first_v2 | {:?}", id, claim);
 
     struct Gotham {}
     impl Sign for Gotham {}
@@ -188,7 +188,7 @@ pub async fn wrap_sign_second_v2(
     ssid: &str,
     request: Json<Party2SignSecondMessage>,
 ) -> Result<Json<Party1SignatureRecid>, String> {
-    println!("/ecdsa/sign/{}/second_v2 | claim: {:?}", ssid, claim);
+    println!("/ecdsa/sign/{}/second_v2 | {:?}", ssid, claim);
 
     struct Gotham {}
     impl Sign for Gotham {}
@@ -206,7 +206,7 @@ pub async fn wrap_sign_first_v3(
     id: &str,
     eph_key_gen_first_message_party_two: Json<Party2EphKeyGenFirstMessage>,
 ) -> Result<Json<(String, Party1EphKeyGenFirstMessage)>, String> {
-    println!("/ecdsa/sign/{}/first_v3 | claim: {:?}", id, claim);
+    println!("/ecdsa/sign/{}/first_v3 | {:?}", id, claim);
 
     struct Gotham {}
     impl Sign for Gotham {}
@@ -226,7 +226,7 @@ pub async fn wrap_sign_second_v3(
     ssid: &str,
     request: Json<Party2SignSecondMessageVector>,
 ) -> Result<Json<Party1SignatureRecid>, String> {
-    println!("/ecdsa/sign/{}/second_v3 | claim: {:?}", ssid, claim);
+    println!("/ecdsa/sign/{}/second_v3 | {:?}", ssid, claim);
 
     struct Gotham {}
     impl Sign for Gotham {}

@@ -41,8 +41,11 @@ reqwest = "0.9.5"
 failure = "0.1"
 floating-duration = "0.1.2"
 rocket = { version = "0.5.0-rc.1", default-features = false, features = ["json"] }
-config = "0.13.3"
+config = "0.14.0"
 uuid = { version = "0.7", features = ["v4"] }
 jsonwebtoken = "8"
 hex = "0.4"
-two-party-ecdsa = { git = "https://github.com/ZenGo-X/two-party-ecdsa.git", branch="feature/derivation" }
+two-party-ecdsa = { git = "https://github.com/ZenGo-X/two-party-ecdsa.git", branch="feature/error-handeling-v1" }
+
+#two-party-ecdsa = { path = "../two-party-ecdsa" }
+

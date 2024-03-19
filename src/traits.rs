@@ -1,12 +1,13 @@
 //! The traits that define the common logic  with default implementation for keygen and sign
 //! while it differentiates implementation of keygen and sign with trait objects for DB management,user authorization and tx authorization
 use std::env;
+use std::env::VarError;
 use log::info;
 
 use crate::types::{DbIndex};
 
-use redis::{Commands, Connection, RedisResult};
-use rocket::async_trait;
+use redis::{Commands, Connection, RedisError, RedisResult};
+use rocket::{async_trait, error};
 use two_party_ecdsa::typetags::Value;
 
 /// The Db trait allows different DB's to implement a common API for insert and get
@@ -74,45 +75,43 @@ pub trait Db: Send + Sync {
 
 /// Common trait both for private and public for redis api
 pub trait RedisMod {
-    fn redis_get(key: String) -> RedisResult<String> {
-        let mut con = Self::redis_get_connection()?;
-        info!("[redis getting  key] {:?}", key);
-        let res = con.get(key)?;
-        Ok(res)
+    fn get(connection: &mut Connection, key: &String) -> Result<String, String> {
+        info!("Getting from Redis key [{:?}]", key);
+        connection.get(key).map_err(|err| {
+            format!("Failed getting from Redis at key [{}] with error: {}", key, err)
+        })
     }
 
-    fn redis_del(key: String) -> RedisResult<String> {
-        let mut con = Self::redis_get_connection()?;
-        info!("[redis deleting  key] {:?}", key);
-        let res: String = con.del(key)?;
-        Ok(res)
+    fn del(connection: &mut Connection, key: &String) -> Result<(), String> {
+        info!("Deleting from Redis key [{}]", key);
+        connection.del(key).map_err(|err| {
+            format!("Failed deleting from Redis at key [{}] with error: {}", key, err)
+        })
     }
 
-    fn redis_set(key: String, value: String) -> RedisResult<String> {
-        let mut con = Self::redis_get_connection()?;
-        info!(
-            "[redis will write key - value ] = {:?}-{:?}",
-            key.clone(),
-            value.clone()
-        );
-        let res: String = con.set(key.clone(), value.clone())?;
-        info!(
-            "[redis wrote key - value ] = {:?}-{:?}",
-            key.clone(),
-            value.clone()
-        );
-        Ok(res)
+    fn set(connection: &mut Connection, key: &String, value: &String) ->  Result<(), String> {
+        info!("Setting to Redis at key [{}]", key);
+        connection.set(key, value).map_err(|err| {
+            format!("Failed setting to Redis at key [{}] with error: {}", key, err)
+        })
     }
 
-    fn redis_get_connection() -> RedisResult<Connection> {
-        let redis_ip = env::var("ELASTICACHE_URL");
-        let redis = String::from("redis://");
-        let redis_url_var = String::from(redis + redis_ip.clone().unwrap().as_str());
-        info!("[redis connecting to] {:?}", redis_url_var);
-        let client = redis::Client::open(redis_url_var)?;
-        let info = client.get_connection_info();
-        info!("{:?}", info);
-        client.get_connection()
+    fn get_connection() -> Result<Connection, String> {
+        let elasticache_url = env::var("ELASTICACHE_URL").map_err(|err| {
+            format!("Invalid 'ELASTICACHE_URL' environment variable {}", err)
+        })?;
+
+        let redis_location = format!("redis://{}", elasticache_url);
+
+        info!("Connecting to Redis at [{:?}]", redis_location);
+
+        let client = redis::Client::open(redis_location.clone()).map_err(|err| {
+            format!("Creating connection to {} failed with error: {}", redis_location, err)
+        })?;
+
+        client.get_connection().map_err(|err| {
+            format!("Getting connection to {} failed with error: {}", redis_location, err)
+        })
     }
 }
 
