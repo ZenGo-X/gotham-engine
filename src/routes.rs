@@ -236,14 +236,14 @@ pub async fn wrap_sign_second_v3(
     Gotham::sign_second_v3(state, claim, ssid.to_string(), request).await
 }
 
-#[post("/ecdsa/sign/<id>/first", format = "json", data = "<request>")]
+#[post("/ecdsa/derive/<id>", format = "json", data = "<request>")]
 pub async fn wrap_derive_first(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
     id: &str,
     request: Json<Vec<BigInt>>,
 ) -> Result<Json<MasterKey1>, String> {
-    println!("/ecdsa/derive/{}/first | {:?}", id, claim);
+    println!("/ecdsa/derive/{} | {:?}", id, claim);
 
     struct Gotham {}
     impl Derive for Gotham {}
