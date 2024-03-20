@@ -3,11 +3,11 @@ use rocket::info;
 macro_rules! db_get {
     ($db:expr, $customer_id:expr, $id:expr, $enum_ident:ident) => {
         match $db.get(
-            &crate::types::DbIndex {
+            &$crate::types::DbIndex {
                 customerId:  $customer_id.to_string(),
                 id: $id.to_string(),
             },
-            &EcdsaStruct::$enum_ident,
+            &$crate::types::EcdsaStruct::$enum_ident,
         )
         .await
         {
@@ -34,11 +34,11 @@ macro_rules! db_get {
 macro_rules! db_get_required {
     ($db:expr, $customer_id:expr, $id:expr, $enum_ident:ident, $cast_type:ty) => {
         match match $db.get(
-            &crate::types::DbIndex {
+            &$crate::types::DbIndex {
                 customerId:  $customer_id.to_string(),
                 id: $id.to_string(),
             },
-            &EcdsaStruct::$enum_ident,
+            &$crate::types::EcdsaStruct::$enum_ident,
         )
         .await
         {
@@ -84,11 +84,11 @@ macro_rules! db_get_required {
 macro_rules! db_insert {
     ($db:expr, $customer_id:expr, $id:expr, $enum_ident:ident, $new_value:expr) => {
         match $db.insert(
-            &crate::types::DbIndex {
+            &$crate::types::DbIndex {
                 customerId: $customer_id.to_string(),
                 id: $id.to_string(),
             },
-            &crate::types::EcdsaStruct::$enum_ident,
+            &$crate::types::EcdsaStruct::$enum_ident,
             $new_value,
         )
         .await {
