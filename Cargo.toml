@@ -1,6 +1,6 @@
 [package]
 name = "gotham-engine"
-version = "1.2.0"
+version = "1.2.1"
 
 edition = "2021"
 
@@ -47,5 +47,6 @@ jsonwebtoken = "8"
 hex = "0.4"
 two-party-ecdsa = { git = "https://github.com/ZenGo-X/two-party-ecdsa.git", branch="develop" }
 
+# For debugging
 #two-party-ecdsa = { path = "../two-party-ecdsa" }
 
