@@ -224,6 +224,7 @@ async fn sign_second_helper(
     let mut file = File::create(format!("{}/{}_master1.json", root_path, id)).unwrap();
     file.write_all(serialized.as_bytes()).unwrap();
 
+    let serialized = serde_json::to_string(&child_master_key).unwrap();
     let derivation_path = request.pos_child_key.iter().map(|n| n.to_string()).collect::<Vec<_>>().join("-");
     let mut file = File::create(format!("{}/{}_child1_{}.json", root_path, id, derivation_path)).unwrap();
     file.write_all(serialized.as_bytes()).unwrap();
