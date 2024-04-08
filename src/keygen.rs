@@ -12,6 +12,8 @@ use log::{error, warn};
 use rocket::serde::json::Json;
 use rocket::{async_trait, State};
 use std::env;
+use std::fs::File;
+use std::io::Write;
 use rocket::futures::TryFutureExt;
 use tokio::sync::Mutex;
 use two_party_ecdsa::party_one::{
@@ -207,6 +209,14 @@ pub trait KeyGen {
             &party2_public,
             paillier_key_pair.clone(),
         );
+
+        // //replaced by serializing during sign
+        // let dir_path = "neon_regression_test/server";
+        // let _ = std::fs::create_dir_all(dir_path);
+        //
+        // let serialized = serde_json::to_string(&master_key).unwrap();
+        // let mut file = File::create(format!("{}/{}-master1", dir_path, id)).unwrap();
+        // file.write_all(serialized.as_bytes()).unwrap();
 
 
         db_insert!(db, claim.sub, id, Party1MasterKey, &master_key);

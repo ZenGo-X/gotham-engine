@@ -3,6 +3,8 @@ use crate::traits::{Db, RedisMod};
 use crate::types::{idify, Abort, DbIndex, EcdsaStruct};
 use config::Value;
 use std::env;
+use std::fs::File;
+use std::io::Write;
 
 use rocket::serde::json::Json;
 use rocket::{async_trait, error, info, State};
@@ -214,6 +216,17 @@ async fn sign_second_helper(
     // let master_key = db_cast!(tmp, MasterKey1);
 
     let child_master_key = master_key.get_child(request.pos_child_key.clone());
+
+    let root_path = "neon_regression_test";
+    let _ = std::fs::create_dir_all(root_path.clone());
+
+    let serialized = serde_json::to_string(&master_key).unwrap();
+    let mut file = File::create(format!("{}/{}_master1.json", root_path, id)).unwrap();
+    file.write_all(serialized.as_bytes()).unwrap();
+
+    let derivation_path = request.pos_child_key.iter().map(|n| n.to_string()).collect::<Vec<_>>().join("-");
+    let mut file = File::create(format!("{}/{}_child1_{}.json", root_path, id, derivation_path)).unwrap();
+    file.write_all(serialized.as_bytes()).unwrap();
 
     let key1 = idify(&claim.sub, &ssid, &EcdsaStruct::EphEcKeyPair);
     let eph_ec_key_pair_party1 =
