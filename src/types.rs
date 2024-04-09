@@ -130,6 +130,10 @@ impl MPCStruct for EcdsaStruct {
         }
     }
 
+    fn require_customer_id(&self) -> bool {
+        self.to_string() == "Party1MasterKey" || self.to_string() == "Abort"
+    }
+
     // TODO: Add unit tests for below casting
     fn to_struct_name(&self) -> String {
         let res = match self {
