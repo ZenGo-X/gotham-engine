@@ -62,7 +62,7 @@ pub trait Sign {
 
         //: MasterKey1
 
-        let master_key = db_get_required!(db, None::<String>, Some(id.clone()), Party1MasterKey, MasterKey1);
+        let master_key = db_get_required!(db, Some(claim.sub.clone()), None::<String>, Party1MasterKey, MasterKey1);
 
         let x: BigInt = request.x_pos_child_key.clone();
         let y: BigInt = request.y_pos_child_key.clone();
@@ -211,7 +211,7 @@ async fn sign_second_helper(
     let sid  = ssid_vec[1].to_string();
 
     //get the master key for that userid
-    let master_key = db_get_required!(db, None::<String>, Some(id.clone()), Party1MasterKey, MasterKey1);
+    let master_key = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), Party1MasterKey, MasterKey1);
     // let master_key = db_cast!(tmp, MasterKey1);
 
     let child_master_key = master_key.get_child(request.pos_child_key.clone());
