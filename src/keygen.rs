@@ -209,7 +209,7 @@ pub trait KeyGen {
         );
 
 
-        db_insert!(db, None::<String>, Some(id.clone()), Party1MasterKey, &master_key);
+        db_insert!(db, Some(claim.sub.clone()), Some(id.clone()), Party1MasterKey, &master_key);
 
         Ok(Json(party1_cc_res))
     }

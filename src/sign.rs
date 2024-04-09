@@ -27,7 +27,7 @@ pub trait Sign {
         let db = state.lock().await;
 
         // Abort table has only customerId as key
-        let tmp = db_get!(db, None::<String>, Some(id.clone()), Abort)
+        let tmp = db_get!(db, Some(claim.sub.clone()), None::<String>, Abort)
             .unwrap_or(Box::new(Abort { blocked: false }));
         let to_abort = db_cast!(tmp, Abort);
 
@@ -62,7 +62,7 @@ pub trait Sign {
 
         //: MasterKey1
 
-        let master_key = db_get_required!(db, Some(claim.sub.clone()), None::<String>, Party1MasterKey, MasterKey1);
+        let master_key = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), Party1MasterKey, MasterKey1);
 
         let x: BigInt = request.x_pos_child_key.clone();
         let y: BigInt = request.y_pos_child_key.clone();
@@ -144,7 +144,7 @@ async fn sign_first_helper(
 ) -> Result<Json<(String, Party1EphKeyGenFirstMessage)>, String> {
     let db = state.lock().await;
 
-    let tmp = db_get!(db, None::<String>, Some(id.clone()), Abort)
+    let tmp = db_get!(db, Some(claim.sub.clone()), None::<String>, Abort)
         .unwrap_or(Box::new(Abort { blocked: false }));
 
     let to_abort = db_cast!(tmp, Abort);

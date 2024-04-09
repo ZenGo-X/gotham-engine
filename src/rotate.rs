@@ -61,7 +61,7 @@ pub trait Rotate {
         let (coin_flip_party1_second, random1) =
             Rotation1::key_rotate_second_message(&coin_flip_party2_first.0, &rotate_commit_message);
 
-        let party_one_master_key = db_get_required!(db, None::<String>, Some(id.clone()), Party1MasterKey, MasterKey1);
+        let party_one_master_key = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), Party1MasterKey, MasterKey1);
 
         if Party1Private::check_rotated_key_bounds(
             &party_one_master_key.private,
@@ -152,7 +152,7 @@ pub trait Rotate {
 
         let party_one_pdl_decommit = db_get_required!(db, None::<String>, Some(id.clone()), RotatePdlDecom, Party1PDLDecommit);
 
-        let party_one_master_key_temp = db_get_required!(db, None::<String>, Some(id.clone()), Party1MasterKey, MasterKey1);
+        let party_one_master_key_temp = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), Party1MasterKey, MasterKey1);
 
         let party_one_master_key = party_one_master_key_temp.clone();
 
