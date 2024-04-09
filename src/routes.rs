@@ -239,15 +239,14 @@ pub async fn wrap_sign_second_v3(
 #[post("/ecdsa/derive/<id>", format = "json", data = "<request>")]
 pub async fn wrap_derive_first(
     state: &State<Mutex<Box<dyn Db>>>,
-    claim: Claims,
     id: &str,
     request: Json<Vec<BigInt>>,
 ) -> Result<Json<MasterKey1>, String> {
-    println!("/ecdsa/derive/{} | {:?}", id, claim);
+    println!("/ecdsa/derive/{}", id);
 
     struct Gotham {}
     impl Derive for Gotham {}
-    Gotham::first(state, claim, id.to_string(), request).await
+    Gotham::first(state, id.to_string(), request).await
 }
 
 #[post("/ecdsa/rotate/<id>/first", format = "json")]

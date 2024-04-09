@@ -13,14 +13,14 @@ use crate::traits::Db;
 pub trait Derive {
     async fn first(
         state: &State<Mutex<Box<dyn Db>>>,
-        claim: Claims,
         id: String,
         request: Json<Vec<BigInt>>) ->  Result<Json<MasterKey1>, String> {
         let db = state.lock().await;
 
-        //get the master key for that userid
-        let master_key = db_get_required!(db, claim.sub, id, Party1MasterKey, MasterKey1);
-        // let master_key = db_cast!(tmp, MasterKey1);
+        // get the master key for that id
+        // customerId is not required as Claims are not passed to this endpoint)
+        let master_key = db_get_required!(db, None::<String>, Some(id.clone()), Party1MasterKey, MasterKey1);
+
 
         let child_master_key = master_key.get_child(request.0);
 
