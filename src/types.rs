@@ -44,9 +44,9 @@ pub enum DbConnector {
 /// It is used as an index for the underlying Db table
 pub struct DbIndex {
     ///The customerId as assigned from cognito and passed through JWT
-    pub customerId: Option<String>,
+    pub customerId: String,
     ///The is as assigned from gotham server during the first round of keygen to identify users
-    pub id: Option<String>,
+    pub id: String,
 }
 
 /// The Authenticator indicates how the input requests to gotham server will be authorized. Currently there is the JWT option
@@ -170,6 +170,8 @@ impl MPCStruct for EcdsaStruct {
         res.to_string()
     }
 }
+
+//TODO move to two-party-ecdsa/kms
 
 #[inline(always)]
 pub fn idify(user_id: &String, id: &String, name: &dyn MPCStruct) -> String {

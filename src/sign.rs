@@ -26,8 +26,7 @@ pub trait Sign {
     ) -> Result<Json<Party1EphKeyGenFirstMessage>, String> {
         let db = state.lock().await;
 
-        // Abort table has only customerId as key
-        let tmp = db_get!(db, Some(claim.sub.clone()), Some(id.clone()), Abort)
+        let tmp = db_get!(db, claim.sub, id, Abort)
             .unwrap_or(Box::new(Abort { blocked: false }));
         let to_abort = db_cast!(tmp, Abort);
 
@@ -39,9 +38,9 @@ pub trait Sign {
         let (sign_party_one_first_message, eph_ec_key_pair_party1) =
             MasterKey1::sign_first_message();
 
-        db_insert!(db, Some(claim.sub.clone()), Some(id.clone()), EphKeyGenFirstMsg, &eph_key_gen_first_message_party_two.0);
+        db_insert!(db, claim.sub, id, EphKeyGenFirstMsg, &eph_key_gen_first_message_party_two.0);
 
-        db_insert!(db, Some(claim.sub.clone()), Some(id.clone()), EphEcKeyPair, &eph_ec_key_pair_party1);
+        db_insert!(db, claim.sub, id, EphEcKeyPair, &eph_ec_key_pair_party1);
 
         Ok(Json(sign_party_one_first_message))
     }
@@ -62,7 +61,7 @@ pub trait Sign {
 
         //: MasterKey1
 
-        let master_key = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), Party1MasterKey, MasterKey1);
+        let master_key = db_get_required!(db, claim.sub, id, Party1MasterKey, MasterKey1);
 
         let x: BigInt = request.x_pos_child_key.clone();
         let y: BigInt = request.y_pos_child_key.clone();
@@ -71,10 +70,10 @@ pub trait Sign {
 
         //: party_one::EphEcKeyPair
 
-        let eph_ec_key_pair_party1 = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), EphEcKeyPair, Party1EphEcKeyPair);
+        let eph_ec_key_pair_party1 = db_get_required!(db, claim.sub, id, EphEcKeyPair, Party1EphEcKeyPair);
 
 
-        let eph_key_gen_first_message_party_two = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), EphKeyGenFirstMsg, Party2EphKeyGenFirstMessage);
+        let eph_key_gen_first_message_party_two = db_get_required!(db, claim.sub, id, EphKeyGenFirstMsg, Party2EphKeyGenFirstMessage);
 
         let signature_with_recid = child_master_key.sign_second_message(
             &request.party_two_sign_message,
@@ -86,7 +85,7 @@ pub trait Sign {
         match signature_with_recid {
             Ok(sig) => Ok(Json(sig)),
             Err(_) => {
-                db_insert!(db, Some(claim.sub.clone()), Some(id.clone()), Abort, &Abort { blocked: true });
+                db_insert!(db, claim.sub, id, Abort, &Abort { blocked: true });
                 Err(format!("sign_second failed for customer_id {}, id {}. Inserted into Abort table",  claim.sub, id))
             }
         }
@@ -144,7 +143,7 @@ async fn sign_first_helper(
 ) -> Result<Json<(String, Party1EphKeyGenFirstMessage)>, String> {
     let db = state.lock().await;
 
-    let tmp = db_get!(db, Some(claim.sub.clone()), Some(id.clone()), Abort)
+    let tmp = db_get!(db, claim.sub, id, Abort)
         .unwrap_or(Box::new(Abort { blocked: false }));
 
     let to_abort = db_cast!(tmp, Abort);
@@ -207,11 +206,11 @@ async fn sign_second_helper(
         return Err("ssid must include only two values: id,sid".to_string());
     }
 
-    let id = ssid_vec[0].to_string();
-    let sid  = ssid_vec[1].to_string();
+    let id: &str = ssid_vec[0];
+    let sid: &str = ssid_vec[1];
 
     //get the master key for that userid
-    let master_key = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), Party1MasterKey, MasterKey1);
+    let master_key = db_get_required!(db, claim.sub, id, Party1MasterKey, MasterKey1);
     // let master_key = db_cast!(tmp, MasterKey1);
 
     let child_master_key = master_key.get_child(request.pos_child_key.clone());
@@ -241,8 +240,8 @@ async fn sign_second_helper(
     match signature_with_recid {
         Ok(sig) => Ok(Json(sig)),
         Err(err) => {
-            db_insert!(db, Some(claim.sub.clone()), Some(id.clone()), Abort, &Abort { blocked: true });
-            Err(format!("sign_second failed for customer_id {:?}, ssid {:?}, id: {:?}, sid: {:?}. \
+            db_insert!(db, claim.sub, id, Abort, &Abort { blocked: true });
+            Err(format!("sign_second failed for customer_id {}, ssid {}, id: {}, sid: {}. \
             Inserted into Abort table",  claim.sub, ssid, id, sid))
         }
     }
