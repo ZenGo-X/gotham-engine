@@ -53,13 +53,13 @@ pub trait KeyGen {
 
         //save pos 0
         let hd_pos = Party1HDPos { pos: 0u32 };
-        db_insert!(db, Some(claim.sub.clone()), Some(id.clone()), POS, &hd_pos);
+        db_insert!(db, None::<String>, Some(id.clone()), POS, &hd_pos);
 
-        db_insert!(db, Some(claim.sub.clone()), Some(id.clone()), KeyGenFirstMsg, &key_gen_first_msg);
+        db_insert!(db, None::<String>, Some(id.clone()), KeyGenFirstMsg, &key_gen_first_msg);
 
-        db_insert!(db, Some(claim.sub.clone()), Some(id.clone()), CommWitness, &comm_witness);
+        db_insert!(db, None::<String>, Some(id.clone()), CommWitness, &comm_witness);
 
-        db_insert!(db, Some(claim.sub.clone()), Some(id.clone()), EcKeyPair, &ec_key_pair);
+        db_insert!(db, None::<String>, Some(id.clone()), EcKeyPair, &ec_key_pair);
 
         Ok(Json((id.clone(), key_gen_first_msg)))
     }
@@ -75,18 +75,18 @@ pub trait KeyGen {
         let party2_public: GE = dlog_proof.0.pk;
 
 
-        db_insert!(db, Some(claim.sub.clone()), Some(id.clone()), Party2Public, &party2_public);
+        db_insert!(db, None::<String>, Some(id.clone()), Party2Public, &party2_public);
 
-        let comm_witness = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), CommWitness, Party1CommWitness);
+        let comm_witness = db_get_required!(db, None::<String>, Some(id.clone()), CommWitness, Party1CommWitness);
 
-        let ec_key_pair = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), EcKeyPair, Party1EcKeyPair);
+        let ec_key_pair = db_get_required!(db, None::<String>, Some(id.clone()), EcKeyPair, Party1EcKeyPair);
 
         let (kg_party_one_second_message, paillier_key_pair, party_one_private) =
             MasterKey1::key_gen_second_message(&comm_witness, &ec_key_pair, &dlog_proof.0);
 
-        db_insert!(db, Some(claim.sub.clone()), Some(id.clone()), PaillierKeyPair, &paillier_key_pair);
+        db_insert!(db, None::<String>, Some(id.clone()), PaillierKeyPair, &paillier_key_pair);
 
-        db_insert!(db, Some(claim.sub.clone()), Some(id.clone()), Party1Private, &party_one_private);
+        db_insert!(db, None::<String>, Some(id.clone()), Party1Private, &party_one_private);
 
         Ok(Json(kg_party_one_second_message))
     }
@@ -99,7 +99,7 @@ pub trait KeyGen {
     ) -> Result<Json<Party1PDLFirstMessage>, String> {
         let db = state.lock().await;
 
-        let party_one_private = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), Party1Private, Party1Private);
+        let party_one_private = db_get_required!(db, None::<String>, Some(id.clone()), Party1Private, Party1Private);
 
         let (party_one_third_message, party_one_pdl_decommit, alpha) =
             MasterKey1::key_gen_third_message(
@@ -107,12 +107,12 @@ pub trait KeyGen {
                 &party_one_private,
             );
 
-        db_insert!(db, Some(claim.sub.clone()), Some(id.clone()), PDLDecommit, &party_one_pdl_decommit);
+        db_insert!(db, None::<String>, Some(id.clone()), PDLDecommit, &party_one_pdl_decommit);
 
         let alpha = Alpha { value: alpha };
-        db_insert!(db, Some(claim.sub.clone()), Some(id.clone()), Alpha, &alpha);
+        db_insert!(db, None::<String>, Some(id.clone()), Alpha, &alpha);
 
-        db_insert!(db, Some(claim.sub.clone()), Some(id.clone()), Party2PDLFirstMsg, &party_2_pdl_first_message.0);
+        db_insert!(db, None::<String>, Some(id.clone()), Party2PDLFirstMsg, &party_2_pdl_first_message.0);
 
         Ok(Json(party_one_third_message))
     }
@@ -124,13 +124,13 @@ pub trait KeyGen {
     ) -> Result<Json<Party1PDLSecondMessage>, String> {
         let db = state.lock().await;
 
-        let party_one_private = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), Party1Private, Party1Private);
+        let party_one_private = db_get_required!(db, None::<String>, Some(id.clone()), Party1Private, Party1Private);
 
-        let party_2_pdl_first_message = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), Party2PDLFirstMsg, Party2PDLFirstMessage);
+        let party_2_pdl_first_message = db_get_required!(db, None::<String>, Some(id.clone()), Party2PDLFirstMsg, Party2PDLFirstMessage);
 
-        let party_one_pdl_decommit = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), PDLDecommit, Party1PDLDecommit);
+        let party_one_pdl_decommit = db_get_required!(db, None::<String>, Some(id.clone()), PDLDecommit, Party1PDLDecommit);
 
-        let alpha = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), Alpha, Alpha);
+        let alpha = db_get_required!(db, None::<String>, Some(id.clone()), Alpha, Alpha);
 
         // let dl: &mut dyn Value = party_one_pdl_decommit.borrow_mut();
 
@@ -156,11 +156,11 @@ pub trait KeyGen {
         let (cc_party_one_first_message, cc_comm_witness, cc_ec_key_pair1) =
             ChainCode1::chain_code_first_message();
 
-        db_insert!(db, Some(claim.sub.clone()), Some(id.clone()), CCKeyGenFirstMsg, &cc_party_one_first_message);
+        db_insert!(db, None::<String>, Some(id.clone()), CCKeyGenFirstMsg, &cc_party_one_first_message);
 
-        db_insert!(db, Some(claim.sub.clone()), Some(id.clone()), CCCommWitness, &cc_comm_witness);
+        db_insert!(db, None::<String>, Some(id.clone()), CCCommWitness, &cc_comm_witness);
 
-        db_insert!(db, Some(claim.sub.clone()), Some(id.clone()), CCEcKeyPair, &cc_ec_key_pair1);
+        db_insert!(db, None::<String>, Some(id.clone()), CCEcKeyPair, &cc_ec_key_pair1);
 
         Ok(Json(cc_party_one_first_message))
     }
@@ -172,7 +172,7 @@ pub trait KeyGen {
     ) -> Result<Json<DHPoKParty1SecondMessage>, String> {
         let db = state.lock().await;
 
-        let cc_comm_witness = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), CCCommWitness, DHPoKCommWitness);
+        let cc_comm_witness = db_get_required!(db, None::<String>, Some(id.clone()), CCCommWitness, DHPoKCommWitness);
 
         let party1_cc_res = ChainCode1::chain_code_second_message(
             cc_comm_witness.clone(),
@@ -181,24 +181,24 @@ pub trait KeyGen {
 
         let party2_pub = &cc_party_two_first_message_d_log_proof.pk;
 
-        let cc_ec_key_pair_party1 = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), CCEcKeyPair, DHPoKEcKeyPair);
+        let cc_ec_key_pair_party1 = db_get_required!(db, None::<String>, Some(id.clone()), CCEcKeyPair, DHPoKEcKeyPair);
 
         let party1_cc = ChainCode1::compute_chain_code(
             &cc_ec_key_pair_party1.clone(),
             party2_pub,
         );
 
-        db_insert!(db, Some(claim.sub.clone()), Some(id.clone()), CC, &party1_cc);
+        db_insert!(db, None::<String>, Some(id.clone()), CC, &party1_cc);
 
-        let party2_public = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), Party2Public, GE);
+        let party2_public = db_get_required!(db, None::<String>, Some(id.clone()), Party2Public, GE);
 
-        let paillier_key_pair = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), PaillierKeyPair, Party1PaillierKeyPair);
+        let paillier_key_pair = db_get_required!(db, None::<String>, Some(id.clone()), PaillierKeyPair, Party1PaillierKeyPair);
 
-        let party1_cc = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), CC, ChainCode1);
+        let party1_cc = db_get_required!(db, None::<String>, Some(id.clone()), CC, ChainCode1);
 
-        let party_one_private = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), Party1Private, Party1Private);
+        let party_one_private = db_get_required!(db, None::<String>, Some(id.clone()), Party1Private, Party1Private);
 
-        let comm_witness = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), CommWitness, Party1CommWitness);
+        let comm_witness = db_get_required!(db, None::<String>, Some(id.clone()), CommWitness, Party1CommWitness);
 
         let master_key = MasterKey1::set_master_key(
             &party1_cc.chain_code,
@@ -209,7 +209,7 @@ pub trait KeyGen {
         );
 
 
-        db_insert!(db, Some(claim.sub.clone()), Some(id.clone()), Party1MasterKey, &master_key);
+        db_insert!(db, None::<String>, Some(id.clone()), Party1MasterKey, &master_key);
 
         Ok(Json(party1_cc_res))
     }
