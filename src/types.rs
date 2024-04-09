@@ -49,6 +49,8 @@ pub struct DbIndex {
     pub id: Option<String>,
 }
 
+/*      JWT is no longer used!
+
 /// The Authenticator indicates how the input requests to gotham server will be authorized. Currently there is the JWT option
 /// but in the future it will be discarded. Private gotham is using a jwt auth while public one does not use it
 pub enum Authenticator {
@@ -57,6 +59,8 @@ pub enum Authenticator {
     /// verification with a valid JWT
     Jwt,
 }
+
+ */
 
 pub const CUSTOMER_ID_IDENTIFIER: &str = "customerId";
 pub const ID_IDENTIFIER: &str = "id";
@@ -130,7 +134,6 @@ impl MPCStruct for EcdsaStruct {
         }
     }
 
-    // TODO: Add unit tests for below casting
     fn to_struct_name(&self) -> String {
         let res = match self {
             EcdsaStruct::KeyGenFirstMsg => "Party1KeyGenFirstMessage",
