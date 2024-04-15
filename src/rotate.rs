@@ -6,7 +6,7 @@ use crate::traits::Db;
 use crate::types::{Alpha, EcdsaStruct};
 use crate::{db_cast, db_get, db_get_required, db_insert};
 use rocket::State;
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, MutexGuard};
 use two_party_ecdsa::curv::cryptographic_primitives::twoparty::coin_flip_optimal_rounds;
 use two_party_ecdsa::curv::elliptic::curves::traits::ECScalar;
 use two_party_ecdsa::kms::ecdsa::two_party::MasterKey1;
@@ -21,11 +21,11 @@ use two_party_ecdsa::party_two::Party2PDLFirstMessage;
 #[async_trait]
 pub trait Rotate {
     async fn rotate_first(
-        state: &State<Mutex<Box<dyn Db>>>,
+        db: &MutexGuard<Box<dyn Db>>,
         claim: Claims,
         id: String,
     ) -> Result<coin_flip_optimal_rounds::Party1FirstMessage, String> {
-        let db = state.lock().await;
+
 
         let (party1_first, rotate_commit_message) = Rotation1::key_rotate_first_message();
 
@@ -41,7 +41,7 @@ pub trait Rotate {
     }
 
     async fn rotate_second(
-        state: &State<Mutex<Box<dyn Db>>>,
+        db: &MutexGuard<Box<dyn Db>>,
         claim: Claims,
         id: String,
         coin_flip_party2_first: coin_flip_optimal_rounds::Party2FirstMessage,
@@ -53,7 +53,6 @@ pub trait Rotate {
             )>,
         String,
     > {
-        let db = state.lock().await;
 
         let rotate_commit_message = db_get_required!(db, claim.sub, id, RotateCommitMessage1, RotateCommitMessage1);
         // let rotate_commit_message = db_cast!(tmp, RotateCommitMessage1);
@@ -88,12 +87,11 @@ pub trait Rotate {
     }
 
     async fn rotate_third(
-        state: &State<Mutex<Box<dyn Db>>>,
+        db: &MutexGuard<Box<dyn Db>>,
         claim: Claims,
         id: String,
         rotation_party_two_first: party_two::Party2PDLFirstMessage,
     ) -> Result<party_one::Party1PDLFirstMessage, String> {
-        let db = state.lock().await;
 
         let rotate_party_one_private = db_get_required!(db, claim.sub, id, RotatePrivateNew, Party1Private);
         // let rotate_party_one_private = db_cast!(tmp, party_one::Party1Private);
@@ -132,12 +130,11 @@ pub trait Rotate {
     }
 
     async fn rotate_forth(
-        state: &State<Mutex<Box<dyn Db>>>,
+        db: &MutexGuard<Box<dyn Db>>,
         claim: Claims,
         id: String,
         rotation_party_two_second: party_two::Party2PDLSecondMessage,
     ) -> Result<party_one::Party1PDLSecondMessage, String> {
-        let db = state.lock().await;
 
         let rotation_party_one_first = db_get_required!(db, claim.sub, id, RotateFirstMsg, RotationParty1Message1);
         // let rotation_party_one_first = db_cast!(tmp, RotationParty1Message1);

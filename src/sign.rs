@@ -5,7 +5,7 @@ use config::Value;
 use std::env;
 
 use rocket::{async_trait, error, info, State};
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, MutexGuard};
 use two_party_ecdsa::kms::ecdsa::two_party::MasterKey1;
 use two_party_ecdsa::party_one::{Converter, Party1EphEcKeyPair, Party1EphKeyGenFirstMessage, Party1SignatureRecid};
 use two_party_ecdsa::party_two::Party2EphKeyGenFirstMessage;
@@ -18,12 +18,11 @@ use crate::{db_cast, db_get, db_get_required, db_insert};
 #[async_trait]
 pub trait Sign {
     async fn sign_first(
-        state: &State<Mutex<Box<dyn Db>>>,
+        db: &MutexGuard<Box<dyn Db>>,
         claim: Claims,
         id: String,
         eph_key_gen_first_message_party_two: Party2EphKeyGenFirstMessage,
     ) -> Result<Party1EphKeyGenFirstMessage, String> {
-        let db = state.lock().await;
 
         let tmp = db_get!(db, claim.sub, id, Abort)
             .unwrap_or(Box::new(Abort { blocked: false }));
@@ -44,12 +43,11 @@ pub trait Sign {
         Ok(sign_party_one_first_message)
     }
     async fn sign_second(
-        state: &State<Mutex<Box<dyn Db>>>,
+        db: &MutexGuard<Box<dyn Db>>,
         claim: Claims,
         id: String,
         request: Party2SignSecondMessage,
     ) -> Result<Party1SignatureRecid, String> {
-        let db = state.lock().await;
         if env::var("REDIS_ENV").is_ok() {
             if db.granted(&*request.message.to_hex().to_string(), claim.sub.as_str()) == Ok(false) {
                 return Err(format!("Unauthorized transaction from redis-pps for customer_id {}, id {}:",
@@ -94,16 +92,16 @@ pub trait Sign {
     }
 
     async fn sign_first_v2(
-        state: &State<Mutex<Box<dyn Db>>>,
+        db: &MutexGuard<Box<dyn Db>>,
         claim: Claims,
         id: String,
         eph_key_gen_first_message_party_two: Party2EphKeyGenFirstMessage,
     ) -> Result<(String, Party1EphKeyGenFirstMessage), String> {
-        sign_first_helper(state, claim, id, eph_key_gen_first_message_party_two).await
+        sign_first_helper(db, claim, id, eph_key_gen_first_message_party_two).await
     }
 
     async fn sign_second_v2(
-        state: &State<Mutex<Box<dyn Db>>>,
+        db: &MutexGuard<Box<dyn Db>>,
         claim: Claims,
         ssid: String,
         request: Party2SignSecondMessage,
@@ -114,36 +112,35 @@ pub trait Sign {
             pos_child_key: vec![request.x_pos_child_key.clone(), request.y_pos_child_key.clone()],
         };
 
-        sign_second_helper(state, claim, ssid, vector_request).await
+        sign_second_helper(db, claim, ssid, vector_request).await
     }
 
     async fn sign_first_v3(
-        state: &State<Mutex<Box<dyn Db>>>,
+        db: &MutexGuard<Box<dyn Db>>,
         claim: Claims,
         id: String,
         eph_key_gen_first_message_party_two: Party2EphKeyGenFirstMessage,
     ) -> Result<(String, Party1EphKeyGenFirstMessage), String> {
-        sign_first_helper(state, claim, id, eph_key_gen_first_message_party_two).await
+        sign_first_helper(db, claim, id, eph_key_gen_first_message_party_two).await
     }
 
     async fn sign_second_v3(
-        state: &State<Mutex<Box<dyn Db>>>,
+        db: &MutexGuard<Box<dyn Db>>,
         claim: Claims,
         ssid: String,
         request: Party2SignSecondMessageVector,
     ) -> Result<Party1SignatureRecid, String> {
-        sign_second_helper(state, claim, ssid, request).await
+        sign_second_helper(db, claim, ssid, request).await
     }
 }
 
 
 async fn sign_first_helper(
-    state: &State<Mutex<Box<dyn Db>>>,
+    db: &MutexGuard<'_, Box<dyn Db>>,
     claim: Claims,
     id: String,
     eph_key_gen_first_message_party_two: Party2EphKeyGenFirstMessage,
 ) -> Result<(String, Party1EphKeyGenFirstMessage), String> {
-    let db = state.lock().await;
 
     let tmp = db_get!(db, claim.sub, id, Abort)
         .unwrap_or(Box::new(Abort { blocked: false }));
@@ -185,12 +182,11 @@ async fn sign_first_helper(
     Ok((ssid.clone(), sign_party_one_first_message))
 }
 async fn sign_second_helper(
-    state: &State<Mutex<Box<dyn Db>>>,
+    db: &MutexGuard<'_, Box<dyn Db>>,
     claim: Claims,
     ssid: String,
     request: Party2SignSecondMessageVector,
 ) -> Result<Party1SignatureRecid, String> {
-    let db = state.lock().await;
     if env::var("REDIS_ENV").is_ok() {
         if db.granted(request.message.to_hex().to_string().as_str(), claim.sub.as_str()) == Ok(false) {
             return Err(format!("Unauthorized transaction from redis-pps: {}", ssid));
