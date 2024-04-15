@@ -150,9 +150,9 @@ pub async fn wrap_sign_first(
         state,
         claim,
         id.to_string(),
-        eph_key_gen_first_message_party_two,
+        eph_key_gen_first_message_party_two.0,
     )
-    .await
+    .await.map(|x| Json(x))
 }
 
 #[post("/ecdsa/sign/<id>/second", format = "json", data = "<request>")]
@@ -166,7 +166,7 @@ pub async fn wrap_sign_second(
 
     struct Gotham {}
     impl Sign for Gotham {}
-    Gotham::sign_second(state, claim, id.to_string(), request).await
+    Gotham::sign_second(state, claim, id.to_string(), request.0).await.map(|x| Json(x))
 }
 
 #[post(
@@ -188,9 +188,9 @@ pub async fn wrap_sign_first_v2(
         state,
         claim,
         id.to_string(),
-        eph_key_gen_first_message_party_two,
+        eph_key_gen_first_message_party_two.0,
     )
-    .await
+    .await.map(|x| Json(x))
 }
 
 #[post("/ecdsa/sign/<ssid>/second_v2", format = "json", data = "<request>")]
@@ -204,7 +204,7 @@ pub async fn wrap_sign_second_v2(
 
     struct Gotham {}
     impl Sign for Gotham {}
-    Gotham::sign_second_v2(state, claim, ssid.to_string(), request).await
+    Gotham::sign_second_v2(state, claim, ssid.to_string(), request.0).await.map(|x| Json(x))
 }
 
 #[post(
@@ -226,9 +226,9 @@ pub async fn wrap_sign_first_v3(
         state,
         claim,
         id.to_string(),
-        eph_key_gen_first_message_party_two,
+        eph_key_gen_first_message_party_two.0,
     )
-        .await
+        .await.map(|x| Json(x))
 }
 
 #[post("/ecdsa/sign/<ssid>/second_v3", format = "json", data = "<request>")]
@@ -242,7 +242,7 @@ pub async fn wrap_sign_second_v3(
 
     struct Gotham {}
     impl Sign for Gotham {}
-    Gotham::sign_second_v3(state, claim, ssid.to_string(), request).await
+    Gotham::sign_second_v3(state, claim, ssid.to_string(), request.0).await.map(|x| Json(x))
 }
 
 #[post("/ecdsa/rotate/<id>/first", format = "json")]
@@ -253,7 +253,7 @@ pub async fn wrap_rotate_first(
 ) -> Result<Json<coin_flip_optimal_rounds::Party1FirstMessage>, String> {
     struct Gotham {}
     impl Rotate for Gotham {}
-    Gotham::rotate_first(state, claim, id.to_string()).await
+    Gotham::rotate_first(state, claim, id.to_string()).await.map(|x| Json(x))
 }
 
 #[post("/ecdsa/rotate/<id>/second", format = "json", data = "<request>")]
@@ -273,7 +273,7 @@ pub async fn wrap_rotate_second(
 > {
     struct Gotham {}
     impl Rotate for Gotham {}
-    Gotham::rotate_second(state, claim, id.to_string(), request).await
+    Gotham::rotate_second(state, claim, id.to_string(), request.0).await.map(|x| Json(x))
 }
 
 #[post("/ecdsa/rotate/<id>/third", format = "json", data = "<request>")]
@@ -285,7 +285,7 @@ pub async fn wrap_rotate_third(
 ) -> Result<Json<Party1PDLFirstMessage>, String> {
     struct Gotham {}
     impl Rotate for Gotham {}
-    Gotham::rotate_third(state, claim, id.to_string(), request).await
+    Gotham::rotate_third(state, claim, id.to_string(), request.0).await.map(|x| Json(x))
 }
 
 #[post("/ecdsa/rotate/<id>/forth", format = "json", data = "<request>")]
@@ -297,7 +297,7 @@ pub async fn wrap_rotate_forth(
 ) -> Result<Json<Party1PDLSecondMessage>, String> {
     struct Gotham {}
     impl Rotate for Gotham {}
-    Gotham::rotate_forth(state, claim, id.to_string(), request).await
+    Gotham::rotate_forth(state, claim, id.to_string(), request.0).await.map(|x| Json(x))
 }
 
 #[get("/health")]

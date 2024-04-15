@@ -24,7 +24,7 @@ pub trait Rotate {
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         id: String,
-    ) -> Result<Json<coin_flip_optimal_rounds::Party1FirstMessage>, String> {
+    ) -> Result<coin_flip_optimal_rounds::Party1FirstMessage, String> {
         let db = state.lock().await;
 
         let (party1_first, rotate_commit_message) = Rotation1::key_rotate_first_message();
@@ -37,21 +37,20 @@ pub trait Rotate {
             &rotate_commit_message
         );
 
-        Ok(Json(party1_first))
+        Ok(party1_first)
     }
 
     async fn rotate_second(
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         id: String,
-        coin_flip_party2_first: Json<coin_flip_optimal_rounds::Party2FirstMessage>,
+        coin_flip_party2_first: coin_flip_optimal_rounds::Party2FirstMessage,
     ) -> Result<
-        Json<
+
             Option<(
                 coin_flip_optimal_rounds::Party1SecondMessage,
                 RotationParty1Message1,
             )>,
-        >,
         String,
     > {
         let db = state.lock().await;
@@ -60,7 +59,7 @@ pub trait Rotate {
         // let rotate_commit_message = db_cast!(tmp, RotateCommitMessage1);
 
         let (coin_flip_party1_second, random1) =
-            Rotation1::key_rotate_second_message(&coin_flip_party2_first.0, &rotate_commit_message);
+            Rotation1::key_rotate_second_message(&coin_flip_party2_first, &rotate_commit_message);
 
         let party_one_master_key = db_get_required!(db, claim.sub, id, Party1MasterKey, MasterKey1);
         // let party_one_master_key = db_cast!(tmp, MasterKey1);
@@ -70,7 +69,7 @@ pub trait Rotate {
             &random1.rotation.to_big_int(),
         ) {
             // TODO: check if RotateCommitMessage1M and RotateCommitMessage1R need to be deleted
-            return Ok(Json(None));
+            return Ok(None);
         }
 
         db_insert!(db, claim.sub, id, RotateRandom1, &random1);
@@ -82,18 +81,18 @@ pub trait Rotate {
 
         db_insert!(db, claim.sub, id, RotatePrivateNew, &party_one_private_new);
 
-        Ok(Json(Some((
+        Ok(Some((
             coin_flip_party1_second,
             rotation_party_one_first,
-        ))))
+        )))
     }
 
     async fn rotate_third(
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         id: String,
-        rotation_party_two_first: Json<party_two::Party2PDLFirstMessage>,
-    ) -> Result<Json<party_one::Party1PDLFirstMessage>, String> {
+        rotation_party_two_first: party_two::Party2PDLFirstMessage,
+    ) -> Result<party_one::Party1PDLFirstMessage, String> {
         let db = state.lock().await;
 
         let rotate_party_one_private = db_get_required!(db, claim.sub, id, RotatePrivateNew, Party1Private);
@@ -118,7 +117,7 @@ pub trait Rotate {
             claim.sub,
             id,
             RotateParty2First,
-            &rotation_party_two_first.0
+            &rotation_party_two_first
         );
 
         db_insert!(
@@ -129,15 +128,15 @@ pub trait Rotate {
             &rotation_party_one_second
         );
 
-        Ok(Json(rotation_party_one_second))
+        Ok(rotation_party_one_second)
     }
 
     async fn rotate_forth(
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         id: String,
-        rotation_party_two_second: Json<party_two::Party2PDLSecondMessage>,
-    ) -> Result<Json<party_one::Party1PDLSecondMessage>, String> {
+        rotation_party_two_second: party_two::Party2PDLSecondMessage,
+    ) -> Result<party_one::Party1PDLSecondMessage, String> {
         let db = state.lock().await;
 
         let rotation_party_one_first = db_get_required!(db, claim.sub, id, RotateFirstMsg, RotationParty1Message1);
@@ -170,7 +169,7 @@ pub trait Rotate {
             rotate_party_one_private.clone(),
             &random,
             &rotation_party_two_first,
-            &rotation_party_two_second.0,
+            &rotation_party_two_second,
             party_one_pdl_decommit.clone(),
             party_one_alpha.clone().value,
         );
@@ -190,6 +189,6 @@ pub trait Rotate {
             &party_one_master_key_rotated
         );
 
-        Ok(Json(rotation_party_one_third))
+        Ok(rotation_party_one_third)
     }
 }

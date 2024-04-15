@@ -4,7 +4,6 @@ use crate::types::{idify, Abort, DbIndex, EcdsaStruct};
 use config::Value;
 use std::env;
 
-use rocket::serde::json::Json;
 use rocket::{async_trait, error, info, State};
 use tokio::sync::Mutex;
 use two_party_ecdsa::kms::ecdsa::two_party::MasterKey1;
@@ -22,8 +21,8 @@ pub trait Sign {
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         id: String,
-        eph_key_gen_first_message_party_two: Json<Party2EphKeyGenFirstMessage>,
-    ) -> Result<Json<Party1EphKeyGenFirstMessage>, String> {
+        eph_key_gen_first_message_party_two: Party2EphKeyGenFirstMessage,
+    ) -> Result<Party1EphKeyGenFirstMessage, String> {
         let db = state.lock().await;
 
         let tmp = db_get!(db, claim.sub, id, Abort)
@@ -38,18 +37,18 @@ pub trait Sign {
         let (sign_party_one_first_message, eph_ec_key_pair_party1) =
             MasterKey1::sign_first_message();
 
-        db_insert!(db, claim.sub, id, EphKeyGenFirstMsg, &eph_key_gen_first_message_party_two.0);
+        db_insert!(db, claim.sub, id, EphKeyGenFirstMsg, &eph_key_gen_first_message_party_two);
 
         db_insert!(db, claim.sub, id, EphEcKeyPair, &eph_ec_key_pair_party1);
 
-        Ok(Json(sign_party_one_first_message))
+        Ok(sign_party_one_first_message)
     }
     async fn sign_second(
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         id: String,
-        request: Json<Party2SignSecondMessage>,
-    ) -> Result<Json<Party1SignatureRecid>, String> {
+        request: Party2SignSecondMessage,
+    ) -> Result<Party1SignatureRecid, String> {
         let db = state.lock().await;
         if env::var("REDIS_ENV").is_ok() {
             if db.granted(&*request.message.to_hex().to_string(), claim.sub.as_str()) == Ok(false) {
@@ -86,7 +85,7 @@ pub trait Sign {
         );
 
         match signature_with_recid {
-            Ok(sig) => Ok(Json(sig)),
+            Ok(sig) => Ok(sig),
             Err(_) => {
                 db_insert!(db, claim.sub, id, Abort, &Abort { blocked: true });
                 Err(format!("sign_second failed for customer_id {}, id {}. Inserted into Abort table",  claim.sub, id))
@@ -98,8 +97,8 @@ pub trait Sign {
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         id: String,
-        eph_key_gen_first_message_party_two: Json<Party2EphKeyGenFirstMessage>,
-    ) -> Result<Json<(String, Party1EphKeyGenFirstMessage)>, String> {
+        eph_key_gen_first_message_party_two: Party2EphKeyGenFirstMessage,
+    ) -> Result<(String, Party1EphKeyGenFirstMessage), String> {
         sign_first_helper(state, claim, id, eph_key_gen_first_message_party_two).await
     }
 
@@ -107,23 +106,23 @@ pub trait Sign {
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         ssid: String,
-        request: Json<Party2SignSecondMessage>,
-    ) -> Result<Json<Party1SignatureRecid>, String> {
+        request: Party2SignSecondMessage,
+    ) -> Result<Party1SignatureRecid, String> {
         let vector_request =  Party2SignSecondMessageVector {
             message: request.message.clone(),
             party_two_sign_message: request.party_two_sign_message.clone(),
             pos_child_key: vec![request.x_pos_child_key.clone(), request.y_pos_child_key.clone()],
         };
 
-        sign_second_helper(state, claim, ssid, Json(vector_request)).await
+        sign_second_helper(state, claim, ssid, vector_request).await
     }
 
     async fn sign_first_v3(
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         id: String,
-        eph_key_gen_first_message_party_two: Json<Party2EphKeyGenFirstMessage>,
-    ) -> Result<Json<(String, Party1EphKeyGenFirstMessage)>, String> {
+        eph_key_gen_first_message_party_two: Party2EphKeyGenFirstMessage,
+    ) -> Result<(String, Party1EphKeyGenFirstMessage), String> {
         sign_first_helper(state, claim, id, eph_key_gen_first_message_party_two).await
     }
 
@@ -131,8 +130,8 @@ pub trait Sign {
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         ssid: String,
-        request: Json<Party2SignSecondMessageVector>,
-    ) -> Result<Json<Party1SignatureRecid>, String> {
+        request: Party2SignSecondMessageVector,
+    ) -> Result<Party1SignatureRecid, String> {
         sign_second_helper(state, claim, ssid, request).await
     }
 }
@@ -142,8 +141,8 @@ async fn sign_first_helper(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
     id: String,
-    eph_key_gen_first_message_party_two: Json<Party2EphKeyGenFirstMessage>,
-) -> Result<Json<(String, Party1EphKeyGenFirstMessage)>, String> {
+    eph_key_gen_first_message_party_two: Party2EphKeyGenFirstMessage,
+) -> Result<(String, Party1EphKeyGenFirstMessage), String> {
     let db = state.lock().await;
 
     let tmp = db_get!(db, claim.sub, id, Abort)
@@ -169,7 +168,7 @@ async fn sign_first_helper(
     let mut key: String = idify(&claim.sub, &ssid, &EcdsaStruct::EphKeyGenFirstMsg);
     if let Err(err) = RedisCon::set(&mut connection,
         &key.clone(),
-        &serde_json::to_string(&eph_key_gen_first_message_party_two.0).unwrap(),
+        &serde_json::to_string(&eph_key_gen_first_message_party_two).unwrap(),
     ) {
         return Err(err);
     }
@@ -183,14 +182,14 @@ async fn sign_first_helper(
         return Err(err);
     }
 
-    Ok(Json((ssid.clone(), sign_party_one_first_message)))
+    Ok((ssid.clone(), sign_party_one_first_message))
 }
 async fn sign_second_helper(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
     ssid: String,
-    request: Json<Party2SignSecondMessageVector>,
-) -> Result<Json<Party1SignatureRecid>, String> {
+    request: Party2SignSecondMessageVector,
+) -> Result<Party1SignatureRecid, String> {
     let db = state.lock().await;
     if env::var("REDIS_ENV").is_ok() {
         if db.granted(request.message.to_hex().to_string().as_str(), claim.sub.as_str()) == Ok(false) {
@@ -240,7 +239,7 @@ async fn sign_second_helper(
     );
 
     match signature_with_recid {
-        Ok(sig) => Ok(Json(sig)),
+        Ok(sig) => Ok(sig),
         Err(err) => {
             db_insert!(db, claim.sub, id, Abort, &Abort { blocked: true });
             Err(format!("sign_second failed for customer_id {}, ssid {}, id: {}, sid: {}. \
