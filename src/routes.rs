@@ -243,7 +243,8 @@ pub async fn wrap_derive_first(
     id: &str,
     request: Json<Vec<BigInt>>,
 ) -> Result<Json<MasterKey1>, String> {
-    println!("/ecdsa/derive/{}", id);
+    println!("/ecdsa/derive/{} | path = {:?}", id, request);
+
 
     struct Gotham {}
     impl Derive for Gotham {}
