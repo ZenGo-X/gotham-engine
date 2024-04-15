@@ -20,14 +20,9 @@ pub trait Derive {
 
         // get the master key for that id
         // customerId is not required as Claims are not passed to this endpoint)
-        // let master_key = db_get_required!(db, Some(claims.sub.clone()), Some(id.clone()), Party1MasterKey, MasterKey1);
         let master_key = db_get_required!(db, None::<String>, Some(id.clone()), Party1MasterKey, MasterKey1);
 
-        println!("u64 vector: {:?}", request);
-
         let derivation_vector = request.0.iter().map(|&x| BigInt::from(x)).collect();
-
-        println!("BigInt vector: {:?}", derivation_vector);
 
         let child_master_key = master_key.get_child(derivation_vector);
 
