@@ -209,7 +209,7 @@ pub async fn wrap_sign_first_v3(
     id: &str,
     eph_key_gen_first_message_party_two: Json<Party2EphKeyGenFirstMessage>,
 ) -> Result<Json<(String, Party1EphKeyGenFirstMessage)>, String> {
-    println!("/ecdsa/sign/{}/first_v3 | {:?}", id, claim);
+    println!("/ecdsa/sign/{}/first_v3 | {:?} | \n | {:?}", id, claim, eph_key_gen_first_message_party_two);
 
     struct Gotham {}
     impl Sign for Gotham {}
@@ -229,7 +229,7 @@ pub async fn wrap_sign_second_v3(
     ssid: &str,
     request: Json<Party2SignSecondMessageVector>,
 ) -> Result<Json<Party1SignatureRecid>, String> {
-    println!("/ecdsa/sign/{}/second_v3 | {:?}", ssid, claim);
+    println!("/ecdsa/sign/{}/second_v3 | {:?} | \n | {:?}", ssid, claim, request);
 
     struct Gotham {}
     impl Sign for Gotham {}
