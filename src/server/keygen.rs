@@ -1,6 +1,3 @@
-use crate::guarder::Claims;
-use crate::traits::Db;
-use crate::types::{Alpha, DbIndex, EcdsaStruct};
 
 use two_party_ecdsa::GE;
 use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::{DHPoKCommWitness, DHPoKEcKeyPair, DHPoKParty1FirstMessage, DHPoKParty1SecondMessage};
@@ -21,6 +18,9 @@ use two_party_ecdsa::party_one::{
 };
 use two_party_ecdsa::party_two::{Party2PDLFirstMessage, Party2PDLSecondMessage};
 use uuid::Uuid;
+use crate::server::guarder::Claims;
+use crate::server::traits::Db;
+use crate::server::types::Alpha;
 
 
 #[async_trait]

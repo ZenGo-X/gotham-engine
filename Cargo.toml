@@ -10,16 +10,6 @@ edition = "2021"
 
 
 [dependencies]
-rocket.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-log.workspace = true
-config.workspace = true
-uuid.workspace = true
-failure.workspace = true
-jsonwebtoken.workspace = true
-hex.workspace = true
-two-party-ecdsa.workspace = true
 rusoto_core = { version = "0.47.0", optional = true }
 rocksdb = { version = "0.21.0", optional = true }
 rusoto_dynamodb = { version = "0.47.0", optional = true }
@@ -31,13 +21,10 @@ erased-serde = "0.3"
 async-trait = "0.1.67"
 tokio = { version = "1", features = ["full"] }
 typetag = "0.2"
-
-
-[workspace.dependencies]
+reqwest = { version =  "0.12.4", features = ["blocking", "json"] }
 serde = { version = "1", features = ["serde_derive"] }
 serde_json = "1"
 log = "0.4"
-reqwest = "0.9.5"
 failure = "0.1"
 floating-duration = "0.1.2"
 rocket = { version = "0.5.0-rc.1", default-features = false, features = ["json"] }

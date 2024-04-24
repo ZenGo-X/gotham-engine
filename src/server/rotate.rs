@@ -1,9 +1,6 @@
 use async_trait::async_trait;
 use rocket::serde::json::Json;
 
-use crate::guarder::Claims;
-use crate::traits::Db;
-use crate::types::{Alpha, EcdsaStruct};
 use crate::{db_cast, db_get, db_get_required, db_insert};
 use rocket::State;
 use tokio::sync::Mutex;
@@ -17,6 +14,9 @@ use two_party_ecdsa::kms::rotation::two_party::Rotation;
 use two_party_ecdsa::{party_one, party_two};
 use two_party_ecdsa::party_one::{Party1PDLDecommit, Party1Private};
 use two_party_ecdsa::party_two::Party2PDLFirstMessage;
+use crate::server::guarder::Claims;
+use crate::server::traits::Db;
+use crate::server::types::Alpha;
 
 #[async_trait]
 pub trait Rotate {

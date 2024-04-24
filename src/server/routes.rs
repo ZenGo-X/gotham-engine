@@ -1,15 +1,10 @@
 //! The routes that gotham-engine exposes. Notice that these are actually wrappers on the underlying implementations due
 //! to the fact that rockets http server does not allow to mount directly routes as trait functions.
 
-use crate::guarder::Claims;
-use crate::keygen::KeyGen;
-use crate::sign::Sign;
-use crate::traits::Db;
 
 use two_party_ecdsa::party_one::{Party1KeyGenFirstMessage, Party1KeyGenSecondMessage, DLogProof, Party1EphKeyGenFirstMessage, Party1SignatureRecid, Party1PDLFirstMessage, Party1PDLSecondMessage};
 use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::{DHPoKParty1FirstMessage, DHPoKParty1SecondMessage};
 
-use crate::rotate::Rotate;
 use rocket::serde::json::Json;
 use rocket::{get, http::Status, info, post, State};
 use tokio::sync::Mutex;
@@ -20,6 +15,11 @@ use two_party_ecdsa::kms::rotation::two_party::party1::RotationParty1Message1;
 use two_party_ecdsa::party_two::{
     Party2EphKeyGenFirstMessage, Party2PDLFirstMessage, Party2PDLSecondMessage,
 };
+use crate::server::guarder::Claims;
+use crate::server::keygen::KeyGen;
+use crate::server::rotate::Rotate;
+use crate::server::sign::Sign;
+use crate::server::traits::Db;
 
 
 #[post("/ecdsa/keygen_v2/first", format = "json")]

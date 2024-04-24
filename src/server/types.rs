@@ -1,5 +1,4 @@
 //! Common types for traits the implementations thereofs at [private_gotham] and [public_gotham]
-use crate::traits::MPCStruct;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use thiserror::Error;
@@ -7,6 +6,7 @@ use two_party_ecdsa::typetag_value;
 use two_party_ecdsa::typetags::Value;
 use two_party_ecdsa::BigInt;
 use two_party_ecdsa::kms::ecdsa::two_party::party2::Party2SignMessage;
+use crate::server::traits::MPCStruct;
 
 
 // TODO: use 'thiserror' and this enum in code
