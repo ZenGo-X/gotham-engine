@@ -2,11 +2,11 @@ use serde::{Deserialize, Serialize};
 use two_party_ecdsa::BigInt;
 use two_party_ecdsa::kms::ecdsa::two_party::MasterKey2;
 
-mod keygen;
-mod sign;
-mod rotate;
+pub mod keygen;
+pub mod sign;
+pub mod rotate;
 
-mod client_shim;
+pub mod client_shim;
 
 
 #[derive(Serialize, Deserialize)]
@@ -24,3 +24,4 @@ impl PrivateShare {
         }
     }
 }
+
