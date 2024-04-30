@@ -1,5 +1,6 @@
 use config::Value;
 use std::env;
+use redis::Connection;
 
 use rocket::serde::json::Json;
 use rocket::{async_trait, error, info, State};
@@ -13,6 +14,7 @@ use two_party_ecdsa::kms::Errors;
 use uuid::Uuid;
 use crate::{db_cast, db_get, db_get_required, db_insert};
 use crate::server::guarder::Claims;
+use crate::server::macros;
 use crate::server::traits::{Db, RedisMod};
 use crate::server::types::{Abort, EcdsaStruct, idify};
 
@@ -155,7 +157,14 @@ async fn sign_first_helper(
     struct RedisCon {}
     impl RedisMod for RedisCon {}
 
-    let mut connection = RedisCon::get_connection()?;
+    let mut connection = match RedisCon::get_connection() {
+        Ok(c) => c,
+        Err(err) => {
+            println!("{}", err);
+            return Err(err);
+        }
+    };
+
 
     let (sign_party_one_first_message, eph_ec_key_pair_party1) =
         MasterKey1::sign_first_message();
