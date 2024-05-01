@@ -7,7 +7,7 @@ use tokio::sync::Mutex;
 use two_party_ecdsa::curv::cryptographic_primitives::twoparty::coin_flip_optimal_rounds;
 use two_party_ecdsa::curv::elliptic::curves::traits::ECScalar;
 use two_party_ecdsa::kms::ecdsa::two_party::MasterKey1;
-use two_party_ecdsa::kms::rotation::two_party::party1::{RotateCommitMessage1, Rotation1, RotationParty1Message1, RotationParty1Message2};
+use two_party_ecdsa::kms::rotation::two_party::party1::{RotateCommitMessage1, Rotation1, RotationParty1Message1, RotationParty1ValidMessage1};
 use two_party_ecdsa::kms::rotation::two_party::Rotation;
 use two_party_ecdsa::{party_one, party_two};
 use two_party_ecdsa::party_one::{Party1PDLDecommit, Party1Private};
@@ -25,7 +25,7 @@ pub trait Rotate {
     ) -> Result<Json<coin_flip_optimal_rounds::Party1FirstMessage>, String> {
         let db = state.lock().await;
 
-        let (party1_first, rotate_commit_message) = Rotation1::key_rotate_first_message();
+        let (coin_flip_party1_first_message, rotate_commit_message) = Rotation1::key_rotate_first_message();
 
         db_insert!(
             db,
@@ -35,7 +35,7 @@ pub trait Rotate {
             &rotate_commit_message
         );
 
-        Ok(Json(party1_first))
+        Ok(Json(coin_flip_party1_first_message))
     }
 
     async fn rotate_second(
@@ -43,7 +43,7 @@ pub trait Rotate {
         claim: Claims,
         id: String,
         coin_flip_party2_first: Json<coin_flip_optimal_rounds::Party2FirstMessage>,
-    ) -> Result<Json<RotationParty1Message2>, String> {
+    ) -> Result<Json<RotationParty1ValidMessage1>, String> {
         let db = state.lock().await;
 
         let rotate_commit_message = db_get_required!(db, claim.sub, id, RotateCommitMessage1, RotateCommitMessage1);
@@ -53,14 +53,14 @@ pub trait Rotate {
 
         let party_one_master_key = db_get_required!(db, claim.sub, id, Party1MasterKey, MasterKey1);
 
-        if Party1Private::check_rotated_key_bounds(
+        if !Party1Private::check_rotated_key_bounds(
             &party_one_master_key.private,
             &random1.rotation.to_big_int(),
         ) {
             return Ok(Json(
-                RotationParty1Message2 {
+                RotationParty1ValidMessage1 {
                     coin_flip_party1_second_message: None,
-                    rotation_party1_prev_message: None,
+                    rotation_party1_first_message: None,
                     is_valid: false,
                 }
             ));
@@ -76,9 +76,9 @@ pub trait Rotate {
         db_insert!(db, claim.sub, id, RotatePrivateNew, &party_one_private_new);
 
         Ok(Json(
-            RotationParty1Message2 {
+            RotationParty1ValidMessage1 {
                 coin_flip_party1_second_message: Some(coin_flip_party1_second),
-                rotation_party1_prev_message: Some(rotation_party1_first),
+                rotation_party1_first_message: Some(rotation_party1_first),
                 is_valid: true,
             }
         ))

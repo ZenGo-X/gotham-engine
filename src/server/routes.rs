@@ -11,7 +11,7 @@ use tokio::sync::Mutex;
 use two_party_ecdsa::curv::cryptographic_primitives::twoparty::coin_flip_optimal_rounds;
 use two_party_ecdsa::kms::ecdsa::two_party::party2::{Party2SignSecondMessage, Party2SignSecondMessageVector};
 
-use two_party_ecdsa::kms::rotation::two_party::party1::{RotationParty1Message1, RotationParty1Message2};
+use two_party_ecdsa::kms::rotation::two_party::party1::{RotationParty1Message1, RotationParty1ValidMessage1};
 use two_party_ecdsa::party_two::{
     Party2EphKeyGenFirstMessage, Party2PDLFirstMessage, Party2PDLSecondMessage,
 };
@@ -250,7 +250,7 @@ pub async fn wrap_rotate_second(
     claim: Claims,
     id: &str,
     request: Json<coin_flip_optimal_rounds::Party2FirstMessage>,
-) -> Result<Json<RotationParty1Message2>, String> {
+) -> Result<Json<RotationParty1ValidMessage1>, String> {
     struct Gotham {}
     impl Rotate for Gotham {}
     Gotham::rotate_second(state, claim, id.to_string(), request).await
