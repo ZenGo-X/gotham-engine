@@ -9,6 +9,7 @@ use rocket::serde::json::Json;
 use rocket::{get, http::Status, info, post, State};
 use tokio::sync::Mutex;
 use two_party_ecdsa::curv::cryptographic_primitives::twoparty::coin_flip_optimal_rounds;
+use two_party_ecdsa::kms::ecdsa::two_party::MasterKey1;
 use two_party_ecdsa::kms::ecdsa::two_party::party2::{Party2SignSecondMessage, Party2SignSecondMessageVector};
 
 use two_party_ecdsa::kms::rotation::two_party::party1::{RotationParty1Message1, RotationParty1ValidMessage1};
@@ -19,6 +20,7 @@ use crate::server::guarder::Claims;
 use crate::server::keygen::KeyGen;
 use crate::server::rotate::Rotate;
 use crate::server::sign::Sign;
+use crate::server::derive::Derive;
 use crate::server::traits::Db;
 
 
@@ -231,6 +233,21 @@ pub async fn wrap_sign_second_v3(
     struct Gotham {}
     impl Sign for Gotham {}
     Gotham::sign_second_v3(state, claim, ssid.to_string(), request).await
+}
+
+#[post("/ecdsa/derive/<id>", format = "json", data = "<request>")]
+pub async fn wrap_derive_first(
+    state: &State<Mutex<Box<dyn Db>>>,
+    // claim: Claims,
+    id: &str,
+    request: Json<Vec<i64>>,
+) -> Result<Json<MasterKey1>, String> {
+    println!("/ecdsa/derive/{} | path = {:?}", id, request);
+
+
+    struct Gotham {}
+    impl Derive for Gotham {}
+    Gotham::first(state, /* claim ,*/ id.to_string(), request).await
 }
 
 #[post("/ecdsa/rotate/<id>/first", format = "json")]

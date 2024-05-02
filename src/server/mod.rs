@@ -7,3 +7,4 @@ pub mod routes;
 pub mod keygen;
 pub mod sign;
 pub mod rotate;
+pub mod derive;

@@ -4,8 +4,8 @@ macro_rules! db_get {
     ($db:expr, $customer_id:expr, $id:expr, $enum_ident:ident) => {
         match $db.get(
             &$crate::server::types::DbIndex {
-                customerId:  $customer_id.to_string(),
-                id: $id.to_string(),
+                customerId:  $customer_id,
+                id: $id,
             },
             &$crate::server::types::EcdsaStruct::$enum_ident,
         )
@@ -18,7 +18,7 @@ macro_rules! db_get {
             }
             Err(err) => {
                 //Db error
-                let txt = format!("Failed to get from {} with customerId: {}, id: {} with error:\n{}",
+                let txt = format!("Failed to get from {} with customerId: {:?}, id: {:?} with error:\n{}",
                     stringify!($enum_ident),
                     $customer_id,
                     $id,
@@ -35,8 +35,8 @@ macro_rules! db_get_required {
     ($db:expr, $customer_id:expr, $id:expr, $enum_ident:ident, $cast_type:ty) => {
         match match $db.get(
             &$crate::server::types::DbIndex {
-                customerId:  $customer_id.to_string(),
-                id: $id.to_string(),
+                customerId:  $customer_id,
+                id: $id,
             },
             &$crate::server::types::EcdsaStruct::$enum_ident,
         )
@@ -48,7 +48,7 @@ macro_rules! db_get_required {
             }
             Ok(None) => {
                 // Empty result
-                let txt = format!("Value from {} with customerId: {}, id: {} is required",
+                let txt = format!("Value from {} with customerId: {:?}, id: {:?} is required",
                     stringify!($enum_ident),
                     $customer_id,
                     $id
@@ -58,7 +58,7 @@ macro_rules! db_get_required {
             }
             Err(err) => {
                 //Db error
-                let txt = format!("Failed to get from {} with customerId: {}, id: {} with error:\n{}",
+                let txt = format!("Failed to get from {} with customerId: {:?}, id: {:?} with error:\n{}",
                     stringify!($enum_ident),
                     $customer_id,
                     $id,
@@ -85,8 +85,8 @@ macro_rules! db_insert {
     ($db:expr, $customer_id:expr, $id:expr, $enum_ident:ident, $new_value:expr) => {
         match $db.insert(
             &$crate::server::types::DbIndex {
-                customerId: $customer_id.to_string(),
-                id: $id.to_string(),
+                customerId: $customer_id,
+                id: $id,
             },
             &$crate::server::types::EcdsaStruct::$enum_ident,
             $new_value,
@@ -94,7 +94,7 @@ macro_rules! db_insert {
         .await {
             Ok(_) => { },
             Err(err) => {
-                let txt = format!("Failed to insert into {} with customerId: {}, id: {} with error:\n{}",
+                let txt = format!("Failed to insert into {} with customerId: {:?}, id: {:?} with error:\n{}",
                     stringify!($enum_ident),
                     $customer_id,
                     $id,
