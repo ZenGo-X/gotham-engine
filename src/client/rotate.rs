@@ -1,6 +1,6 @@
 use two_party_ecdsa::curv::cryptographic_primitives::twoparty::coin_flip_optimal_rounds;
 use two_party_ecdsa::kms::ecdsa::two_party::MasterKey2;
-use two_party_ecdsa::kms::rotation::two_party::party1::RotationParty1Message1;
+use two_party_ecdsa::kms::rotation::two_party::party1::{RotationParty1Message1, RotationParty1ValidMessage1};
 use two_party_ecdsa::kms::rotation::two_party::party2::Rotation2;
 use two_party_ecdsa::party_one::{Party1PDLFirstMessage, Party1PDLSecondMessage};
 use crate::client::client_shim::{Client, ClientShim};
@@ -11,45 +11,39 @@ const ROT_PATH_PRE: &str = "ecdsa/rotate";
 pub fn rotate_master_key<C: Client>(client_shim: &ClientShim<C>,
                                     master_key_2: &MasterKey2,
                                     id: &str) -> PrivateShare {
-    let mut coin_flip_party1_first_message: Option<coin_flip_optimal_rounds::Party1FirstMessage> = None;
-    let mut coin_flip_party2_first_message: Option<coin_flip_optimal_rounds::Party2FirstMessage> = None;
 
-    let mut second_message: Option<(
-        coin_flip_optimal_rounds::Party1SecondMessage,
-        RotationParty1Message1,
-    )> = None;
+    let mut coin_flip_party1_first_message: coin_flip_optimal_rounds::Party1FirstMessage;
+    let mut coin_flip_party2_first_message: coin_flip_optimal_rounds::Party2FirstMessage;
+    let mut rotation_party1_valid_first_message: RotationParty1ValidMessage1;
 
-    // None values mean that the check_rotated_key_bounds of the server failed
-    // and the second request needs to be repeated
-    while second_message.is_none() {
-        let coin_flip_party1_first_message_temp: coin_flip_optimal_rounds::Party1FirstMessage =
+    loop {
+        coin_flip_party1_first_message =
             client_shim.post(&format!("{}/{}/first", ROT_PATH_PRE, id)).unwrap();
 
-        coin_flip_party1_first_message = Some(coin_flip_party1_first_message_temp.clone());
+        coin_flip_party2_first_message  =
+            Rotation2::key_rotate_first_message(&coin_flip_party1_first_message);
 
-        let coin_flip_party2_first_message_temp =
-            Rotation2::key_rotate_first_message(&coin_flip_party1_first_message_temp);
+        let body = &coin_flip_party2_first_message;
 
-        coin_flip_party2_first_message = Some(coin_flip_party2_first_message_temp.clone());
-
-        let body = &coin_flip_party2_first_message_temp;
-
-        second_message = client_shim.postb(
+        rotation_party1_valid_first_message = client_shim.postb(
             &format!("{}/{}/second", ROT_PATH_PRE, id),
             body,
         ).unwrap();
+
+        if rotation_party1_valid_first_message.is_valid {
+            break;
+        }
     }
 
-    let (coin_flip_party1_second_message, rotation_party1_first_message) = second_message.unwrap();
-
-    let random2 = Rotation2::key_rotate_second_message(
-        &coin_flip_party1_second_message,
-        &coin_flip_party2_first_message.unwrap(),
-        &coin_flip_party1_first_message.unwrap()
+    let rotation2 = Rotation2::key_rotate_second_message(
+        &rotation_party1_valid_first_message.coin_flip_party1_second_message.unwrap(),
+        &coin_flip_party2_first_message,
+        &coin_flip_party1_first_message
     );
 
     let result_rotate_party_one_first_message =
-        master_key_2.rotate_first_message(&random2, &rotation_party1_first_message);
+        master_key_2.rotate_first_message(
+            &rotation2, &rotation_party1_valid_first_message.rotation_party1_first_message.unwrap());
 
     if result_rotate_party_one_first_message.is_err() {
         panic!("rotation failed");
@@ -76,7 +70,7 @@ pub fn rotate_master_key<C: Client>(client_shim: &ClientShim<C>,
         .unwrap();
 
     let result_rotate_party_one_third_message = master_key_2.rotate_third_message(
-        &random2,
+        &rotation2,
         &party_two_paillier,
         &party_two_pdl_chal,
         &rotation_party1_second_message,
