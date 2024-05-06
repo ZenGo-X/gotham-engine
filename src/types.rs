@@ -44,10 +44,12 @@ pub enum DbConnector {
 /// It is used as an index for the underlying Db table
 pub struct DbIndex {
     ///The customerId as assigned from cognito and passed through JWT
-    pub customerId: String,
+    pub customerId: Option<String>,
     ///The is as assigned from gotham server during the first round of keygen to identify users
-    pub id: String,
+    pub id: Option<String>,
 }
+
+/*      JWT is no longer used!
 
 /// The Authenticator indicates how the input requests to gotham server will be authorized. Currently there is the JWT option
 /// but in the future it will be discarded. Private gotham is using a jwt auth while public one does not use it
@@ -57,6 +59,8 @@ pub enum Authenticator {
     /// verification with a valid JWT
     Jwt,
 }
+
+ */
 
 pub const CUSTOMER_ID_IDENTIFIER: &str = "customerId";
 pub const ID_IDENTIFIER: &str = "id";
@@ -130,11 +134,6 @@ impl MPCStruct for EcdsaStruct {
         }
     }
 
-    fn require_customer_id(&self) -> bool {
-        self.to_string() == "Party1MasterKey" || self.to_string() == "Abort"
-    }
-
-    // TODO: Add unit tests for below casting
     fn to_struct_name(&self) -> String {
         let res = match self {
             EcdsaStruct::KeyGenFirstMsg => "Party1KeyGenFirstMessage",
@@ -170,8 +169,6 @@ impl MPCStruct for EcdsaStruct {
         res.to_string()
     }
 }
-
-//TODO move to two-party-ecdsa/kms
 
 #[inline(always)]
 pub fn idify(user_id: &String, id: &String, name: &dyn MPCStruct) -> String {

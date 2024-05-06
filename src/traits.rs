@@ -123,8 +123,5 @@ pub trait MPCStruct: Sync {
         format!("{}_{}", env, self.to_string())
     }
 
-    fn require_customer_id(&self) -> bool {
-        true
-    }
     fn to_struct_name(&self) -> String;
 }

@@ -31,8 +31,8 @@ pub trait Rotate {
 
         db_insert!(
             db,
-            claim.sub,
-            id,
+            None::<String>,
+            Some(id.clone()),
             RotateCommitMessage1,
             &rotate_commit_message
         );
@@ -56,12 +56,12 @@ pub trait Rotate {
     > {
         let db = state.lock().await;
 
-        let rotate_commit_message = db_get_required!(db, claim.sub, id, RotateCommitMessage1, RotateCommitMessage1);
+        let rotate_commit_message = db_get_required!(db, None::<String>, Some(id.clone()), RotateCommitMessage1, RotateCommitMessage1);
 
         let (coin_flip_party1_second, random1) =
             Rotation1::key_rotate_second_message(&coin_flip_party2_first.0, &rotate_commit_message);
 
-        let party_one_master_key = db_get_required!(db, claim.sub, id, Party1MasterKey, MasterKey1);
+        let party_one_master_key = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), Party1MasterKey, MasterKey1);
 
         if Party1Private::check_rotated_key_bounds(
             &party_one_master_key.private,
@@ -71,14 +71,14 @@ pub trait Rotate {
             return Ok(Json(None));
         }
 
-        db_insert!(db, claim.sub, id, RotateRandom1, &random1);
+        db_insert!(db, None::<String>, Some(id.clone()), RotateRandom1, &random1);
 
         let (rotation_party_one_first, party_one_private_new) =
             party_one_master_key.rotation_first_message(&random1);
 
-        db_insert!(db, claim.sub, id, RotateFirstMsg, &rotation_party_one_first);
+        db_insert!(db, None::<String>, Some(id.clone()), RotateFirstMsg, &rotation_party_one_first);
 
-        db_insert!(db, claim.sub, id, RotatePrivateNew, &party_one_private_new);
+        db_insert!(db, None::<String>, Some(id.clone()), RotatePrivateNew, &party_one_private_new);
 
         Ok(Json(Some((
             coin_flip_party1_second,
@@ -94,7 +94,7 @@ pub trait Rotate {
     ) -> Result<Json<party_one::Party1PDLFirstMessage>, String> {
         let db = state.lock().await;
 
-        let rotate_party_one_private = db_get_required!(db, claim.sub, id, RotatePrivateNew, Party1Private);
+        let rotate_party_one_private = db_get_required!(db, None::<String>, Some(id.clone()), RotatePrivateNew, Party1Private);
 
         let (rotation_party_one_second, party_one_pdl_decommit, party_one_alpha) =
             MasterKey1::rotation_second_message(
@@ -106,22 +106,22 @@ pub trait Rotate {
             value: party_one_alpha,
         };
 
-        db_insert!(db, claim.sub, id, RotateAlpha, &party_one_alpha);
+        db_insert!(db, None::<String>, Some(id.clone()), RotateAlpha, &party_one_alpha);
 
-        db_insert!(db, claim.sub, id, RotatePdlDecom, &party_one_pdl_decommit);
+        db_insert!(db, None::<String>, Some(id.clone()), RotatePdlDecom, &party_one_pdl_decommit);
 
         db_insert!(
             db,
-            claim.sub,
-            id,
+            None::<String>,
+            Some(id.clone()),
             RotateParty2First,
             &rotation_party_two_first.0
         );
 
         db_insert!(
             db,
-            claim.sub,
-            id,
+            None::<String>,
+            Some(id.clone()),
             RotateParty1Second,
             &rotation_party_one_second
         );
@@ -137,22 +137,22 @@ pub trait Rotate {
     ) -> Result<Json<party_one::Party1PDLSecondMessage>, String> {
         let db = state.lock().await;
 
-        let rotation_party_one_first = db_get_required!(db, claim.sub, id, RotateFirstMsg, RotationParty1Message1);
+        let rotation_party_one_first = db_get_required!(db, None::<String>, Some(id.clone()), RotateFirstMsg, RotationParty1Message1);
 
-        let rotate_party_one_private = db_get_required!(db, claim.sub, id, RotatePrivateNew, Party1Private);
+        let rotate_party_one_private = db_get_required!(db, None::<String>, Some(id.clone()), RotatePrivateNew, Party1Private);
 
-        let random = db_get_required!(db, claim.sub, id, RotateRandom1, Rotation);
+        let random = db_get_required!(db, None::<String>, Some(id.clone()), RotateRandom1, Rotation);
 
-        // let tmp = db_get_required!(db, claim.sub, id, RotateParty1Second);
+        // let tmp = db_get_required!(db, None::<String>, Some(id.clone()), RotateParty1Second);
         // let rotation_party_one_second = db_cast!(tmp, party_one::PDLSecondMessage);
 
-        let rotation_party_two_first = db_get_required!(db, claim.sub, id, RotateParty2First, Party2PDLFirstMessage);
+        let rotation_party_two_first = db_get_required!(db, None::<String>, Some(id.clone()), RotateParty2First, Party2PDLFirstMessage);
 
-        let party_one_alpha = db_get_required!(db, claim.sub, id, RotateAlpha, Alpha);
+        let party_one_alpha = db_get_required!(db, None::<String>, Some(id.clone()), RotateAlpha, Alpha);
 
-        let party_one_pdl_decommit = db_get_required!(db, claim.sub, id, RotatePdlDecom, Party1PDLDecommit);
+        let party_one_pdl_decommit = db_get_required!(db, None::<String>, Some(id.clone()), RotatePdlDecom, Party1PDLDecommit);
 
-        let party_one_master_key_temp = db_get_required!(db, claim.sub, id, Party1MasterKey, MasterKey1);
+        let party_one_master_key_temp = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), Party1MasterKey, MasterKey1);
 
         let party_one_master_key = party_one_master_key_temp.clone();
 
@@ -167,7 +167,7 @@ pub trait Rotate {
         );
 
         if rotate_party_two_second.is_err() {
-            return Err(format!("rotation failed for customerId: {}, id: {}", claim.sub, id));
+            return Err(format!("rotation failed for customerId: {:?}, id: {:?}", None::<String>, Some(id.clone())));
         }
 
         let (rotation_party_one_third, party_one_master_key_rotated) =
@@ -175,8 +175,8 @@ pub trait Rotate {
 
         db_insert!(
             db,
-            claim.sub,
-            id,
+            None::<String>,
+            Some(id.clone()),
             Party1MasterKey,
             &party_one_master_key_rotated
         );
