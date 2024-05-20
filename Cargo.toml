@@ -8,6 +8,10 @@ edition = "2021"
 #name = "backbone"
 #path = "src/lib.rs"
 
+[features]
+gotham_server = []
+gotham_client = []
+
 
 [dependencies]
 rusoto_core = { version = "0.47.0", optional = true }
