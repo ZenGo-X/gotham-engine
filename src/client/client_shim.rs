@@ -18,25 +18,28 @@ pub(crate) type Result<T> = std::result::Result<T, failure::Error>;
 pub struct ClientShim<C: Client> {
     pub client: C,
     pub auth_token: Option<String>,
+    pub customer_id: Option<String>,
     pub endpoint: String,
 }
 
 impl ClientShim<reqwest::blocking::Client> {
-    pub fn new(endpoint: String, auth_token: Option<String>) -> ClientShim<reqwest::blocking::Client> {
+    pub fn new(endpoint: String, auth_token: Option<String>, customer_id: Option<String>,) -> ClientShim<reqwest::blocking::Client> {
         let client = reqwest::blocking::Client::new();
         ClientShim {
             client,
             auth_token,
+            customer_id,
             endpoint,
         }
     }
 }
 
 impl<C: Client> ClientShim<C> {
-    pub fn new_with_client(endpoint: String, auth_token: Option<String>, client: C) -> Self {
+    pub fn new_with_client(endpoint: String, auth_token: Option<String>, customer_id: Option<String>, client: C) -> Self {
         Self {
             client,
             auth_token,
+            customer_id,
             endpoint,
         }
     }
@@ -47,7 +50,7 @@ impl<C: Client> ClientShim<C> {
         let start = Instant::now();
         let res = self
             .client
-            .post(&self.endpoint, path, self.auth_token.clone(), "{}");
+            .post(&self.endpoint, path, self.auth_token.clone(), self.customer_id.clone(), "{}");
         // info!("(req {}, took: {:?})", path, TimeFormat(start.elapsed()));
         res
     }
@@ -60,7 +63,7 @@ impl<C: Client> ClientShim<C> {
         let start = Instant::now();
         let res = self
             .client
-            .post(&self.endpoint, path, self.auth_token.clone(), body);
+            .post(&self.endpoint, path, self.auth_token.clone(), self.customer_id.clone(), body);
         // info!("(req {}, took: {:?})", path, TimeFormat(start.elapsed()));
         res
     }
@@ -72,9 +75,13 @@ pub trait Client: Sized {
         endpoint: &str,
         uri: &str,
         bearer_token: Option<String>,
+        customer_id: Option<String>,
         body: T,
     ) -> Option<V>;
 }
+
+const X_CUSTOMER_ID_HEADER: &str = "x-customer-id";
+
 
 impl Client for reqwest::blocking::Client {
     fn post<V: DeserializeOwned, T: Serialize>(
@@ -82,12 +89,18 @@ impl Client for reqwest::blocking::Client {
         endpoint: &str,
         uri: &str,
         bearer_token: Option<String>,
+        customer_id: Option<String>,
         body: T,
     ) -> Option<V> {
         let mut b = self.post(&format!("{}/{}", endpoint, uri));
         if let Some(token) = bearer_token {
             b = b.bearer_auth(token);
         }
+
+        if let Some(customer_id) = customer_id {
+            b = b.header(X_CUSTOMER_ID_HEADER, customer_id);
+        }
+
         let value = b.json(&body).send().ok()?.text().ok()?;
         serde_json::from_str(value.as_str()).ok()
     }
