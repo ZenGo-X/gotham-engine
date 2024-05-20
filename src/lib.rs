@@ -1,6 +1,6 @@
-#[cfg(feature = "gotham_client")]
+#[cfg(feature = "client_engine")]
 pub mod client;
 
-#[cfg(feature = "gotham_server")]
+#[cfg(feature = "server_engine")]
 pub mod server;
 // type Result<T> = std::result::Result<T, failure::Error>;
