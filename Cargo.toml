@@ -9,8 +9,8 @@ edition = "2021"
 #path = "src/lib.rs"
 
 [features]
-gotham_server = []
-gotham_client = []
+server_engine = []
+client_engine = []
 
 
 [dependencies]
