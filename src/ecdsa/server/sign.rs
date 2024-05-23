@@ -13,10 +13,10 @@ use two_party_ecdsa::kms::ecdsa::two_party::party2::{Party2SignSecondMessage, Pa
 use two_party_ecdsa::kms::Errors;
 use uuid::Uuid;
 use crate::{db_cast, db_get, db_get_required, db_insert};
-use crate::server::guarder::Claims;
-use crate::server::macros;
-use crate::server::traits::{Db, RedisMod};
-use crate::server::types::{Abort, EcdsaStruct, idify};
+use crate::common::guarder::Claims;
+use crate::common::traits::{Db, RedisMod};
+use crate::common::types::{Abort, EcdsaStruct, idify};
+
 
 #[async_trait]
 pub trait Sign {

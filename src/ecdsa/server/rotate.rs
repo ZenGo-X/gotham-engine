@@ -12,9 +12,10 @@ use two_party_ecdsa::kms::rotation::two_party::Rotation;
 use two_party_ecdsa::{party_one, party_two};
 use two_party_ecdsa::party_one::{Party1PDLDecommit, Party1Private};
 use two_party_ecdsa::party_two::Party2PDLFirstMessage;
-use crate::server::guarder::Claims;
-use crate::server::traits::Db;
-use crate::server::types::Alpha;
+use crate::common::guarder::Claims;
+use crate::common::traits::Db;
+use crate::common::types::Alpha;
+
 
 #[async_trait]
 pub trait Rotate {

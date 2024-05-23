@@ -36,7 +36,11 @@ config = "0.14.0"
 uuid = { version = "0.7", features = ["v4"] }
 jsonwebtoken = "8"
 hex = "0.4"
+strum = "0.26"
+strum_macros = "0.26"
+
 two-party-ecdsa = { git = "https://github.com/ZenGo-X/two-party-ecdsa.git", branch="develop" }
+two-party-musig2-eddsa = { git = "https://github.com/ZenGo-X/two-party-musig2-eddsa", branch = "feature/update-crates" }
 
 #two-party-ecdsa = { path = "../two-party-ecdsa" }
 
