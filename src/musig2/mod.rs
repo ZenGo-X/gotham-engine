@@ -1,19 +1,10 @@
-pub mod commands;
+pub mod server;
 
 use std::string::ToString;
 use strum_macros::Display;
 
 #[derive(Display, Debug)]
-enum Color {
+pub enum MuSig2Struct {
     #[strum(serialize = "redred")]
     Red,
-    Green {
-        range: usize,
-    },
-    Blue(usize),
-    Yellow,
-    #[strum(to_string = "purple with {sat} saturation")]
-    Purple {
-        sat: usize,
-    },
 }

@@ -9,6 +9,7 @@ edition = "2021"
 #path = "src/lib.rs"
 
 [features]
+default = ["server_engine", "client_engine"]
 server_engine = []
 client_engine = []
 

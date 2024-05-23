@@ -1,8 +1,7 @@
 use rocket::serde::{Deserialize, Serialize};
-use two_party_ecdsa::{BigInt, typetag_value};
-use crate::common::traits::MPCStruct;
+use two_party_ecdsa::{BigInt, typetag_value, typetags::Value};
+use crate::common::MPCStruct;
 
-pub mod macros;
 pub mod routes;
 
 pub mod keygen;

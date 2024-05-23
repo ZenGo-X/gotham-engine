@@ -17,12 +17,12 @@ use two_party_ecdsa::party_two::{
     Party2EphKeyGenFirstMessage, Party2PDLFirstMessage, Party2PDLSecondMessage,
 };
 use crate::common::guarder::Claims;
-use crate::common::traits::Db;
+use crate::common::Db;
 
-use crate::server::keygen::KeyGen;
-use crate::server::rotate::Rotate;
-use crate::server::sign::Sign;
-use crate::server::derive::Derive;
+use crate::ecdsa::server::keygen::KeyGen;
+use crate::ecdsa::server::rotate::Rotate;
+use crate::ecdsa::server::sign::Sign;
+use crate::ecdsa::server::derive::Derive;
 
 
 #[post("/ecdsa/keygen_v2/first", format = "json")]

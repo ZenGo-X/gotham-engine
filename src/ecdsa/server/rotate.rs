@@ -13,8 +13,8 @@ use two_party_ecdsa::{party_one, party_two};
 use two_party_ecdsa::party_one::{Party1PDLDecommit, Party1Private};
 use two_party_ecdsa::party_two::Party2PDLFirstMessage;
 use crate::common::guarder::Claims;
-use crate::common::traits::Db;
-use crate::common::types::Alpha;
+use crate::common::Db;
+use crate::ecdsa::server::Alpha;
 
 
 #[async_trait]

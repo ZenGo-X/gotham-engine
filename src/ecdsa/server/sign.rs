@@ -13,9 +13,9 @@ use two_party_ecdsa::kms::ecdsa::two_party::party2::{Party2SignSecondMessage, Pa
 use two_party_ecdsa::kms::Errors;
 use uuid::Uuid;
 use crate::{db_cast, db_get, db_get_required, db_insert};
+use crate::common::{Db, RedisMod};
 use crate::common::guarder::Claims;
-use crate::common::traits::{Db, RedisMod};
-use crate::common::types::{Abort, EcdsaStruct, idify};
+use crate::ecdsa::server::{Abort, EcdsaStruct, idify};
 
 
 #[async_trait]

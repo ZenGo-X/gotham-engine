@@ -19,8 +19,8 @@ use two_party_ecdsa::party_one::{
 use two_party_ecdsa::party_two::{Party2PDLFirstMessage, Party2PDLSecondMessage};
 use uuid::Uuid;
 use crate::common::guarder::Claims;
-use crate::common::traits::Db;
-use crate::common::types::Alpha;
+use crate::common::Db;
+use crate::ecdsa::server::Alpha;
 
 
 #[async_trait]

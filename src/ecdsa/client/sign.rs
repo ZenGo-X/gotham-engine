@@ -4,7 +4,7 @@ use two_party_ecdsa::kms::ecdsa::two_party::MasterKey2;
 use two_party_ecdsa::kms::ecdsa::two_party::party2::{Party2SignMessage, Party2SignSecondMessageVector};
 use two_party_ecdsa::party_one::{Party1EphKeyGenFirstMessage, Party1SignatureRecid};
 use two_party_ecdsa::party_two::Party2EphKeyGenFirstMessage;
-use crate::client::client_shim::{Client, ClientShim, Result};
+use crate::ecdsa::client::client_shim::{Client, ClientShim, Result};
 
 pub fn sign<C: Client>(
     client_shim: &ClientShim<C>,

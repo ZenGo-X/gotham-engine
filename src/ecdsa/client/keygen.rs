@@ -5,8 +5,8 @@ use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_v
 use two_party_ecdsa::kms::chain_code::two_party::party2::ChainCode2;
 use two_party_ecdsa::kms::ecdsa::two_party::MasterKey2;
 use two_party_ecdsa::party_one::{Party1KeyGenFirstMessage, Party1KeyGenSecondMessage, Party1PDLFirstMessage, Party1PDLSecondMessage};
-use crate::client::client_shim::{Client, ClientShim};
-use crate::client::PrivateShare;
+use crate::ecdsa::client::client_shim::{Client, ClientShim};
+use crate::ecdsa::client::PrivateShare;
 
 const KG_PATH_PRE: &str = "ecdsa/keygen_v2";
 
