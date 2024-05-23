@@ -1,4 +1,5 @@
 use rocket::serde::{Deserialize, Serialize};
+use strum_macros::Display;
 use two_party_ecdsa::{BigInt, typetag_value, typetags::Value};
 use crate::common::MPCStruct;
 
@@ -11,7 +12,7 @@ pub mod derive;
 
 
 /// An enumeration which keeps track of the different table names used to store information during KeyGen and Sign
-#[derive(Debug)]
+#[derive(Display)]
 pub enum EcdsaStruct {
     KeyGenFirstMsg,
     CommWitness,
@@ -66,16 +67,16 @@ typetag_value!(Abort);
 
 ///common functions for the members of EcdsaStruct struct to strigify and format
 impl MPCStruct for EcdsaStruct {
-    fn to_string(&self) -> String {
-        format!("{:?}", self)
+    fn get_name(&self) -> String {
+        self.to_string()
     }
 
     // backward compatibility
     fn to_table_name(&self, env: &str) -> String {
-        if self.to_string() == "Party1MasterKey" {
-            format!("{}_{}", env, self.to_string())
+        if self.get_name() == "Party1MasterKey" {
+            format!("{}_{}", env, self.get_name())
         } else {
-            format!("{}-gotham-{}", env, self.to_string())
+            format!("{}-gotham-{}", env, self.get_name())
         }
     }
 
@@ -117,5 +118,5 @@ impl MPCStruct for EcdsaStruct {
 
 #[inline(always)]
 pub fn idify(user_id: &String, id: &String, name: &dyn MPCStruct) -> String {
-    format!("{}_{}_{}", user_id, id, name.to_string())
+    format!("{}_{}_{}", user_id, id, name.get_name())
 }

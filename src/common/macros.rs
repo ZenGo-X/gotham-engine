@@ -7,7 +7,7 @@ macro_rules! db_get {
                 customerId:  $customer_id,
                 id: $id,
             },
-            &$crate::ecdsa::server::EcdsaStruct::$enum_ident,
+            &$enum_ident,
         )
         .await
         {
@@ -30,6 +30,8 @@ macro_rules! db_get {
     }
 }
 
+
+//TODO: fix
 #[macro_export]
 macro_rules! db_get_required {
     ($db:expr, $customer_id:expr, $id:expr, $enum_ident:ident, $cast_type:ty) => {
@@ -38,7 +40,7 @@ macro_rules! db_get_required {
                 customerId:  $customer_id,
                 id: $id,
             },
-            &$crate::ecdsa::server::EcdsaStruct::$enum_ident,
+            &$enum_ident,
         )
         .await
         {

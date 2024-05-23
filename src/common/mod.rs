@@ -174,10 +174,10 @@ pub trait RedisMod {
 
 ///Trait for table names management for the different type of tables to be inserted in the DB
 pub trait MPCStruct: Sync {
-    fn to_string(&self) -> String;
+    fn get_name(&self) -> String;
 
     fn to_table_name(&self, env: &str) -> String {
-        format!("{}_{}", env, self.to_string())
+        format!("{}_{}", env, self.get_name())
     }
 
     fn to_struct_name(&self) -> String;
