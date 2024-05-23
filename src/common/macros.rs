@@ -90,7 +90,7 @@ macro_rules! db_insert {
                 customerId: $customer_id,
                 id: $id,
             },
-            &$crate::ecdsa::server::EcdsaStruct::$enum_ident,
+            &$enum_ident,
             $new_value,
         )
         .await {

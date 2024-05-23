@@ -20,8 +20,8 @@ use two_party_ecdsa::party_two::{Party2PDLFirstMessage, Party2PDLSecondMessage};
 use uuid::Uuid;
 use crate::common::guarder::Claims;
 use crate::common::Db;
-use crate::ecdsa::server::Alpha;
-use crate::ecdsa::server::EcdsaStruct::{Alpha as AlphaEnum,CC, CCCommWitness, CCEcKeyPair, CommWitness, EcKeyPair, PaillierKeyPair, Party1Private, Party2PDLFirstMsg, Party2Public, PDLDecommit};
+use crate::ecdsa::server::Alpha as AlphaStruct;
+use crate::ecdsa::server::EcdsaStruct::{Alpha, CC, CCCommWitness, CCEcKeyPair, CCKeyGenFirstMsg, CommWitness, EcKeyPair, KeyGenFirstMsg, PaillierKeyPair, Party1MasterKey, Party1Private, Party2PDLFirstMsg, Party2Public, PDLDecommit, POS};
 
 
 #[async_trait]
@@ -131,7 +131,7 @@ pub trait KeyGen {
 
         let party_one_pdl_decommit = db_get_required!(db, None::<String>, Some(id.clone()), PDLDecommit, Party1PDLDecommit);
 
-        let alpha = db_get_required!(db, None::<String>, Some(id.clone()), AlphaEnum, Alpha);
+        let alpha = db_get_required!(db, None::<String>, Some(id.clone()), Alpha, AlphaStruct);
 
         // let dl: &mut dyn Value = party_one_pdl_decommit.borrow_mut();
 

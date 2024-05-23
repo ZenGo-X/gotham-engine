@@ -8,7 +8,7 @@ use crate::common::MPCStruct;
 
 #[derive(Display)]
 pub enum MuSig2Struct {
-    Red,
+    KeyPair,
 }
 
 
@@ -17,13 +17,13 @@ impl MPCStruct for MuSig2Struct {
         self.to_string()
     }
 
-    fn to_table_name(&self, env: &str) -> String {
-        return format!("{}-gotham-{}", env, self.get_name())
+    fn get_table_name(&self, env: &str) -> String {
+        return format!("{}-gotham-musig2-{}", env, self.get_name())
     }
 
-    fn to_struct_name(&self) -> String {
+    fn get_struct_name(&self) -> String {
         let res = match self {
-            MuSig2Struct::Red => "Red",
+            MuSig2Struct::KeyPair => "KeyPair",
         };
 
         res.to_string()

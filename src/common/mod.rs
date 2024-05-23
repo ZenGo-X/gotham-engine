@@ -176,10 +176,10 @@ pub trait RedisMod {
 pub trait MPCStruct: Sync {
     fn get_name(&self) -> String;
 
-    fn to_table_name(&self, env: &str) -> String {
+    fn get_table_name(&self, env: &str) -> String {
         format!("{}_{}", env, self.get_name())
     }
 
-    fn to_struct_name(&self) -> String;
+    fn get_struct_name(&self) -> String;
 }
 

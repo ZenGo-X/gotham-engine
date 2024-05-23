@@ -72,15 +72,15 @@ impl MPCStruct for EcdsaStruct {
     }
 
     // backward compatibility
-    fn to_table_name(&self, env: &str) -> String {
-        if self.get_name() == "Party1MasterKey" {
+    fn get_table_name(&self, env: &str) -> String {
+        if self.get_name() == EcdsaStruct::Party1MasterKey.get_name() {
             format!("{}_{}", env, self.get_name())
         } else {
             format!("{}-gotham-{}", env, self.get_name())
         }
     }
 
-    fn to_struct_name(&self) -> String {
+    fn get_struct_name(&self) -> String {
         let res = match self {
             EcdsaStruct::KeyGenFirstMsg => "Party1KeyGenFirstMessage",
             EcdsaStruct::CommWitness => "Party1CommWitness",
