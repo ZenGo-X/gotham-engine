@@ -1,6 +1,7 @@
 pub mod guarder;
 pub mod macros;
 
+
 use std::env;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
@@ -8,7 +9,7 @@ use async_trait::async_trait;
 use log::info;
 use redis::{Commands, Connection};
 use thiserror::Error;
-use two_party_ecdsa::typetags::Value;
+
 
 // TODO: use 'thiserror' and this enum in code
 #[derive(Debug, Error, PartialEq, Eq, Clone)]
@@ -74,7 +75,7 @@ pub trait Db: Send + Sync {
     /// # Arguments
     /// * `key` - A [DbIndex] struct which acts as a key index in the DB.
     /// * `table_name` - The table name which is derived from [MPCStruct]
-    /// * `value` - The value to be inserted in the db which is a trait object of the trait  [Value]
+    /// * `value` - The value to be inserted in the db which is a trait object of the trait  [DbValue]
     /// # Examples:
     ///
     ///
@@ -96,13 +97,13 @@ pub trait Db: Send + Sync {
         &self,
         key: &DbIndex,
         table_name: &dyn MPCStruct,
-        value: &dyn Value,
+        value: &dyn DbValue,
     ) -> Result<(), String>;
     ///get a value from the DB
     /// # Arguments
     /// * `key` - A [DbIndex] struct which acts as a key index in the DB.
     /// * `table_name` - The table name which is derived from [MPCStruct]
-    /// * `value` - The value to be inserted in the db which is a trait object of the trait  [Value]
+    /// * `value` - The value to be inserted in the db which is a trait object of the trait  [DbValue]
     /// # Examples
     ///
     /// let party_one_pdl_decommit =
@@ -123,7 +124,7 @@ pub trait Db: Send + Sync {
         &self,
         key: &DbIndex,
         table_name: &dyn MPCStruct,
-    ) -> Result<Option<Box<dyn Value>>, String>;
+    ) -> Result<Option<Box<dyn DbValue>>, String>;
     async fn has_active_share(&self, customerId: &str) -> Result<bool, String>;
 
     /// the granted function implements the logic of tx authorization. If no tx authorization is needed the function returns always true
@@ -183,3 +184,26 @@ pub trait MPCStruct: Sync {
     fn get_struct_name(&self) -> String;
 }
 
+use std::any::Any;
+
+#[typetag::serde]
+pub trait DbValue: Sync + Send + Any {
+    fn as_any(&self) -> &dyn Any;
+    fn type_name(&self) -> &str;
+}
+
+#[macro_export]
+macro_rules! typetag_value {
+    ($struct_name:ty) => {
+        #[typetag::serde]
+        impl crate::common::DbValue for $struct_name {
+            fn as_any(&self) -> &dyn std::any::Any {
+                self
+            }
+
+            fn type_name(&self) -> &str {
+                stringify!($struct_name)
+            }
+        }
+    };
+}

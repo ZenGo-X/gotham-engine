@@ -77,7 +77,7 @@ macro_rules! db_get_required {
                 println!("{}", txt);
                 return Err(txt)
             }
-            Some(v) => { v.clone() }    // Cust success
+            Some(v) => { v.clone() }    // Cast success
         }
     }
 }

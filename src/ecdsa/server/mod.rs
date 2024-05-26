@@ -1,7 +1,15 @@
 use rocket::serde::{Deserialize, Serialize};
 use strum_macros::Display;
-use two_party_ecdsa::{BigInt, typetag_value, typetags::Value};
+use two_party_ecdsa::{BigInt, Secp256k1Point};
+use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::{DHPoKCommWitness, DHPoKEcKeyPair, DHPoKParty1FirstMessage};
+use two_party_ecdsa::kms::chain_code::two_party::party1::ChainCode1;
+use two_party_ecdsa::kms::ecdsa::two_party::MasterKey1;
+use two_party_ecdsa::kms::rotation::two_party::party1::{RotateCommitMessage1, RotationParty1Message1};
+use two_party_ecdsa::kms::rotation::two_party::Rotation;
+use two_party_ecdsa::party_one::{Party1CommWitness, Party1EcKeyPair, Party1EphEcKeyPair, Party1HDPos, Party1KeyGenFirstMessage, Party1PaillierKeyPair, Party1PDLDecommit, Party1PDLFirstMessage, Party1Private};
+use two_party_ecdsa::party_two::{Party2EphKeyGenFirstMessage, Party2PDLFirstMessage};
 use crate::common::MPCStruct;
+use crate::typetag_value;
 
 pub mod routes;
 
@@ -56,14 +64,12 @@ pub struct Alpha {
     pub value: BigInt,
 }
 
-typetag_value!(Alpha);
 
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct Abort {
     pub(crate) blocked: bool,
 }
 
-typetag_value!(Abort);
 
 ///common functions for the members of EcdsaStruct struct to strigify and format
 impl MPCStruct for EcdsaStruct {
@@ -120,3 +126,37 @@ impl MPCStruct for EcdsaStruct {
 pub fn idify(user_id: &String, id: &String, name: &dyn MPCStruct) -> String {
     format!("{}_{}_{}", user_id, id, name.get_name())
 }
+
+typetag_value!(Abort);
+typetag_value!(Party1HDPos);
+typetag_value!(Party1KeyGenFirstMessage);
+typetag_value!(Party1CommWitness);
+typetag_value!(Party1EcKeyPair);
+typetag_value!(Secp256k1Point);
+typetag_value!(Party1PaillierKeyPair);
+typetag_value!(Party1Private);
+typetag_value!(Party1PDLDecommit);
+typetag_value!(Alpha);
+typetag_value!(Party2PDLFirstMessage);
+typetag_value!(DHPoKParty1FirstMessage);
+typetag_value!(DHPoKCommWitness);
+typetag_value!(DHPoKEcKeyPair);
+typetag_value!(ChainCode1);
+typetag_value!(MasterKey1);
+typetag_value!(Party2EphKeyGenFirstMessage);
+typetag_value!(Party1EphEcKeyPair);
+typetag_value!(RotateCommitMessage1);
+typetag_value!(Rotation);
+typetag_value!(RotationParty1Message1);
+typetag_value!(Party1PDLFirstMessage);
+
+
+
+
+
+
+
+
+
+
+
