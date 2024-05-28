@@ -1,8 +1,9 @@
 pub mod server;
+mod rocket_routes;
 
 use std::string::ToString;
 use strum_macros::Display;
-use two_party_musig2_eddsa::aggregate::AggPublicKeyAndMusigCoeff;
+use two_party_musig2_eddsa::aggregate::{AggPublicKeyAndMusigCoeff, AggregatedNonce};
 use two_party_musig2_eddsa::keypair::KeyPair;
 use two_party_musig2_eddsa::public_partial_nonces::{PublicPartialNonces};
 use two_party_musig2_eddsa::private_partial_nonces::{PrivatePartialNonces};
@@ -18,6 +19,7 @@ pub enum MuSig2Struct {
     Party1PrivatePartialNonces,
     Party1PublicPartialNonces,
     Party2PublicPartialNonces,
+    AggregatedNonce,
 }
 
 
@@ -36,7 +38,8 @@ impl MPCStruct for MuSig2Struct {
             MuSig2Struct::AggPublicKeyAndMusigCoeff => "AggPublicKeyAndMusigCoeff",
             MuSig2Struct::Party1PrivatePartialNonces => "PrivatePartialNonces",
             MuSig2Struct::Party1PublicPartialNonces => "PublicPartial",
-            MuSig2Struct::Party2PublicPartialNonces => "PublicPartialNonces"
+            MuSig2Struct::Party2PublicPartialNonces => "PublicPartialNonces",
+            MuSig2Struct::AggregatedNonce => "AggregatedNonce"
         };
 
         res.to_string()
@@ -48,5 +51,7 @@ typetag_value!(KeyPair);
 typetag_value!(AggPublicKeyAndMusigCoeff);
 typetag_value!(PublicPartialNonces);
 typetag_value!(PrivatePartialNonces);
+typetag_value!(AggregatedNonce);
+
 
 
