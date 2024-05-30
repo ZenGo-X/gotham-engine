@@ -1,3 +1,4 @@
+use hex::FromHexError;
 use rocket::{post, State};
 use rocket::serde::json::Json;
 use tokio::sync::Mutex;
@@ -15,31 +16,58 @@ pub async fn wrap_musig2_keygen(
     println!("/musig2/keygen | {:?}", claim);
     struct Gotham {}
     impl Commands for Gotham {}
-    Gotham::keygen(state, claim, client_pubkey).await
+    let result = Gotham::keygen(state, claim, client_pubkey.0).await;
+    match result {
+        Ok(res) => Ok(Json(res)),
+        Err(err) => Err(err)
+    }
 }
 
-#[post("/musig2/sign/<id>/first", format = "json", data = "<compressed_client_public_nonces>")]
+
+#[post("/musig2/sign/<id>/first", format = "json", data = "<client_public_nonces_hex>")]
 pub async fn wrap_musig2_sign_first(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
     id: String,
-    compressed_client_public_nonces: Json<CompressedPublicPartialNonces>,
-) -> Result<Json<CompressedPublicPartialNonces>, String> {
+    client_public_nonces_hex: Json<String>,
+) -> Result<Json<String>, String> {
     println!("/musig2/sign/{}/first | {:?}", id, claim);
+
+    let mut client_public_nonces_slice = [0u8; 64];
+    match hex::decode_to_slice(client_public_nonces_hex.0,
+                         &mut client_public_nonces_slice as &mut [u8]) {
+        Ok(_) => {}
+        Err(err) =>  { return Err(err.to_string()) }
+    }
+
     struct Gotham {}
     impl Commands for Gotham {}
-    Gotham::sign_first(state, claim, id, compressed_client_public_nonces).await
+    let result = Gotham::sign_first(state, claim, id, client_public_nonces_slice).await;
+    match result {
+        Ok(slice) => {
+            Ok(Json(hex::encode(slice)))
+        },
+        Err(err) => Err(err)
+    }
 }
 
-#[post("/musig2/sign/<id>/second", format = "json", data = "<message>")]
+
+#[post("/musig2/sign/<id>/second", format = "json", data = "<message_hex>")]
 pub async fn wrap_musig2_sign_second(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
     id: String,
-    message: Json<&MessageSlice>,
-) -> Result<Json<PartialSignature>, String> {
+    message_hex: Json<String>,
+) -> Result<Json<String>, String> {
     println!("/musig2/sign/{}/second | {:?}", id, claim);
     struct Gotham {}
     impl Commands for Gotham {}
-    Gotham::sign_second(state, claim, id, message).await
+
+    let decoded_message = hex::decode(message_hex.0).map_err(|err| err.to_string())?;
+    let message = decoded_message.as_slice();
+
+    match Gotham::sign_second(state, claim, id, message).await {
+        Ok(partial_sig) =>  Ok(Json(hex::encode(partial_sig.serialize()))),
+        Err(err) => Err(err)
+    }
 }

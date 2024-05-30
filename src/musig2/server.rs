@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use hex::FromHexError;
 use rocket::serde::json::Json;
 use tokio::sync::Mutex;
 use rocket::State;
@@ -24,8 +25,8 @@ pub trait Commands {
     async fn keygen(
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
-        client_pubkey: Json<PublicKeyCompressedEdwardsY>,
-    ) -> Result<Json<(String, PublicKeyCompressedEdwardsY)>, String> {
+        client_pubkey: PublicKeyCompressedEdwardsY,
+    ) -> Result<(String, PublicKeyCompressedEdwardsY), String> {
         let db = state.lock().await;
         let (keypair, restore_secret) = MuSig2KeyPair::create();
 
@@ -33,12 +34,12 @@ pub trait Commands {
         db_insert!(db, Some(claim.sub.clone()), Some(id.clone()), Party1KeyPair, &keypair);
 
         let agg_pubkey =
-            AggPublicKeyAndMusigCoeffStruct::aggregate_public_keys(keypair.pubkey(), client_pubkey.0)
+            AggPublicKeyAndMusigCoeffStruct::aggregate_public_keys(keypair.pubkey(), client_pubkey)
                 .map_err(|_| "Received an invalid public key")?;
 
         db_insert!(db, Some(claim.sub.clone()), Some(id.clone()), AggPublicKeyAndMusigCoeff, &agg_pubkey);
 
-        Ok(Json((id, keypair.pubkey())))
+        Ok((id, keypair.pubkey()))
     }
 
     async fn sign_first(
@@ -46,7 +47,7 @@ pub trait Commands {
         claim: Claims,
         id: String,
         compressed_client_public_nonces: CompressedPublicPartialNonces,
-     ) -> Result<Json<(CompressedPublicPartialNonces)>, String> {
+     ) -> Result<CompressedPublicPartialNonces, String> {
         let db = state.lock().await;
 
         let keypair = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), Party1KeyPair, KeyPair);
@@ -61,15 +62,15 @@ pub trait Commands {
 
         let compressed_public_nonces = PublicPartialNonces::serialize(&public_nonces);
 
-        Ok(Json(compressed_public_nonces))
+        Ok(compressed_public_nonces)
     }
 
     async fn sign_second(
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         id: String,
-        message: Json<MessageSlice>,
-    ) -> Result<Json<(PartialSignature)>, String> {
+        message: &MessageSlice,
+    ) -> Result<PartialSignature, String> {
         let db = state.lock().await;
 
         let keypair = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), Party1KeyPair, KeyPair);
@@ -83,13 +84,12 @@ pub trait Commands {
             private_nonces,
             [public_nonces, client_public_nonces],
             &agg_pubkey,
-            message.0,
+            message,
         );
 
         db_insert!(db, Some(claim.sub.clone()), Some(id.clone()), AggregatedNonce, &agg_nonce);
 
-
-        Ok(Json(partial_sig))
+        Ok(partial_sig)
 
     }
 }
