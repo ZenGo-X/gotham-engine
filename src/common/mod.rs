@@ -1,6 +1,6 @@
 pub mod guarder;
 pub mod macros;
-
+pub mod client_shim;
 
 use std::env;
 use serde::{Deserialize, Serialize};

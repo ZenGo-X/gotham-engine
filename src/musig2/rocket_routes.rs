@@ -5,14 +5,14 @@ use tokio::sync::Mutex;
 use two_party_musig2_eddsa::partial_sig::PartialSignature;
 use crate::common::Db;
 use crate::common::guarder::Claims;
-use crate::musig2::server::{Commands, CompressedPublicPartialNonces, MessageSlice, PublicKeyCompressedEdwardsY};
+use crate::musig2::server::Commands;
 
 #[post("/musig2/keygen", format = "json", data = "<client_pubkey>")]
 pub async fn wrap_musig2_keygen(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
-    client_pubkey: Json<PublicKeyCompressedEdwardsY>
-) -> Result<Json<(String, PublicKeyCompressedEdwardsY)>, String> {
+    client_pubkey: Json<[u8; 32]>
+) -> Result<Json<(String, [u8; 32])>, String> {
     println!("/musig2/keygen | {:?}", claim);
     struct Gotham {}
     impl Commands for Gotham {}

@@ -4,7 +4,7 @@ use two_party_ecdsa::kms::ecdsa::two_party::MasterKey2;
 use two_party_ecdsa::kms::ecdsa::two_party::party2::{Party2SignMessage, Party2SignSecondMessageVector};
 use two_party_ecdsa::party_one::{Party1EphKeyGenFirstMessage, Party1SignatureRecid};
 use two_party_ecdsa::party_two::Party2EphKeyGenFirstMessage;
-use crate::ecdsa::client::client_shim::{Client, ClientShim, Result};
+use crate::common::client_shim::{Client, ClientShim};
 
 pub fn sign<C: Client>(
     client_shim: &ClientShim<C>,
@@ -12,7 +12,7 @@ pub fn sign<C: Client>(
     mk: &MasterKey2,
     pos_child_key: Vec<BigInt>,
     id: &str,
-) -> Result<Party1SignatureRecid> {
+) -> Result<Party1SignatureRecid, failure::Error> {
     let (eph_key_gen_first_message_party_two, eph_comm_witness, eph_ec_key_pair_party2) =
         MasterKey2::sign_first_message();
 
@@ -51,7 +51,7 @@ fn get_signature<C: Client>(
     party_two_sign_message: Party2SignMessage,
     pos_child_key: Vec<BigInt>,
     sid: &str,
-) -> Result<Party1SignatureRecid> {
+) -> Result<Party1SignatureRecid, failure::Error> {
     let request: Party2SignSecondMessageVector = Party2SignSecondMessageVector {
         message,
         party_two_sign_message,

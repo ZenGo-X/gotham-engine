@@ -17,16 +17,14 @@ use crate::common::DbIndex;
 use crate::{db_get_required, db_insert};
 use crate::musig2::MuSig2Struct::{AggPublicKeyAndMusigCoeff, AggregatedNonce, Party1KeyPair, Party1PrivatePartialNonces, Party1PublicPartialNonces, Party2PublicPartialNonces};
 
-pub type PublicKeyCompressedEdwardsY = [u8; 32];
-pub type MessageSlice = [u8];
-pub type CompressedPublicPartialNonces = [u8; 64];
+
 #[async_trait]
 pub trait Commands {
     async fn keygen(
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
-        client_pubkey: PublicKeyCompressedEdwardsY,
-    ) -> Result<(String, PublicKeyCompressedEdwardsY), String> {
+        client_pubkey: [u8; 32],
+    ) -> Result<(String, [u8; 32]), String> {
         let db = state.lock().await;
         let (keypair, restore_secret) = MuSig2KeyPair::create();
 
@@ -46,8 +44,8 @@ pub trait Commands {
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         id: String,
-        compressed_client_public_nonces: CompressedPublicPartialNonces,
-     ) -> Result<CompressedPublicPartialNonces, String> {
+        compressed_client_public_nonces: [u8; 64],
+     ) -> Result<[u8; 64], String> {
         let db = state.lock().await;
 
         let keypair = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), Party1KeyPair, KeyPair);
@@ -69,7 +67,7 @@ pub trait Commands {
         state: &State<Mutex<Box<dyn Db>>>,
         claim: Claims,
         id: String,
-        message: &MessageSlice,
+        message: &[u8],
     ) -> Result<PartialSignature, String> {
         let db = state.lock().await;
 

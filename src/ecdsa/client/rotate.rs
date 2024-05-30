@@ -3,7 +3,7 @@ use two_party_ecdsa::kms::ecdsa::two_party::MasterKey2;
 use two_party_ecdsa::kms::rotation::two_party::party1::{RotationParty1Message1, RotationParty1ValidMessage1};
 use two_party_ecdsa::kms::rotation::two_party::party2::Rotation2;
 use two_party_ecdsa::party_one::{Party1PDLFirstMessage, Party1PDLSecondMessage};
-use crate::ecdsa::client::client_shim::{Client, ClientShim};
+use crate::common::client_shim::{Client, ClientShim};
 use crate::ecdsa::client::PrivateShare;
 
 const ROT_PATH_PRE: &str = "ecdsa/rotate";

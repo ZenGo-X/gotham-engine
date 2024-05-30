@@ -1,5 +1,6 @@
 pub mod server;
 mod rocket_routes;
+mod client;
 
 use std::string::ToString;
 use strum_macros::Display;
