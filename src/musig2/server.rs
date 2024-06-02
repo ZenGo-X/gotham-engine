@@ -13,7 +13,6 @@ use two_party_musig2_eddsa::public_partial_nonces::PublicPartialNonces;
 use uuid::Uuid;
 use crate::common::guarder::Claims;
 use crate::common::Db;
-use crate::common::DbIndex;
 use crate::{db_get_required, db_insert};
 use crate::musig2::MuSig2Struct::{AggPublicKeyAndMusigCoeff, AggregatedNonce, Party1KeyPair, Party1PrivatePartialNonces, Party1PublicPartialNonces, Party2PublicPartialNonces};
 
@@ -45,12 +44,13 @@ pub trait Commands {
         claim: Claims,
         id: String,
         compressed_client_public_nonces: [u8; 64],
+        message: &[u8],
      ) -> Result<[u8; 64], String> {
         let db = state.lock().await;
 
         let keypair = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), Party1KeyPair, KeyPair);
 
-        let (private_nonces, public_nonces) = keypair.generate_partial_nonces(None);
+        let (private_nonces, public_nonces) = keypair.generate_partial_nonces(Some(message));
 
         let client_public_nonces = PublicPartialNonces::deserialize(compressed_client_public_nonces).unwrap();
 
@@ -68,7 +68,7 @@ pub trait Commands {
         claim: Claims,
         id: String,
         message: &[u8],
-    ) -> Result<PartialSignature, String> {
+    ) -> Result<[u8; 32], String> {
         let db = state.lock().await;
 
         let keypair = db_get_required!(db, Some(claim.sub.clone()), Some(id.clone()), Party1KeyPair, KeyPair);
@@ -87,7 +87,7 @@ pub trait Commands {
 
         db_insert!(db, Some(claim.sub.clone()), Some(id.clone()), AggregatedNonce, &agg_nonce);
 
-        Ok(partial_sig)
+        Ok(partial_sig.serialize())
 
     }
 }

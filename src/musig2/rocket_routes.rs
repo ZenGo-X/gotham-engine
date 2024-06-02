@@ -24,25 +24,30 @@ pub async fn wrap_musig2_keygen(
 }
 
 
-#[post("/musig2/sign/<id>/first", format = "json", data = "<client_public_nonces_hex>")]
+#[post("/musig2/sign/<id>/first", format = "json", data = "<hex_data>")]
 pub async fn wrap_musig2_sign_first(
     state: &State<Mutex<Box<dyn Db>>>,
     claim: Claims,
     id: String,
-    client_public_nonces_hex: Json<String>,
+    hex_data: Json<(String, String)>,
 ) -> Result<Json<String>, String> {
     println!("/musig2/sign/{}/first | {:?}", id, claim);
 
+    let (client_public_nonces_hex, message_hex) = hex_data.0;
+
     let mut client_public_nonces_slice = [0u8; 64];
-    match hex::decode_to_slice(client_public_nonces_hex.0,
+    match hex::decode_to_slice(client_public_nonces_hex,
                          &mut client_public_nonces_slice as &mut [u8]) {
         Ok(_) => {}
         Err(err) =>  { return Err(err.to_string()) }
     }
 
+    let decoded_message = hex::decode(message_hex).map_err(|err| err.to_string())?;
+    let message = decoded_message.as_slice();
+
     struct Gotham {}
     impl Commands for Gotham {}
-    let result = Gotham::sign_first(state, claim, id, client_public_nonces_slice).await;
+    let result = Gotham::sign_first(state, claim, id, client_public_nonces_slice, message).await;
     match result {
         Ok(slice) => {
             Ok(Json(hex::encode(slice)))
@@ -67,7 +72,7 @@ pub async fn wrap_musig2_sign_second(
     let message = decoded_message.as_slice();
 
     match Gotham::sign_second(state, claim, id, message).await {
-        Ok(partial_sig) =>  Ok(Json(hex::encode(partial_sig.serialize()))),
+        Ok(partial_sig) =>  Ok(Json(hex::encode(partial_sig))),
         Err(err) => Err(err)
     }
 }
