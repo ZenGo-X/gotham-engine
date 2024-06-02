@@ -1,72 +1,26 @@
-//! Common types for traits the implementations thereofs at [private_gotham] and [public_gotham]
-use serde::{Deserialize, Serialize};
-use std::fmt::{Display, Formatter};
-use thiserror::Error;
-use two_party_ecdsa::typetag_value;
-use two_party_ecdsa::typetags::Value;
-use two_party_ecdsa::BigInt;
-use two_party_ecdsa::kms::ecdsa::two_party::party2::Party2SignMessage;
-use crate::server::traits::MPCStruct;
+use rocket::serde::{Deserialize, Serialize};
+use strum_macros::Display;
+use two_party_ecdsa::{BigInt, Secp256k1Point};
+use two_party_ecdsa::curv::cryptographic_primitives::twoparty::dh_key_exchange_variant_with_pok_comm::{DHPoKCommWitness, DHPoKEcKeyPair, DHPoKParty1FirstMessage};
+use two_party_ecdsa::kms::chain_code::two_party::party1::ChainCode1;
+use two_party_ecdsa::kms::ecdsa::two_party::MasterKey1;
+use two_party_ecdsa::kms::rotation::two_party::party1::{RotateCommitMessage1, RotationParty1Message1};
+use two_party_ecdsa::kms::rotation::two_party::Rotation;
+use two_party_ecdsa::party_one::{Party1CommWitness, Party1EcKeyPair, Party1EphEcKeyPair, Party1HDPos, Party1KeyGenFirstMessage, Party1PaillierKeyPair, Party1PDLDecommit, Party1PDLFirstMessage, Party1Private};
+use two_party_ecdsa::party_two::{Party2EphKeyGenFirstMessage, Party2PDLFirstMessage};
+use crate::common::MPCStruct;
+use crate::typetag_value;
 
+pub mod routes;
 
-// TODO: use 'thiserror' and this enum in code
-#[derive(Debug, Error, PartialEq, Eq, Clone)]
-/// The DatabaseError defines different types of database errors for better error handling
-pub enum DatabaseError {
-    /// Failed to open database.
-    #[error("Failed to open database: {0:?}")]
-    ConnectionError(i32),
-    /// Failed to create a table in database.
-    #[error("Table Creating error code: {0:?}")]
-    TableCreationError(i32),
-    /// Failed to insert a value into a table.
-    #[error("Database write error code: {0:?}")]
-    InsertError(i32),
-    /// Failed to get a value into a table.
-    #[error("Database read error code: {0:?}")]
-    ReadError(i32),
-    /// Failed to delete a `(key, value)` pair into a table.
-    #[error("Database delete error code: {0:?}")]
-    DeleteError(i32),
-    /// Failed to delete a `(key, value)` pair into a table.
-    #[error("Database delete error code: {0:?}")]
-    ConfigError(i32),
-}
+pub mod keygen;
+pub mod sign;
+pub mod rotate;
+pub mod derive;
 
-/// The DbConnector indicates what type of DB will be used for storing the state during the Keyge, and sign interactive protocols
-pub enum DbConnector {
-    RocksDB,
-    DynamoDB,
-    Redis,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-/// It is used as an index for the underlying Db table
-pub struct DbIndex {
-    ///The customerId as assigned from cognito and passed through JWT
-    pub customerId: Option<String>,
-    ///The is as assigned from gotham server during the first round of keygen to identify users
-    pub id: Option<String>,
-}
-
-/*      JWT is no longer used!
-
-/// The Authenticator indicates how the input requests to gotham server will be authorized. Currently there is the JWT option
-/// but in the future it will be discarded. Private gotham is using a jwt auth while public one does not use it
-pub enum Authenticator {
-    /// passthrough mode to authentication at http level
-    None,
-    /// verification with a valid JWT
-    Jwt,
-}
-
- */
-
-pub const CUSTOMER_ID_IDENTIFIER: &str = "customerId";
-pub const ID_IDENTIFIER: &str = "id";
 
 /// An enumeration which keeps track of the different table names used to store information during KeyGen and Sign
-#[derive(Debug)]
+#[derive(Display)]
 pub enum EcdsaStruct {
     KeyGenFirstMsg,
     CommWitness,
@@ -110,31 +64,29 @@ pub struct Alpha {
     pub value: BigInt,
 }
 
-typetag_value!(Alpha);
 
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct Abort {
     pub(crate) blocked: bool,
 }
 
-typetag_value!(Abort);
 
 ///common functions for the members of EcdsaStruct struct to strigify and format
 impl MPCStruct for EcdsaStruct {
-    fn to_string(&self) -> String {
-        format!("{:?}", self)
+    fn get_name(&self) -> String {
+        self.to_string()
     }
 
     // backward compatibility
-    fn to_table_name(&self, env: &str) -> String {
-        if self.to_string() == "Party1MasterKey" {
-            format!("{}_{}", env, self.to_string())
+    fn get_table_name(&self, env: &str) -> String {
+        if self.get_name() == EcdsaStruct::Party1MasterKey.get_name() {
+            format!("{}_{}", env, self.get_name())
         } else {
-            format!("{}-gotham-{}", env, self.to_string())
+            format!("{}-gotham-{}", env, self.get_name())
         }
     }
 
-    fn to_struct_name(&self) -> String {
+    fn get_struct_name(&self) -> String {
         let res = match self {
             EcdsaStruct::KeyGenFirstMsg => "Party1KeyGenFirstMessage",
             EcdsaStruct::CommWitness => "Party1CommWitness",
@@ -172,5 +124,39 @@ impl MPCStruct for EcdsaStruct {
 
 #[inline(always)]
 pub fn idify(user_id: &String, id: &String, name: &dyn MPCStruct) -> String {
-    format!("{}_{}_{}", user_id, id, name.to_string())
+    format!("{}_{}_{}", user_id, id, name.get_name())
 }
+
+typetag_value!(Abort);
+typetag_value!(Party1HDPos);
+typetag_value!(Party1KeyGenFirstMessage);
+typetag_value!(Party1CommWitness);
+typetag_value!(Party1EcKeyPair);
+typetag_value!(Secp256k1Point);
+typetag_value!(Party1PaillierKeyPair);
+typetag_value!(Party1Private);
+typetag_value!(Party1PDLDecommit);
+typetag_value!(Alpha);
+typetag_value!(Party2PDLFirstMessage);
+typetag_value!(DHPoKParty1FirstMessage);
+typetag_value!(DHPoKCommWitness);
+typetag_value!(DHPoKEcKeyPair);
+typetag_value!(ChainCode1);
+typetag_value!(MasterKey1);
+typetag_value!(Party2EphKeyGenFirstMessage);
+typetag_value!(Party1EphEcKeyPair);
+typetag_value!(RotateCommitMessage1);
+typetag_value!(Rotation);
+typetag_value!(RotationParty1Message1);
+typetag_value!(Party1PDLFirstMessage);
+
+
+
+
+
+
+
+
+
+
+

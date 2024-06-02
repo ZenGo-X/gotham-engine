@@ -16,12 +16,13 @@ use two_party_ecdsa::kms::rotation::two_party::party1::{RotationParty1Message1, 
 use two_party_ecdsa::party_two::{
     Party2EphKeyGenFirstMessage, Party2PDLFirstMessage, Party2PDLSecondMessage,
 };
-use crate::server::guarder::Claims;
-use crate::server::keygen::KeyGen;
-use crate::server::rotate::Rotate;
-use crate::server::sign::Sign;
-use crate::server::derive::Derive;
-use crate::server::traits::Db;
+use crate::common::guarder::Claims;
+use crate::common::Db;
+
+use crate::ecdsa::server::keygen::KeyGen;
+use crate::ecdsa::server::rotate::Rotate;
+use crate::ecdsa::server::sign::Sign;
+use crate::ecdsa::server::derive::Derive;
 
 
 #[post("/ecdsa/keygen_v2/first", format = "json")]

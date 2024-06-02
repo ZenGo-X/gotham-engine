@@ -13,10 +13,11 @@ use two_party_ecdsa::kms::ecdsa::two_party::party2::{Party2SignSecondMessage, Pa
 use two_party_ecdsa::kms::Errors;
 use uuid::Uuid;
 use crate::{db_cast, db_get, db_get_required, db_insert};
-use crate::server::guarder::Claims;
-use crate::server::macros;
-use crate::server::traits::{Db, RedisMod};
-use crate::server::types::{Abort, EcdsaStruct, idify};
+use crate::common::{Db, RedisMod};
+use crate::common::guarder::Claims;
+use crate::ecdsa::server::{Abort as AbortStruct, EcdsaStruct, idify};
+use crate::ecdsa::server::EcdsaStruct::{Abort, EphEcKeyPair, EphKeyGenFirstMsg, Party1MasterKey};
+
 
 #[async_trait]
 pub trait Sign {
@@ -30,8 +31,8 @@ pub trait Sign {
 
         // Abort table has only customerId as key
         let tmp = db_get!(db, Some(claim.sub.clone()), None::<String>, Abort)
-            .unwrap_or(Box::new(Abort { blocked: false }));
-        let to_abort = db_cast!(tmp, Abort);
+            .unwrap_or(Box::new(AbortStruct { blocked: false }));
+        let to_abort = db_cast!(tmp, AbortStruct);
 
         if to_abort.blocked == true {
             return Err(format!("customer_id {} exists in Abort table and thus is blocked",
@@ -88,7 +89,7 @@ pub trait Sign {
         match signature_with_recid {
             Ok(sig) => Ok(Json(sig)),
             Err(_) => {
-                db_insert!(db, None::<String>, Some(id.clone()), Abort, &Abort { blocked: true });
+                db_insert!(db, None::<String>, Some(id.clone()), Abort, &AbortStruct { blocked: true });
                 Err(format!("sign_second failed for customer_id {}, id {}. Inserted into Abort table",  claim.sub, id))
             }
         }
@@ -147,9 +148,9 @@ async fn sign_first_helper(
     let db = state.lock().await;
 
     let tmp = db_get!(db, Some(claim.sub.clone()), None::<String>, Abort)
-        .unwrap_or(Box::new(Abort { blocked: false }));
+        .unwrap_or(Box::new(AbortStruct { blocked: false }));
 
-    let to_abort = db_cast!(tmp, Abort);
+    let to_abort = db_cast!(tmp, AbortStruct);
 
     if to_abort.blocked == true {
         return Err(format!("customer_id {} exists in Abort table and thus is blocked", claim.sub.to_string()));
@@ -243,7 +244,7 @@ async fn sign_second_helper(
     match signature_with_recid {
         Ok(sig) => Ok(Json(sig)),
         Err(err) => {
-            db_insert!(db, None::<String>, Some(id.clone()), Abort, &Abort { blocked: true });
+            db_insert!(db, None::<String>, Some(id.clone()), Abort, &AbortStruct { blocked: true });
             Err(format!("sign_second failed for customer_id {:?}, ssid {:?}, id: {:?}, sid: {:?}. \
             Inserted into Abort table",  claim.sub, ssid, id, sid))
         }

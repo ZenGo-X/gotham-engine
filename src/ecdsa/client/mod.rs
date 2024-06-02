@@ -6,7 +6,6 @@ pub mod keygen;
 pub mod sign;
 pub mod rotate;
 
-pub mod client_shim;
 
 
 #[derive(Serialize, Deserialize)]

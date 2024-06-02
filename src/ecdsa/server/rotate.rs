@@ -7,14 +7,16 @@ use tokio::sync::Mutex;
 use two_party_ecdsa::curv::cryptographic_primitives::twoparty::coin_flip_optimal_rounds;
 use two_party_ecdsa::curv::elliptic::curves::traits::ECScalar;
 use two_party_ecdsa::kms::ecdsa::two_party::MasterKey1;
-use two_party_ecdsa::kms::rotation::two_party::party1::{RotateCommitMessage1, Rotation1, RotationParty1Message1, RotationParty1ValidMessage1};
+use two_party_ecdsa::kms::rotation::two_party::party1::{RotateCommitMessage1 as RotateCommitMessage1Struct, Rotation1, RotationParty1Message1, RotationParty1ValidMessage1};
 use two_party_ecdsa::kms::rotation::two_party::Rotation;
 use two_party_ecdsa::{party_one, party_two};
 use two_party_ecdsa::party_one::{Party1PDLDecommit, Party1Private};
 use two_party_ecdsa::party_two::Party2PDLFirstMessage;
-use crate::server::guarder::Claims;
-use crate::server::traits::Db;
-use crate::server::types::Alpha;
+use crate::common::guarder::Claims;
+use crate::common::Db;
+use crate::ecdsa::server::Alpha;
+use crate::ecdsa::server::EcdsaStruct::{Party1MasterKey, RotateAlpha, RotateCommitMessage1, RotateFirstMsg, RotateParty1Second, RotateParty2First, RotatePdlDecom, RotatePrivateNew, RotateRandom1};
+
 
 #[async_trait]
 pub trait Rotate {
@@ -46,7 +48,7 @@ pub trait Rotate {
     ) -> Result<Json<RotationParty1ValidMessage1>, String> {
         let db = state.lock().await;
 
-        let rotate_commit_message = db_get_required!(db, None::<String>, Some(id.clone()), RotateCommitMessage1, RotateCommitMessage1);
+        let rotate_commit_message = db_get_required!(db, None::<String>, Some(id.clone()), RotateCommitMessage1, RotateCommitMessage1Struct);
 
         let (coin_flip_party1_second, random1) =
             Rotation1::key_rotate_second_message(&coin_flip_party2_first.0, &rotate_commit_message);

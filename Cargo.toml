@@ -9,6 +9,7 @@ edition = "2021"
 #path = "src/lib.rs"
 
 [features]
+default = ["server_engine", "client_engine"]
 server_engine = []
 client_engine = []
 
@@ -36,6 +37,9 @@ config = "0.14.0"
 uuid = { version = "0.7", features = ["v4"] }
 jsonwebtoken = "8"
 hex = "0.4"
+strum = "0.26"
+strum_macros = "0.26"
+
 two-party-ecdsa = { git = "https://github.com/ZenGo-X/two-party-ecdsa.git", branch="feature/remove-typetags" }
 
 #two-party-ecdsa = { path = "../two-party-ecdsa" }

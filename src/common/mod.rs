@@ -1,14 +1,72 @@
-//! The traits that define the common logic  with default implementation for keygen and sign
-//! while it differentiates implementation of keygen and sign with trait objects for DB management,user authorization and tx authorization
+pub mod guarder;
+pub mod macros;
+pub mod client_shim;
+
 use std::env;
-use std::env::VarError;
+use serde::{Deserialize, Serialize};
+use std::fmt::{Display, Formatter};
+use async_trait::async_trait;
 use log::info;
+use redis::{Commands, Connection};
+use thiserror::Error;
 
 
-use redis::{Commands, Connection, RedisError, RedisResult};
-use rocket::{async_trait, error};
-use two_party_ecdsa::typetags::Value;
-use crate::server::types::DbIndex;
+// TODO: use 'thiserror' and this enum in code
+#[derive(Debug, Error, PartialEq, Eq, Clone)]
+/// The DatabaseError defines different types of database errors for better error handling
+pub enum DatabaseError {
+    /// Failed to open database.
+    #[error("Failed to open database: {0:?}")]
+    ConnectionError(i32),
+    /// Failed to create a table in database.
+    #[error("Table Creating error code: {0:?}")]
+    TableCreationError(i32),
+    /// Failed to insert a value into a table.
+    #[error("Database write error code: {0:?}")]
+    InsertError(i32),
+    /// Failed to get a value into a table.
+    #[error("Database read error code: {0:?}")]
+    ReadError(i32),
+    /// Failed to delete a `(key, value)` pair into a table.
+    #[error("Database delete error code: {0:?}")]
+    DeleteError(i32),
+    /// Failed to delete a `(key, value)` pair into a table.
+    #[error("Database delete error code: {0:?}")]
+    ConfigError(i32),
+}
+
+/// The DbConnector indicates what type of DB will be used for storing the state during the Keyge, and sign interactive protocols
+pub enum DbConnector {
+    RocksDB,
+    DynamoDB,
+    Redis,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+/// It is used as an index for the underlying Db table
+pub struct DbIndex {
+    ///The customerId as assigned from cognito and passed through JWT
+    pub customerId: Option<String>,
+    ///The is as assigned from gotham server during the first round of keygen to identify users
+    pub id: Option<String>,
+}
+
+/*      JWT is no longer used!
+
+/// The Authenticator indicates how the input requests to gotham server will be authorized. Currently there is the JWT option
+/// but in the future it will be discarded. Private gotham is using a jwt auth while public one does not use it
+pub enum Authenticator {
+    /// passthrough mode to authentication at http level
+    None,
+    /// verification with a valid JWT
+    Jwt,
+}
+
+ */
+
+pub const CUSTOMER_ID_IDENTIFIER: &str = "customerId";
+pub const ID_IDENTIFIER: &str = "id";
+
 
 /// The Db trait allows different DB's to implement a common API for insert and get
 #[async_trait]
@@ -17,7 +75,7 @@ pub trait Db: Send + Sync {
     /// # Arguments
     /// * `key` - A [DbIndex] struct which acts as a key index in the DB.
     /// * `table_name` - The table name which is derived from [MPCStruct]
-    /// * `value` - The value to be inserted in the db which is a trait object of the trait  [Value]
+    /// * `value` - The value to be inserted in the db which is a trait object of the trait  [DbValue]
     /// # Examples:
     ///
     ///
@@ -39,13 +97,13 @@ pub trait Db: Send + Sync {
         &self,
         key: &DbIndex,
         table_name: &dyn MPCStruct,
-        value: &dyn Value,
+        value: &dyn DbValue,
     ) -> Result<(), String>;
     ///get a value from the DB
     /// # Arguments
     /// * `key` - A [DbIndex] struct which acts as a key index in the DB.
     /// * `table_name` - The table name which is derived from [MPCStruct]
-    /// * `value` - The value to be inserted in the db which is a trait object of the trait  [Value]
+    /// * `value` - The value to be inserted in the db which is a trait object of the trait  [DbValue]
     /// # Examples
     ///
     /// let party_one_pdl_decommit =
@@ -66,7 +124,7 @@ pub trait Db: Send + Sync {
         &self,
         key: &DbIndex,
         table_name: &dyn MPCStruct,
-    ) -> Result<Option<Box<dyn Value>>, String>;
+    ) -> Result<Option<Box<dyn DbValue>>, String>;
     async fn has_active_share(&self, customerId: &str) -> Result<bool, String>;
 
     /// the granted function implements the logic of tx authorization. If no tx authorization is needed the function returns always true
@@ -117,11 +175,35 @@ pub trait RedisMod {
 
 ///Trait for table names management for the different type of tables to be inserted in the DB
 pub trait MPCStruct: Sync {
-    fn to_string(&self) -> String;
+    fn get_name(&self) -> String;
 
-    fn to_table_name(&self, env: &str) -> String {
-        format!("{}_{}", env, self.to_string())
+    fn get_table_name(&self, env: &str) -> String {
+        format!("{}_{}", env, self.get_name())
     }
 
-    fn to_struct_name(&self) -> String;
+    fn get_struct_name(&self) -> String;
+}
+
+use std::any::Any;
+
+#[typetag::serde]
+pub trait DbValue: Sync + Send + Any {
+    fn as_any(&self) -> &dyn Any;
+    fn type_name(&self) -> &str;
+}
+
+#[macro_export]
+macro_rules! typetag_value {
+    ($struct_name:ty) => {
+        #[typetag::serde]
+        impl crate::common::DbValue for $struct_name {
+            fn as_any(&self) -> &dyn std::any::Any {
+                self
+            }
+
+            fn type_name(&self) -> &str {
+                stringify!($struct_name)
+            }
+        }
+    };
 }

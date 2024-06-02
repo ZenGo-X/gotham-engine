@@ -14,13 +14,14 @@ use tokio::sync::Mutex;
 use two_party_ecdsa::party_one::{
     DLogProof, Party1CommWitness, Party1EcKeyPair, Party1HDPos, Party1KeyGenFirstMessage,
     Party1KeyGenSecondMessage, Party1PDLDecommit, Party1PDLFirstMessage, Party1PDLSecondMessage,
-    Party1PaillierKeyPair, Party1Private,
+    Party1PaillierKeyPair, Party1Private as Party1PrivateStruct,
 };
 use two_party_ecdsa::party_two::{Party2PDLFirstMessage, Party2PDLSecondMessage};
 use uuid::Uuid;
-use crate::server::guarder::Claims;
-use crate::server::traits::Db;
-use crate::server::types::Alpha;
+use crate::common::guarder::Claims;
+use crate::common::Db;
+use crate::ecdsa::server::Alpha as AlphaStruct;
+use crate::ecdsa::server::EcdsaStruct::{Alpha, CC, CCCommWitness, CCEcKeyPair, CCKeyGenFirstMsg, CommWitness, EcKeyPair, KeyGenFirstMsg, PaillierKeyPair, Party1MasterKey, Party1Private, Party2PDLFirstMsg, Party2Public, PDLDecommit, POS};
 
 
 #[async_trait]
@@ -99,7 +100,7 @@ pub trait KeyGen {
     ) -> Result<Json<Party1PDLFirstMessage>, String> {
         let db = state.lock().await;
 
-        let party_one_private = db_get_required!(db, None::<String>, Some(id.clone()), Party1Private, Party1Private);
+        let party_one_private = db_get_required!(db, None::<String>, Some(id.clone()), Party1Private, Party1PrivateStruct);
 
         let (party_one_third_message, party_one_pdl_decommit, alpha) =
             MasterKey1::key_gen_third_message(
@@ -109,7 +110,7 @@ pub trait KeyGen {
 
         db_insert!(db, None::<String>, Some(id.clone()), PDLDecommit, &party_one_pdl_decommit);
 
-        let alpha = Alpha { value: alpha };
+        let alpha = crate::ecdsa::server::Alpha { value: alpha };
         db_insert!(db, None::<String>, Some(id.clone()), Alpha, &alpha);
 
         db_insert!(db, None::<String>, Some(id.clone()), Party2PDLFirstMsg, &party_2_pdl_first_message.0);
@@ -124,13 +125,13 @@ pub trait KeyGen {
     ) -> Result<Json<Party1PDLSecondMessage>, String> {
         let db = state.lock().await;
 
-        let party_one_private = db_get_required!(db, None::<String>, Some(id.clone()), Party1Private, Party1Private);
+        let party_one_private = db_get_required!(db, None::<String>, Some(id.clone()), Party1Private, Party1PrivateStruct);
 
         let party_2_pdl_first_message = db_get_required!(db, None::<String>, Some(id.clone()), Party2PDLFirstMsg, Party2PDLFirstMessage);
 
         let party_one_pdl_decommit = db_get_required!(db, None::<String>, Some(id.clone()), PDLDecommit, Party1PDLDecommit);
 
-        let alpha = db_get_required!(db, None::<String>, Some(id.clone()), Alpha, Alpha);
+        let alpha = db_get_required!(db, None::<String>, Some(id.clone()), Alpha, AlphaStruct);
 
         // let dl: &mut dyn Value = party_one_pdl_decommit.borrow_mut();
 
@@ -196,7 +197,7 @@ pub trait KeyGen {
 
         let party1_cc = db_get_required!(db, None::<String>, Some(id.clone()), CC, ChainCode1);
 
-        let party_one_private = db_get_required!(db, None::<String>, Some(id.clone()), Party1Private, Party1Private);
+        let party_one_private = db_get_required!(db, None::<String>, Some(id.clone()), Party1Private, Party1PrivateStruct);
 
         let comm_witness = db_get_required!(db, None::<String>, Some(id.clone()), CommWitness, Party1CommWitness);
 

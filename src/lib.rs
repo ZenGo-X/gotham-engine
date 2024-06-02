@@ -1,6 +1,6 @@
-#[cfg(feature = "client_engine")]
-pub mod client;
+pub mod common;
 
-#[cfg(feature = "server_engine")]
-pub mod server;
-// type Result<T> = std::result::Result<T, failure::Error>;
+// #[cfg(feature = "ecdsa_engine")]
+pub mod ecdsa;
+
+// #[cfg(feature = "musig2_engine")]

@@ -3,11 +3,11 @@ use rocket::info;
 macro_rules! db_get {
     ($db:expr, $customer_id:expr, $id:expr, $enum_ident:ident) => {
         match $db.get(
-            &$crate::server::types::DbIndex {
+            &$crate::common::DbIndex {
                 customerId:  $customer_id,
                 id: $id,
             },
-            &$crate::server::types::EcdsaStruct::$enum_ident,
+            &$enum_ident,
         )
         .await
         {
@@ -30,15 +30,17 @@ macro_rules! db_get {
     }
 }
 
+
+//TODO: fix
 #[macro_export]
 macro_rules! db_get_required {
     ($db:expr, $customer_id:expr, $id:expr, $enum_ident:ident, $cast_type:ty) => {
         match match $db.get(
-            &$crate::server::types::DbIndex {
+            &$crate::common::DbIndex {
                 customerId:  $customer_id,
                 id: $id,
             },
-            &$crate::server::types::EcdsaStruct::$enum_ident,
+            &$enum_ident,
         )
         .await
         {
@@ -75,7 +77,7 @@ macro_rules! db_get_required {
                 println!("{}", txt);
                 return Err(txt)
             }
-            Some(v) => { v.clone() }    // Cust success
+            Some(v) => { v.clone() }    // Cast success
         }
     }
 }
@@ -84,11 +86,11 @@ macro_rules! db_get_required {
 macro_rules! db_insert {
     ($db:expr, $customer_id:expr, $id:expr, $enum_ident:ident, $new_value:expr) => {
         match $db.insert(
-            &$crate::server::types::DbIndex {
+            &$crate::common::DbIndex {
                 customerId: $customer_id,
                 id: $id,
             },
-            &$crate::server::types::EcdsaStruct::$enum_ident,
+            &$enum_ident,
             $new_value,
         )
         .await {

@@ -7,12 +7,8 @@
 // version 3 of the License, or (at your option) any later version.
 //
 
-use log::info;
 use serde::{de::DeserializeOwned, Serialize};
 use std::time::Instant;
-
-
-pub(crate) type Result<T> = std::result::Result<T, failure::Error>;
 
 #[derive(Debug)]
 pub struct ClientShim<C: Client> {
