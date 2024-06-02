@@ -41,10 +41,10 @@ strum = "0.26"
 strum_macros = "0.26"
 
 two-party-ecdsa = { git = "https://github.com/ZenGo-X/two-party-ecdsa.git", branch="feature/musig2" }
-#two-party-musig2-eddsa = { git = "https://github.com/ZenGo-X/two-party-musig2-eddsa", branch = "feature/update-crates" }
+two-party-musig2-eddsa = { git = "https://github.com/ZenGo-X/two-party-musig2-eddsa", branch = "feature/expose-structs" }
 
-two-party-musig2-eddsa = { path = "../two-party-musig2-eddsa" }
-
-
+# for debug
 #two-party-ecdsa = { path = "../two-party-ecdsa" }
+#two-party-musig2-eddsa = { path = "../two-party-musig2-eddsa" }
+
 
