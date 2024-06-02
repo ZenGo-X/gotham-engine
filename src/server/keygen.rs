@@ -20,8 +20,8 @@ use two_party_ecdsa::party_two::{Party2PDLFirstMessage, Party2PDLSecondMessage};
 use uuid::Uuid;
 use crate::common::guarder::Claims;
 use crate::common::Db;
-use crate::ecdsa::server::Alpha as AlphaStruct;
-use crate::ecdsa::server::EcdsaStruct::{Alpha, CC, CCCommWitness, CCEcKeyPair, CCKeyGenFirstMsg, CommWitness, EcKeyPair, KeyGenFirstMsg, PaillierKeyPair, Party1MasterKey, Party1Private, Party2PDLFirstMsg, Party2Public, PDLDecommit, POS};
+use crate::server::Alpha as AlphaStruct;
+use crate::server::EcdsaStruct::{Alpha, CC, CCCommWitness, CCEcKeyPair, CCKeyGenFirstMsg, CommWitness, EcKeyPair, KeyGenFirstMsg, PaillierKeyPair, Party1MasterKey, Party1Private, Party2PDLFirstMsg, Party2Public, PDLDecommit, POS};
 
 
 #[async_trait]
@@ -110,7 +110,7 @@ pub trait KeyGen {
 
         db_insert!(db, None::<String>, Some(id.clone()), PDLDecommit, &party_one_pdl_decommit);
 
-        let alpha = crate::ecdsa::server::Alpha { value: alpha };
+        let alpha = crate::server::Alpha { value: alpha };
         db_insert!(db, None::<String>, Some(id.clone()), Alpha, &alpha);
 
         db_insert!(db, None::<String>, Some(id.clone()), Party2PDLFirstMsg, &party_2_pdl_first_message.0);

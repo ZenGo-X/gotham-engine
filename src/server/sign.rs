@@ -15,8 +15,8 @@ use uuid::Uuid;
 use crate::{db_cast, db_get, db_get_required, db_insert};
 use crate::common::{Db, RedisMod};
 use crate::common::guarder::Claims;
-use crate::ecdsa::server::{Abort as AbortStruct, EcdsaStruct, idify};
-use crate::ecdsa::server::EcdsaStruct::{Abort, EphEcKeyPair, EphKeyGenFirstMsg, Party1MasterKey};
+use crate::server::{Abort as AbortStruct, EcdsaStruct, idify};
+use crate::server::EcdsaStruct::{Abort, EphEcKeyPair, EphKeyGenFirstMsg, Party1MasterKey};
 
 
 #[async_trait]

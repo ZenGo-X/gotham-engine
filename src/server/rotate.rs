@@ -14,8 +14,8 @@ use two_party_ecdsa::party_one::{Party1PDLDecommit, Party1Private};
 use two_party_ecdsa::party_two::Party2PDLFirstMessage;
 use crate::common::guarder::Claims;
 use crate::common::Db;
-use crate::ecdsa::server::Alpha;
-use crate::ecdsa::server::EcdsaStruct::{Party1MasterKey, RotateAlpha, RotateCommitMessage1, RotateFirstMsg, RotateParty1Second, RotateParty2First, RotatePdlDecom, RotatePrivateNew, RotateRandom1};
+use crate::server::Alpha;
+use crate::server::EcdsaStruct::{Party1MasterKey, RotateAlpha, RotateCommitMessage1, RotateFirstMsg, RotateParty1Second, RotateParty2First, RotatePdlDecom, RotatePrivateNew, RotateRandom1};
 
 
 #[async_trait]
