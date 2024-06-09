@@ -9,6 +9,7 @@
 
 use serde::{de::DeserializeOwned, Serialize};
 use std::time::Instant;
+use async_trait::async_trait;
 
 #[derive(Debug)]
 pub struct ClientShim<C: Client> {
@@ -18,9 +19,9 @@ pub struct ClientShim<C: Client> {
     pub endpoint: String,
 }
 
-impl ClientShim<reqwest::blocking::Client> {
-    pub fn new(endpoint: String, auth_token: Option<String>, customer_id: Option<String>,) -> ClientShim<reqwest::blocking::Client> {
-        let client = reqwest::blocking::Client::new();
+impl ClientShim<reqwest::Client> {
+    pub fn new(endpoint: String, auth_token: Option<String>, customer_id: Option<String>,) -> ClientShim<reqwest::Client> {
+        let client = reqwest::Client::new();
         ClientShim {
             client,
             auth_token,
@@ -39,7 +40,7 @@ impl<C: Client> ClientShim<C> {
             endpoint,
         }
     }
-    pub fn post<V>(&self, path: &str) -> Option<V>
+    pub async fn post<V>(&self, path: &str) -> Option<V>
         where
             V: serde::de::DeserializeOwned,
     {
@@ -48,12 +49,13 @@ impl<C: Client> ClientShim<C> {
             .client
             .post(&self.endpoint, path, self.auth_token.clone(), self.customer_id.clone(), "{}");
         // info!("(req {}, took: {:?})", path, TimeFormat(start.elapsed()));
-        res
+        res.await
     }
 
-    pub fn postb<T, V>(&self, path: &str, body: T) -> Option<V>
+
+    pub async fn postb<T, V>(&self, path: &str, body: T) -> Option<V>
         where
-            T: serde::ser::Serialize,
+            T: serde::ser::Serialize + Send,
             V: serde::de::DeserializeOwned,
     {
         let start = Instant::now();
@@ -61,12 +63,12 @@ impl<C: Client> ClientShim<C> {
             .client
             .post(&self.endpoint, path, self.auth_token.clone(), self.customer_id.clone(), body);
         // info!("(req {}, took: {:?})", path, TimeFormat(start.elapsed()));
-        res
+        res.await
     }
 }
-
+#[async_trait]
 pub trait Client: Sized {
-    fn post<V: DeserializeOwned, T: Serialize>(
+    async fn post<V: DeserializeOwned, T: Serialize + Send>(
         &self,
         endpoint: &str,
         uri: &str,
@@ -78,9 +80,9 @@ pub trait Client: Sized {
 
 const X_CUSTOMER_ID_HEADER: &str = "x-customer-id";
 
-
-impl Client for reqwest::blocking::Client {
-    fn post<V: DeserializeOwned, T: Serialize>(
+#[async_trait]
+impl Client for reqwest::Client {
+    async fn post<V: DeserializeOwned, T: Serialize + Send>(
         &self,
         endpoint: &str,
         uri: &str,
@@ -97,7 +99,7 @@ impl Client for reqwest::blocking::Client {
             b = b.header(X_CUSTOMER_ID_HEADER, customer_id);
         }
 
-        let value = b.json(&body).send().ok()?.text().ok()?;
+        let value = b.json(&body).send().await.ok()?.text().await.ok()?;
         serde_json::from_str(value.as_str()).ok()
     }
 }

@@ -6,7 +6,7 @@ use two_party_ecdsa::party_one::{Party1EphKeyGenFirstMessage, Party1SignatureRec
 use two_party_ecdsa::party_two::Party2EphKeyGenFirstMessage;
 use crate::common::client_shim::{Client, ClientShim};
 
-pub fn sign<C: Client>(
+pub async fn sign<C: Client>(
     client_shim: &ClientShim<C>,
     message: BigInt,
     mk: &MasterKey2,
@@ -19,7 +19,7 @@ pub fn sign<C: Client>(
     let request: Party2EphKeyGenFirstMessage = eph_key_gen_first_message_party_two;
 
     let (sid, sign_party_one_first_message): (String, Party1EphKeyGenFirstMessage) =
-        match client_shim.postb(&format!("/ecdsa/sign/{}/first_v3", id), &request) {
+        match client_shim.postb(&format!("/ecdsa/sign/{}/first_v3", id), &request).await {
             Some(s) => s,
             None => return Err(failure::err_msg("party1 sign first message request failed")),
         };
@@ -37,7 +37,7 @@ pub fn sign<C: Client>(
         party_two_sign_message,
         pos_child_key,
         &sid,
-    ) {
+    ).await {
         Ok(s) => s,
         Err(e) => return Err(format_err!("ecdsa::get_signature failed failed: {}", e)),
     };
@@ -45,7 +45,7 @@ pub fn sign<C: Client>(
     Ok(signature)
 }
 
-fn get_signature<C: Client>(
+async fn get_signature<C: Client>(
     client_shim: &ClientShim<C>,
     message: BigInt,
     party_two_sign_message: Party2SignMessage,
@@ -59,7 +59,7 @@ fn get_signature<C: Client>(
     };
 
     let signature: Party1SignatureRecid =
-        match client_shim.postb(&format!("/ecdsa/sign/{}/second_v3", sid), &request) {
+        match client_shim.postb(&format!("/ecdsa/sign/{}/second_v3", sid), &request).await {
             Some(s) => s,
             None => {
                 return Err(failure::err_msg(

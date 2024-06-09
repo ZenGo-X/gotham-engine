@@ -8,9 +8,9 @@ use crate::client::PrivateShare;
 
 const ROT_PATH_PRE: &str = "ecdsa/rotate";
 
-pub fn rotate_master_key<C: Client>(client_shim: &ClientShim<C>,
-                                    master_key_2: &MasterKey2,
-                                    id: &str) -> PrivateShare {
+pub async fn rotate_master_key<C: Client>(client_shim: &ClientShim<C>,
+                                          master_key_2: &MasterKey2,
+                                          id: &str) -> PrivateShare {
 
     let mut coin_flip_party1_first_message: coin_flip_optimal_rounds::Party1FirstMessage;
     let mut coin_flip_party2_first_message: coin_flip_optimal_rounds::Party2FirstMessage;
@@ -18,7 +18,7 @@ pub fn rotate_master_key<C: Client>(client_shim: &ClientShim<C>,
 
     loop {
         coin_flip_party1_first_message =
-            client_shim.post(&format!("{}/{}/first", ROT_PATH_PRE, id)).unwrap();
+            client_shim.post(&format!("{}/{}/first", ROT_PATH_PRE, id)).await.unwrap();
 
         coin_flip_party2_first_message  =
             Rotation2::key_rotate_first_message(&coin_flip_party1_first_message);
@@ -28,7 +28,7 @@ pub fn rotate_master_key<C: Client>(client_shim: &ClientShim<C>,
         rotation_party1_valid_first_message = client_shim.postb(
             &format!("{}/{}/second", ROT_PATH_PRE, id),
             body,
-        ).unwrap();
+        ).await.unwrap();
 
         if rotation_party1_valid_first_message.is_valid {
             break;
@@ -57,7 +57,7 @@ pub fn rotate_master_key<C: Client>(client_shim: &ClientShim<C>,
     let rotation_party1_second_message: Party1PDLFirstMessage = client_shim.postb(
         &format!("{}/{}/third", ROT_PATH_PRE, id),
         body,
-    ).unwrap();
+    ).await.unwrap();
 
     let rotation_party_two_second_message = MasterKey2::rotate_second_message(&party_two_pdl_chal);
 
@@ -67,7 +67,7 @@ pub fn rotate_master_key<C: Client>(client_shim: &ClientShim<C>,
         &format!("{}/{}/forth", ROT_PATH_PRE, id),
         body,
     )
-        .unwrap();
+        .await.unwrap();
 
     let result_rotate_party_one_third_message = master_key_2.rotate_third_message(
         &rotation2,
