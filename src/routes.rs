@@ -241,7 +241,7 @@ pub async fn wrap_derive_first(
     state: &State<Mutex<Box<dyn Db>>>,
     // claim: Claims,
     id: &str,
-    request: Json<Vec<i64>>,
+    request: Json<Vec<BigInt>>,
 ) -> Result<Json<MasterKey1>, String> {
     println!("/ecdsa/derive/{} | path = {:?}", id, request);
 

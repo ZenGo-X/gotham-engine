@@ -15,16 +15,16 @@ pub trait Derive {
         state: &State<Mutex<Box<dyn Db>>>,
         // claims: Claims,
         id: String,
-        request: Json<Vec<i64>>) ->  Result<Json<MasterKey1>, String> {
+        request: Json<Vec<BigInt>>) ->  Result<Json<MasterKey1>, String> {
         let db = state.lock().await;
 
         // get the master key for that id
         // customerId is not required as Claims are not passed to this endpoint)
         let master_key = db_get_required!(db, None::<String>, Some(id.clone()), Party1MasterKey, MasterKey1);
 
-        let derivation_vector = request.0.iter().map(|&x| BigInt::from(x)).collect();
+        // let derivation_vector = request.0.iter().map(|&x| BigInt::from(x)).collect();
 
-        let child_master_key = master_key.get_child(derivation_vector);
+        let child_master_key = master_key.get_child(request.0);
 
         Ok(Json(child_master_key))
     }
