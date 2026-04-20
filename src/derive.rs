@@ -1,13 +1,20 @@
 use async_trait::async_trait;
 use rocket::serde::json::Json;
 use rocket::State;
+use serde::Serialize;
 use tokio::sync::Mutex;
 use two_party_ecdsa::BigInt;
-use two_party_ecdsa::kms::ecdsa::two_party::MasterKey1;
+use two_party_ecdsa::kms::ecdsa::two_party::{MasterKey1, Party1Public};
 use crate::types::EcdsaStruct;
 use crate::db_get_required;
-use crate::guarder::Claims;
 use crate::traits::Db;
+
+/// Public-only response for the derive endpoint.
+/// Strips the server-side private key share (x1 / Party1Private) before sending.
+#[derive(Serialize)]
+pub struct DeriveResponse {
+    pub public: Party1Public,
+}
 
 #[async_trait]
 pub trait Derive {
@@ -15,7 +22,7 @@ pub trait Derive {
         state: &State<Mutex<Box<dyn Db>>>,
         // claims: Claims,
         id: String,
-        request: Json<Vec<BigInt>>) ->  Result<Json<MasterKey1>, String> {
+        request: Json<Vec<BigInt>>) ->  Result<Json<DeriveResponse>, String> {
         let db = state.lock().await;
 
         // get the master key for that id
@@ -26,6 +33,6 @@ pub trait Derive {
 
         let child_master_key = master_key.get_child(request.0);
 
-        Ok(Json(child_master_key))
+        Ok(Json(DeriveResponse { public: child_master_key.public }))
     }
 }
